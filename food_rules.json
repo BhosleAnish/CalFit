@@ -1,0 +1,52 @@
+{
+  "sugar": {
+    "unit": "g",
+    "threshold": 25,
+    "advice": "Limit sugar intake to reduce risk of obesity, diabetes, and heart disease."
+  },
+  "salt": {
+    "unit": "g",
+    "threshold": 5,
+    "advice": "Excess salt may lead to high blood pressure and cardiovascular diseases."
+  },
+  "cholesterol": {
+    "unit": "mg",
+    "threshold": 300,
+    "advice": "High cholesterol intake increases the risk of heart disease."
+  },
+  "saturated fat": {
+    "unit": "g",
+    "threshold": 20,
+    "advice": "Too much saturated fat can raise LDL cholesterol and heart disease risk."
+  },
+  "trans fat": {
+    "unit": "g",
+    "threshold": 0,
+    "advice": "Trans fats are harmful and should be avoided entirely."
+  },
+  "total fat": {
+    "unit": "g",
+    "threshold": 70,
+    "advice": "High total fat may contribute to weight gain and heart issues."
+  },
+  "carbohydrate": {
+    "unit": "g",
+    "threshold": 300,
+    "advice": "Monitor carbs to avoid weight gain and blood sugar spikes."
+  },
+  "protein": {
+    "unit": "g",
+    "threshold": 50,
+    "advice": "Excess protein intake may burden kidneys in some individuals."
+  },
+  "fiber": {
+    "unit": "g",
+    "threshold": 25,
+    "advice": "Less than 25g of fiber may indicate low dietary fiber intake."
+  },
+  "calories": {
+    "unit": "kcal",
+    "threshold": 2000,
+    "advice": "Exceeding daily calorie needs may result in weight gain."
+  }
+}

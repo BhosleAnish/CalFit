@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cal-FIT | All-in-One</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      position: relative;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      background: url("{{ url_for('static', filename='backgrounds/landing page.jpg') }}") no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(15px);
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #10B981;
+    }
+
+    nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: white;
+      font-size: 16px;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: #10B981;
+    }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: calc(100vh - 100px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 50px;
+    }
+
+    .hero h1 {
+      font-size: 44px;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .form-box {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+      width: 320px;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .tabs button {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tabs button.active {
+      border-color: #10B981;
+    }
+
+    form {
+      display: none;
+      flex-direction: column;
+    }
+
+    form.active {
+      display: flex;
+    }
+
+    input {
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 6px;
+      border: none;
+      font-size: 15px;
+    }
+
+    .form-box button[type="submit"] {
+      padding: 10px;
+      background-color: #10B981;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .form-box button:hover {
+      background-color: #059669;
+    }
+    /* Dropdown styling */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropbtn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: rgba(16, 185, 129, 0.95);
+  min-width: 180px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 2;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.dropdown-content a {
+  color: white;
+  padding: 10px 15px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+  background-color: #059669;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+  </style>
+
+  <script>
+    function showForm(type) {
+      document.getElementById('loginForm').classList.remove('active');
+      document.getElementById('signupForm').classList.remove('active');
+      document.getElementById(type + 'Form').classList.add('active');
+
+      document.getElementById('loginBtn').classList.remove('active');
+      document.getElementById('signupBtn').classList.remove('active');
+      document.getElementById(type + 'Btn').classList.add('active');
+    }
+
+    window.onload = function () {
+      showForm('login'); // default form
+    };
+  </script>
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <header>
+  <div class="logo">Cal-FIT</div>
+  <nav class="main-nav">
+    <a href="{{ url_for('dashboard') }}">Home</a>
+    <a href="#explore">Explore</a>
+    <a href="#about">About Us</a>
+    <a href="{{ url_for('profile') }}">Profile</a>
+
+  </nav>
+</header>
+
+
+  <!--  Hero Section -->
+  <section class="hero">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div style="margin-bottom: 20px;">
+          {% for category, message in messages %}
+            <div style="
+              padding: 10px;
+              border-radius: 5px;
+              margin-bottom: 10px;
+              color: white;
+              background-color: {% if category == 'error' %}#EF4444{% else %}#10B981{% endif %};
+            ">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <h1>Scan Smarter. Eat Healthier.</h1>
+    <p>Join the Cal-FIT mission. Start your healthy journey now!</p>
+
+    <div class="form-box">
+      <div class="tabs">
+        <button id="loginBtn" onclick="showForm('login')">Login</button>
+        <button id="signupBtn" onclick="showForm('signup')">Sign Up</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" method="POST" action="/login">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+
+      <!--  Signup Form -->
+      <form id="signupForm" method="POST" action="/signup">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Sign Up</button>
+      </form>
+    </div>
+  </section>
+
+</body>
+</html>

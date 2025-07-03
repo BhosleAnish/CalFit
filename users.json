@@ -1,0 +1,6 @@
+{
+    "anish": {
+        "user_id": "U001",
+        "password": "scrypt:32768:8:1$udQpe144LEdkT2Qn$707e65b4bfc00bc946b4224136ae60d8c2405e6b0d2f3ba98eff518a40dd8c950b7152753925cb3df69d651356d8ba078a9f8666d4ea30e11bfe474d6516f61d"
+    }
+}

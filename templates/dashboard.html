@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard | Cal-FIT</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  background: url('https://i.pinimg.com/736x/fe/69/fd/fe69fd41d5810c692df832c600d0996a.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: white;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  z-index: 0;
+}
+
+header {
+  position: relative;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+/* Navbar Links */
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.main-nav a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 8px;
+  transition: color 0.3s ease;
+}
+
+.main-nav a:hover {
+  color: #10B981;
+}
+
+/* Dropdown */
+.dropdown {
+  position: relative;
+}
+
+.dropbtn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.dropdown:hover .dropdown-content,
+.dropdown:focus-within .dropdown-content {
+  display: block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: rgba(16, 185, 129, 0.95);
+  min-width: 180px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.dropdown-content a {
+  color: white;
+  padding: 10px 15px;
+  text-decoration: none;
+  display: block;
+  white-space: nowrap;
+}
+
+.dropdown-content a:hover {
+  background-color: #059669;
+}
+
+/* Container + Cards */
+.container {
+  position: relative;
+  z-index: 1;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+h2 {
+  margin-bottom: 40px;
+  color: #fff;
+  text-align: center;
+}
+
+.card-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+}
+
+.card {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 30px;
+  width: 280px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 12px rgba(0,0,0,0.3);
+  transition: transform 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h3 {
+  margin-bottom: 15px;
+  color: #10B981;
+}
+
+.card p {
+  color: #ddd;
+  margin-bottom: 20px;
+}
+
+.card a {
+  background-color: #10B981;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.card a:hover {
+  background-color: #059669;
+}
+</style>
+
+</head>
+<body>
+
+  <header>
+  <div class="logo">Cal-FIT Dashboard</div>
+  <nav class="main-nav">
+    <a href="{{ url_for('dashboard') }}">Home</a>
+    <a href="#explore">Explore</a>
+    <a href="{{ url_for('about') }}">About Us</a>
+    <a href="{{ url_for('profile') }}">Profile</a>
+
+  </nav>
+</header>
+
+
+  <div class="container">
+    <h2>Welcome, {{ username }} </h2>
+
+    <div class="card-wrapper">
+
+      <div class="card">
+        <h3>Scan & Analyze</h3>
+        <p>Upload a food label and instantly check for health risks.</p>
+        <a href="{{ url_for('scan_label') }}">Start Scan</a>
+
+      </div>
+
+      <div class="card">
+        <h3>Health Report</h3>
+        <p>See personalized health insights based on your scans.</p>
+        <a href="/health-report">View Report</a>
+      </div>
+
+      <div class="card">
+        <h3>Track Food Intake</h3>
+        <p>Search and add food items to calculate your daily nutrient intake.</p>
+        <a href="{{ url_for('food_tracker') }}">Open Food Tracker</a>
+      </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

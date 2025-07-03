@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Profile | Cal-FIT</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      position: relative;
+      color: white;
+    }
+
+    body {
+      background: url('https://i.pinimg.com/736x/20/3a/9d/203a9d098f06541a1fd7e26b2eb71e29.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      z-index: 0;
+    }
+
+    /* ✅ Header Styling */
+    header {
+      position: relative;
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .main-nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .main-nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 8px;
+      transition: color 0.3s ease;
+    }
+
+    .main-nav a:hover {
+      color: #10B981;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.75);
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #10B981;
+    }
+
+    form {
+      width: 100%;
+    }
+
+    table {
+      width: 100%;
+      color: white;
+      font-size: 16px;
+      border-spacing: 12px;
+    }
+
+    table td:first-child {
+      width: 30%;
+      font-weight: bold;
+      vertical-align: top;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      color: #333;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      display: block;
+      margin: 30px auto 0;
+      padding: 12px 30px;
+      font-size: 16px;
+      background-color: #10B981;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #059669;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden; /* Prevents scrolling */
+      font-family: 'Segoe UI', sans-serif;
+      position: relative;
+      color: white;
+    }
+
+    body {
+      background: url('https://i.pinimg.com/736x/20/3a/9d/203a9d098f06541a1fd7e26b2eb71e29.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; /* important to cover everything including overflow */
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.75);
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #10B981;
+    }
+
+    form {
+      width: 100%;
+    }
+
+    table {
+      width: 100%;
+      color: white;
+      font-size: 16px;
+      border-spacing: 12px;
+    }
+
+    table td:first-child {
+      width: 30%;
+      font-weight: bold;
+      vertical-align: top;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      color: #333;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      display: block;
+      margin: 30px auto 0;
+      padding: 12px 30px;
+      font-size: 16px;
+      background-color: #10B981;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #059669;
+    }
+  </style>
+</head>
+<body>
+    <header>
+    <div class="logo">Cal-FIT</div>
+    <nav class="main-nav">
+      <a href="{{ url_for('dashboard') }}">Home</a>
+      <a href="{{ url_for('about') }}">About Us</a>
+      <a href="#explore">Explore</a>
+      <a href="{{ url_for('profile') }}">Profile</a>
+    </nav>
+  </header>
+  <div class="container">
+    <h2>Edit Your Profile</h2>
+    <form method="POST" action="{{ url_for('edit_profile') }}">
+      <table>
+        <tr>
+          <td>Full Name</td>
+          <td><input type="text" name="full_name" value="{{ profile.full_name }}" required></td>
+        </tr>
+        <tr>
+          <td>Age</td>
+          <td><input type="number" name="age" value="{{ profile.age }}" required></td>
+        </tr>
+        <tr>
+          <td>Gender</td>
+          <td>
+            <select name="gender" required>
+              <option value="Male" {% if profile.gender == 'Male' %}selected{% endif %}>Male</option>
+              <option value="Female" {% if profile.gender == 'Female' %}selected{% endif %}>Female</option>
+              <option value="Other" {% if profile.gender == 'Other' %}selected{% endif %}>Other</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>Height (cm)</td>
+          <td><input type="number" name="height_cm" value="{{ profile.height_cm }}" required></td>
+        </tr>
+        <tr>
+          <td>Weight (kg)</td>
+          <td><input type="number" name="weight_kg" value="{{ profile.weight_kg }}" required></td>
+        </tr>
+        <tr>
+          <td>Activity Level</td>
+          <td>
+            <select name="activity_level" required>
+              <option value="sedentary" {% if profile.activity_level == 'sedentary' %}selected{% endif %}>Sedentary</option>
+              <option value="moderate" {% if profile.activity_level == 'moderate' %}selected{% endif %}>Moderate</option>
+              <option value="active" {% if profile.activity_level == 'active' %}selected{% endif %}>Active</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>Medical Conditions</td>
+          <td><textarea name="medical_conditions" rows="2">{{ profile.medical_conditions }}</textarea></td>
+        </tr>
+        <tr>
+          <td>Allergies</td>
+          <td><textarea name="allergies" rows="2">{{ profile.allergies }}</textarea></td>
+        </tr>
+      </table>
+      <button type="submit">Update Profile</button>
+    </form>
+  </div>
+</body>
+</html>

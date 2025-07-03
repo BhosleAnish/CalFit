@@ -1,0 +1,173 @@
+<!-- profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cal-FIT | Profile</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: url('https://i.pinimg.com/736x/20/3a/9d/203a9d098f06541a1fd7e26b2eb71e29.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+    }
+
+    header {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .main-nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .main-nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 8px;
+      transition: color 0.3s ease;
+    }
+
+    .main-nav a:hover {
+      color: #10B981;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #10B981;
+    }
+
+    .nutrient-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+      margin-top: 30px;
+    }
+
+    .nutrient {
+      text-align: center;
+    }
+
+    .circle {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: conic-gradient(#10B981 0%, #ccc 0%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      margin: 0 auto 10px;
+      color: black;
+      background-color: white;
+    }
+
+    .actions {
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+    }
+
+    .actions a {
+      background-color: #10B981;
+      padding: 12px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      color: white;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    .actions a:hover {
+      background-color: #059669;
+    }
+
+    @media screen and (max-width: 768px) {
+      .nutrient-boxes {
+        flex-direction: column;
+        align-items: center;
+      }
+      .actions {
+        flex-direction: column;
+        gap: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">Cal-FIT</div>
+    <nav class="main-nav">
+      <a href="{{ url_for('dashboard') }}">Home</a>
+      <a href="{{ url_for('about') }}">About Us</a>
+      <a href="#explore">Explore</a>
+      <a href="{{ url_for('profile') }}">Profile</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h2>Today you've consumed</h2>
+
+    <div class="nutrient-boxes">
+      <div class="nutrient">
+        <div class="circle" data-percent="{{ percentages['protein'] }}"></div>
+        <h3>Protein</h3>
+        <p>{{ intake['protein_g'] }}g / {{ recommendation['protein_g'] }}g</p>
+      </div>
+      <div class="nutrient">
+        <div class="circle" data-percent="{{ percentages['carbs'] }}"></div>
+        <h3>Carbohydrates</h3>
+        <p>{{ intake['carbs_g'] }}g / {{ recommendation['carbs_g'] }}g</p>
+      </div>
+      <div class="nutrient">
+        <div class="circle" data-percent="{{ percentages['fats'] }}"></div>
+        <h3>Healthy Fats</h3>
+        <p>{{ intake['fats_g'] }}g / {{ recommendation['fats_g'] }}g</p>
+      </div>
+    </div>
+
+    <!-- ✅ Action Buttons -->
+    <div class="actions">
+      <a href="{{ url_for('download_report') }}">Download Report</a>
+      <a href="{{ url_for('edit_profile') }}">Edit Profile</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.circle').forEach(circle => {
+      const percent = parseInt(circle.getAttribute('data-percent'));
+      const value = Math.min(percent, 200);
+      circle.style.background = `conic-gradient(#10B981 ${value}%, #ccc ${value}%)`;
+      circle.innerHTML = percent + '%';
+    });
+  </script>
+
+</body>
+</html>
