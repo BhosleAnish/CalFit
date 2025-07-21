@@ -1,19 +1,40 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file
 from werkzeug.utils import secure_filename
-from ocr_utils import process_label_image
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf import CSRFProtect
+from flask_wtf.csrf import generate_csrf 
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import csv, os, re
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from ocr_utils import process_label_image,extract_nutrients
+from PIL import Image
+from io import BytesIO
+import sqlite3
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key'
 
+csrf = CSRFProtect(app)
+limiter = Limiter(key_func=get_remote_address)
+limiter.init_app(app)
+
+@app.context_processor
+def inject_csrf_token():
+    return dict(csrf_token=generate_csrf)
+
+# File paths
 USER_CSV = 'users.csv'
 PROFILE_CSV = 'user_profiles.csv'
 SCAN_CSV = 'user_scans.csv'
 UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# CSV Initialization
+# Initialize CSVs if not exist
 for file, headers in {
     USER_CSV: ['username', 'password'],
     PROFILE_CSV: ['username', 'full_name', 'age', 'gender', 'height_cm', 'weight_kg', 'activity_level', 'medical_conditions', 'allergies'],
@@ -32,9 +53,13 @@ def load_users():
             users[row['username']] = row['password']
     return users
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
+
 def add_user(username, password):
+    hashed_password = generate_password_hash(password)
     with open(USER_CSV, 'a', newline='') as f:
-        csv.writer(f).writerow([username, password])
+        csv.writer(f).writerow([username, hashed_password])
 
 def save_user_profile(data):
     fieldnames = ['username', 'full_name', 'height_cm', 'weight_kg', 'age', 'gender', 'activity_level', 'medical_conditions', 'allergies']
@@ -56,8 +81,8 @@ def load_user_health_profile(username):
 
 def calculate_daily_needs(weight_kg, activity_level):
     weight_kg = float(weight_kg)
-    mult = {'sedentary': 25, 'moderate': 30, 'active': 35}.get(activity_level, 30)
-    calories = weight_kg * mult
+    multiplier = {'sedentary': 25, 'moderate': 30, 'active': 35}.get(activity_level, 30)
+    calories = weight_kg * multiplier
     return {
         "calories": round(calories),
         "protein_g": round(weight_kg * 1.2),
@@ -66,7 +91,8 @@ def calculate_daily_needs(weight_kg, activity_level):
     }
 
 def load_user_scans(username):
-    if not os.path.exists(SCAN_CSV): return []
+    if not os.path.exists(SCAN_CSV):
+        return []
     with open(SCAN_CSV, 'r') as f:
         return [row for row in csv.DictReader(f) if row['username'] == username]
 
@@ -81,27 +107,70 @@ def get_weekly_summary(scans):
         'avg_carbs': round(total('carbs') / count, 1) if count else 0,
         'avg_fats': round(total('fats') / count, 1) if count else 0
     }
+import sqlite3
+def evaluate_nutrient_status(nutrient_name, value):
+    conn = sqlite3.connect('food_thresholds.db')
+    cursor = conn.cursor()
 
-# ------------------------- Routes -------------------------
+    cursor.execute("""
+        SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
+        FROM ingredient_thresholds 
+        WHERE LOWER(name) = LOWER(?)
+    """, (nutrient_name,))
+    
+    result = cursor.fetchone()
+    conn.close()
+
+    if not result:
+        return {"status": "Unknown", "message": "No data available."}
+
+    max_threshold, min_threshold, high_msg, low_msg = result
+
+    if max_threshold is not None and value > max_threshold:
+        return {"status": "High", "message": high_msg}
+    elif min_threshold is not None and value < min_threshold:
+        return {"status": "Low", "message": low_msg}
+    else:
+        return {"status": "Normal", "message": "This level is within the healthy range."}
+
+
+# ---------------- ROUTES ---------------- #
 
 @app.route('/')
-def landing(): return render_template('landing.html')
+def landing():
+    return render_template('landing.html')
 
 @app.route('/about')
-def about(): return render_template('about_us.html')
+def about():
+    return render_template('about_us.html')
 
-@app.route('/login', methods=['POST'])
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    flash("Too many login attempts. Try again later.", "error")
+    return redirect(url_for('landing'))
+@limiter.limit("3 per minute", methods=["POST"])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'GET':
+        return redirect(url_for('landing'))
+
     username = request.form['username']
     password = request.form['password']
     users = load_users()
-    if users.get(username) == password:
+
+    # Check if username exists
+    if username not in users:
+        flash("Account does not exist. Please sign up first.", "error")
+        return redirect(url_for('landing'))
+
+    hashed = users.get(username)
+
+    if check_password_hash(hashed, password):
         session['username'] = username
-        if not load_user_health_profile(username):
-            return redirect(url_for('profile_form'))
         flash("Logged in successfully!", "success")
         return redirect(url_for('dashboard'))
-    flash("Invalid credentials.", "error")
+
+    flash("Incorrect password.", "error")
     return redirect(url_for('landing'))
 
 @app.route('/signup', methods=['POST'])
@@ -110,37 +179,209 @@ def signup():
     if username in load_users():
         flash("Username already exists.", "error")
         return redirect(url_for('landing'))
+
     add_user(username, password)
     session['username'] = username
-    flash("Signup successful!", "success")
     return redirect(url_for('profile_form'))
 
 @app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
-        flash("Please log in.", "error")
         return redirect(url_for('landing'))
     return render_template('dashboard.html', username=session['username'])
-@app.route('/scan-label', methods=['POST'])
+
+@app.route('/scan-label', methods=['GET', 'POST'])
 def scan_label():
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+    if request.method == 'POST':
+        if 'label_image' not in request.files:
+            return render_template('scan_label.html', error="No file part")
+
+        file = request.files['label_image']
+
+        if file.filename == '':
+            return render_template('scan_label.html', error="No selected file")
+
+        if not allowed_file(file.filename):
+            return render_template('scan_label.html', error="Only .jpg, .jpeg, .png files allowed")
+
+        if not file.mimetype.startswith('image/'):
+            return render_template('scan_label.html', error="Uploaded file is not an image")
+
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        filepath = filepath.replace("\\", "/")  # Windows fix
+
+        try:
+            # Read the uploaded file once into memory
+            image_stream = BytesIO(file.read())
+
+            # Verify the image
+            image_stream.seek(0)
+            img = Image.open(image_stream)
+            img.verify()
+
+            # Reopen and convert the image to RGB
+            image_stream.seek(0)
+            img = Image.open(image_stream).convert("RGB")
+
+            # Save the image
+            img.save(filepath)
+
+            print(f"✅ File saved to {filepath}")
+
+            # Process the image with OCR
+            raw_text, structured_nutrients = process_label_image(filepath)
+            print("✅ OCR Text:", raw_text)
+            print("✅ Nutrients:", structured_nutrients)
+
+            session['scan_raw_text'] = raw_text
+            session['scan_structured_nutrients'] = structured_nutrients
+            return redirect(url_for('scan_result'))
+
+        except Exception as e:
+            print(f" Error while handling image: {e}")
+            return render_template('scan_label.html', error=f"Could not process image: {e}")
+
+    return render_template('scan_label.html')
+
+@app.route('/scan-result')
+def scan_result():
+    raw_text = session.get('scan_raw_text')
+    structured_nutrients = session.get('scan_structured_nutrients')
+
+    if not raw_text or not structured_nutrients:
+        return redirect(url_for('scan_label'))
+
+    # Evaluate each nutrient's status and risk message properly
+    for nutrient in structured_nutrients:
+        try:
+            # Clean the value - remove any non-numeric characters except decimal points
+            value_str = str(nutrient['value'])
+            value = float(re.sub(r'[^\d.]', '', value_str))
+        except (ValueError, TypeError):
+            value = 0.0
+            print(f"⚠️ Could not parse value for {nutrient.get('nutrient', 'Unknown')}: {nutrient.get('value', 'None')}")
+
+        nutrient_name = nutrient.get('nutrient', '').strip()
+        
+        # Get status evaluation from database
+        status_info = evaluate_nutrient_status(nutrient_name, value)
+        
+        # Update nutrient info
+        nutrient['value'] = value  # Clean numeric value
+        nutrient['status'] = status_info['status']
+        nutrient['message'] = status_info['message']
+        
+        # Debug output
+        print(f"🔍 Nutrient: {nutrient_name}, Value: {value}, Status: {status_info['status']}")
+
+    return render_template('scan_result.html', raw_text=raw_text, structured_nutrients=structured_nutrients)
+
+
+def evaluate_nutrient_status(nutrient_name, value):
+    """
+    Enhanced function to evaluate nutrient status with better name matching
+    """
+    conn = sqlite3.connect('food_thresholds.db')
+    cursor = conn.cursor()
+
+    # First, try exact match (case insensitive)
+    cursor.execute("""
+        SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
+        FROM ingredient_thresholds 
+        WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
+    """, (nutrient_name,))
+    
+    result = cursor.fetchone()
+    
+    # If no exact match, try partial matching for common variations
+    if not result:
+        # Common nutrient name mappings
+        name_mappings = {
+            'sugar': ['sugar', 'added sugar', 'total sugar'],
+            'fat': ['fat', 'total fat', 'fats'],
+            'saturated fat': ['saturated fat', 'sat fat'],
+            'trans fat': ['trans fat'],
+            'sodium': ['sodium', 'salt'],
+            'carbohydrates': ['carbohydrates', 'carbs', 'total carbohydrates'],
+            'protein': ['protein'],
+            'fiber': ['fiber', 'dietary fiber'],
+            'cholesterol': ['cholesterol'],
+            'calcium': ['calcium'],
+            'iron': ['iron'],
+            'vitamin c': ['vitamin c', 'ascorbic acid'],
+            'vitamin a': ['vitamin a'],
+            'vitamin d': ['vitamin d'],
+            'potassium': ['potassium']
+        }
+        
+        # Try to find a match using mappings
+        for db_name, variations in name_mappings.items():
+            if nutrient_name.lower() in [v.lower() for v in variations]:
+                cursor.execute("""
+                    SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
+                    FROM ingredient_thresholds 
+                    WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
+                """, (db_name,))
+                result = cursor.fetchone()
+                if result:
+                    break
+    
+    # If still no match, try LIKE search
+    if not result:
+        cursor.execute("""
+            SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
+            FROM ingredient_thresholds 
+            WHERE LOWER(name) LIKE LOWER(?)
+        """, (f'%{nutrient_name}%',))
+        result = cursor.fetchone()
+    
+    conn.close()
+
+    if not result:
+        print(f"⚠️ No threshold data found for: {nutrient_name}")
+        return {"status": "Unknown", "message": f"No threshold data available for {nutrient_name}."}
+
+    max_threshold, min_threshold, high_msg, low_msg = result
+
+    # Evaluate status based on thresholds
+    if max_threshold is not None and value > max_threshold:
+        return {"status": "High", "message": high_msg}
+    elif min_threshold is not None and value < min_threshold:
+        return {"status": "Low", "message": low_msg}
+    else:
+        return {"status": "Normal", "message": "This level is within the healthy range."}
+
+
+# Also add this debug route to check your database content
+@app.route('/debug-thresholds')
+def debug_thresholds():
+    """Debug route to see what's in your thresholds database"""
     if 'username' not in session:
         return redirect(url_for('landing'))
-
-    file = request.files.get('label_image')
-    if not file or file.filename == '':
-        flash("No file selected for scanning.", "error")
-        return redirect(url_for('dashboard'))
-
-    filepath = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
-    file.save(filepath)
-
-    ocr_result, risks = process_label_image(filepath)
-
-    return render_template('scan_result.html', ocr_result=ocr_result, risks=risks)
+    
+    conn = sqlite3.connect('food_thresholds.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, max_threshold, min_threshold FROM ingredient_thresholds ORDER BY name")
+    results = cursor.fetchall()
+    conn.close()
+    
+    html = "<h2>Database Thresholds</h2><table border='1'><tr><th>Name</th><th>Max</th><th>Min</th></tr>"
+    for row in results:
+        html += f"<tr><td>{row[0]}</td><td>{row[1]}</td><td>{row[2]}</td></tr>"
+    html += "</table>"
+    return html
 
 @app.route('/profile-form', methods=['GET', 'POST'])
 def profile_form():
-    if 'username' not in session: return redirect(url_for('landing'))
+    if 'username' not in session:
+        return redirect(url_for('landing'))
+
     if request.method == 'POST':
         save_user_profile({
             'username': session['username'],
@@ -153,185 +394,126 @@ def profile_form():
             'medical_conditions': request.form['medical_conditions'],
             'allergies': request.form['allergies'],
         })
-        flash("Profile saved!", "success")
         return redirect(url_for('profile'))
+
     return render_template('profile_form.html')
 
 @app.route('/profile')
 def profile():
-    if 'username' not in session: return redirect(url_for('landing'))
+    if 'username' not in session:
+        return redirect(url_for('landing'))
+
     profile = load_user_health_profile(session['username'])
-    if not profile: return redirect(url_for('profile_form'))
+    if not profile:
+        flash("Your Profile Doesnt exists , Create a profile")
+        return redirect(url_for('profile_form'))
 
-    weight = float(profile.get('weight_kg', 0))
-    activity = profile.get('activity_level', 'moderate').lower()
-    recommendation = calculate_daily_needs(weight, activity)
-
+    recommendation = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
     scans = load_user_scans(session['username'])
+
     today = datetime.now().strftime('%Y-%m-%d')
     today_scans = [s for s in scans if s['date'] == today]
-    total = lambda key: sum(float(s.get(key, 0)) for s in today_scans)
 
+    sum_nutrients = lambda key: sum(float(s.get(key, 0)) for s in today_scans)
     intake = {
-        'protein_g': round(total('protein'), 1),
-        'carbs_g': round(total('carbs'), 1),
-        'fats_g': round(total('fats'), 1)
+        'protein_g': round(sum_nutrients('protein'), 1),
+        'carbs_g': round(sum_nutrients('carbs'), 1),
+        'fats_g': round(sum_nutrients('fats'), 1)
     }
 
-    percent = lambda a, b: round((a / b) * 100) if b else 0
+    percent = lambda val, ref: round((val / ref) * 100) if ref else 0
     percentages = {
         'protein': percent(intake['protein_g'], recommendation['protein_g']),
         'carbs': percent(intake['carbs_g'], recommendation['carbs_g']),
-        'fats': percent(intake['fats_g'], recommendation['fats_g']),
+        'fats': percent(intake['fats_g'], recommendation['fats_g'])
     }
 
     return render_template('profile.html', profile=profile, intake=intake, recommendation=recommendation, percentages=percentages, scans=scans, summary=get_weekly_summary(scans))
-@app.route('/download-report')
-def download_report():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-
-    username = session['username']
-    user_scans = load_user_scans(username)
-
-    # Create a temporary CSV file
-    report_path = f"{username}_report.csv"
-    with open(report_path, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=['item', 'quantity', 'protein', 'carbs', 'fats', 'date'])
-        writer.writeheader()
-        for scan in user_scans:
-            writer.writerow({
-                'item': scan['item'],
-                'quantity': scan['quantity'],
-                'protein': scan['protein'],
-                'carbs': scan['carbs'],
-                'fats': scan['fats'],
-                'date': scan['date']
-            })
-
-    from flask import send_file
-    return send_file(report_path, as_attachment=True)
-@app.route('/edit-profile', methods=['GET', 'POST'])
-def edit_profile():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-
-    username = session['username']
-    profile = load_user_health_profile(username)
-
-    if not profile:
-        return redirect(url_for('profile_form'))
-
-    if request.method == 'POST':
-        updated_data = {
-            'username': username,
-            'full_name': request.form['full_name'],
-            'age': request.form['age'],
-            'gender': request.form['gender'],
-            'height_cm': request.form['height_cm'],
-            'weight_kg': request.form['weight_kg'],
-            'activity_level': request.form['activity_level'],
-            'medical_conditions': request.form['medical_conditions'],
-            'allergies': request.form['allergies']
-        }
-        save_user_profile(updated_data)
-        flash("Profile updated successfully!", "success")
-        return redirect(url_for('profile'))
-
-    return render_template('edit_profile.html', profile=profile)
-
-@app.route('/food-tracker', methods=['GET', 'POST'])
-def food_tracker():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-
-    food_items = session.get('food_items', [])
-
-    if request.method == 'POST':
-        action = request.form.get('action')
-
-
-
-        #Scan image and extract values
-        if action == 'scan':
-            file = request.files.get('label_image')
-            if not file or file.filename == '':
-                flash("No file selected for scan.", "error")
-                return redirect(url_for('food_tracker'))
-
-            filepath = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
-            file.save(filepath)
-            text, _ = process_label_image(filepath)
-
-            def extract_nutrient(name):
-                match = re.search(rf"{name}[:\-]?\s*(\d+(?:\.\d+)?)", text, re.IGNORECASE)
-                return float(match.group(1)) if match else 0
-
-            entry = {
-                'item': 'Scanned Label',
-                'quantity': 100,
-                'protein': extract_nutrient('protein'),
-                'carbs': extract_nutrient('carbs'),
-                'fats': extract_nutrient('fats')
-            }
-            food_items.append(entry)
-            session['food_items'] = food_items
-            return redirect(url_for('food_tracker'))
-
-        # 👇 Manual Add
-        else:
-            item = request.form.get('item')
-            quantity = request.form.get('quantity')
-            if not item or not quantity:
-                flash("Both fields are required.", "error")
-                return redirect(url_for('food_tracker'))
-
-            try:
-                quantity = float(quantity)
-            except ValueError:
-                flash("Invalid quantity.", "error")
-                return redirect(url_for('food_tracker'))
-
-            food_db = {
-                'banana': {'protein': 1.1, 'carbs': 23, 'fats': 0.3},
-                'apple': {'protein': 0.3, 'carbs': 14, 'fats': 0.2},
-                'rice': {'protein': 2.7, 'carbs': 28, 'fats': 0.3},
-                'egg': {'protein': 6, 'carbs': 0.6, 'fats': 5}
-            }
-            data = food_db.get(item.lower(), {'protein': 0.5, 'carbs': 5, 'fats': 0.2})
-            entry = {
-                'item': item,
-                'quantity': quantity,
-                'protein': round(data['protein'] * quantity / 100, 2),
-                'carbs': round(data['carbs'] * quantity / 100, 2),
-                'fats': round(data['fats'] * quantity / 100, 2)
-            }
-            food_items.append(entry)
-            session['food_items'] = food_items
-
-    total = {
-        'protein': round(sum(i['protein'] for i in food_items), 2),
-        'carbs': round(sum(i['carbs'] for i in food_items), 2),
-        'fats': round(sum(i['fats'] for i in food_items), 2)
-    }
-    return render_template('food_tracker.html', food_items=food_items, total=total)
-
-
-@app.route('/delete-item/<int:index>', methods=['POST'])
-def delete_food_item(index):
-    if 'food_items' in session:
-        items = session['food_items']
-        if 0 <= index < len(items):
-            items.pop(index)
-            session['food_items'] = items
-    return redirect(url_for('food_tracker'))
 
 @app.route('/logout')
 def logout():
     session.clear()
     flash("Logged out.", "info")
     return redirect(url_for('landing'))
+@app.route('/food-tracker', methods=['GET', 'POST'])
+def food_tracker():
+    if 'username' not in session:
+        return redirect(url_for('landing'))
 
-# Run server
+    if 'food_items' not in session:
+        session['food_items'] = []
+
+    if request.method == 'POST':
+        if 'food_image' in request.files:
+            # Handle scan upload
+            image = request.files['food_image']
+            if image.filename != '':
+                nutrients = process_label_image(image)  # Your OCR function
+                if nutrients:
+                    session['food_items'].append({
+                        'item': 'Scanned Item',
+                        'quantity': 1,
+                        'protein': nutrients.get('protein', 0),
+                        'carbs': nutrients.get('carbohydrates', 0),
+                        'fats': nutrients.get('fats', 0)
+                    })
+                    session.modified = True
+                    flash("Scanned food item added.")
+        else:
+            # Handle manual form entry
+            item = request.form.get('item')
+            quantity = float(request.form.get('quantity', 0))
+            protein = float(request.form.get('protein', 0))
+            carbs = float(request.form.get('carbs', 0))
+            fats = float(request.form.get('fats', 0))
+
+            # Check if item already exists, update if so
+            updated = False
+            for food in session['food_items']:
+                if food['item'].lower() == item.lower():
+                    food['quantity'] += quantity
+                    food['protein'] += protein
+                    food['carbs'] += carbs
+                    food['fats'] += fats
+                    updated = True
+                    break
+            if not updated:
+                session['food_items'].append({
+                    'item': item,
+                    'quantity': quantity,
+                    'protein': protein,
+                    'carbs': carbs,
+                    'fats': fats
+                })
+            session.modified = True
+            flash("Food item added/updated.")
+
+    # 🟩 Add this block to fix the UndefinedError
+    total = {
+        'protein': sum(item['protein'] for item in session['food_items']),
+        'carbs': sum(item['carbs'] for item in session['food_items']),
+        'fats': sum(item['fats'] for item in session['food_items']),
+    }
+
+    return render_template('food_tracker.html', food_items=session['food_items'], total=total)
+
+@app.route('/download-report')
+def download_report():
+    # Example dummy response
+    return "Download functionality not implemented yet."
+@app.route('/edit-profile')
+def edit_profile():
+    if 'username' not in session:
+        return redirect(url_for('landing'))
+
+    profile = load_user_health_profile(session['username'])
+    if not profile:
+        flash("No profile found. Please create one.")
+        return redirect(url_for('profile_form'))
+
+    return render_template('edit_profile.html', profile=profile)
+
+
+# Final app launch
 if __name__ == '__main__':
     app.run(debug=True)

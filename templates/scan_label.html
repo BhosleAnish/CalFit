@@ -3,150 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Cal-FIT | Scan Label</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      background: url('https://i.pinimg.com/736x/ae/5d/7f/ae5d7fd96ec1b89daa5a446198e4e04c.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-      position: relative;
-    }
-
-    body::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
-      z-index: 0;
-    }
-
-    header {
-      position: relative;
-      z-index: 1;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 20px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: white;
-    }
-
-    .main-nav {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .main-nav a {
-      color: white;
-      text-decoration: none;
-      font-size: 16px;
-      padding: 8px;
-      transition: color 0.3s ease;
-    }
-
-    .main-nav a:hover {
-      color: #10B981;
-    }
-
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .dropbtn {
-      background-color: transparent;
-      border: none;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      padding: 8px;
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      right: 0;
-      background-color: rgba(16, 185, 129, 0.95);
-      min-width: 180px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 2;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-
-    .dropdown-content a {
-      color: white;
-      padding: 10px 15px;
-      text-decoration: none;
-      display: block;
-    }
-
-    .dropdown-content a:hover {
-      background-color: #059669;
-    }
-
-    .dropdown:hover .dropdown-content {
-      display: block;
-    }
-
-    .container {
-      position: relative;
-      z-index: 1;
-      margin: 60px auto;
-      max-width: 500px;
-      background-color: rgba(255, 255, 255, 0.08);
-      padding: 30px;
-      border-radius: 12px;
-      text-align: center;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 12px rgba(0,0,0,0.3);
-    }
-
-    h2 {
-      margin-bottom: 20px;
-      color: #10B981;
-    }
-
-    input[type="file"] {
-      margin: 20px 0;
-      background: white;
-      color: black;
-      padding: 8px;
-      border-radius: 6px;
-    }
-
-    button {
-      background-color: #10B981;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background-color: #059669;
-    }
-
-    .result {
-      margin-top: 30px;
-      background: rgba(0,0,0,0.2);
-      padding: 20px;
-      border-radius: 10px;
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/scan_label.css') }}">
 </head>
 <body>
 
@@ -169,19 +26,33 @@
 
 <div class="container">
   <h2>Upload a Food Label</h2>
-  <form method="POST" action="/scan-label" enctype="multipart/form-data">
-    <input type="file" name="label_image" accept="image/*" required>
-    <br>
-    <button type="submit">Scan Now</button>
-  </form>
+  <form method="POST" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="file" name="label_image">
+  <button type="submit">Scan</button>
+</form>
 
-  {% if ocr_result %}
-  <div class="result">
-    <h3>Detected Ingredients</h3>
-    <p>{{ ocr_result }}</p>
-  </div>
-  {% endif %}
+
 </div>
-
+<div class="text">
+  <h1>How To Use Cal-FIT</h1>
+</div>
+<div class="tutorial">
+  <div class="step1">
+    <p>1</p>
+    <h1>Scan</h1>
+    <p>Scan your item using camera or uploading an image</p>
+  </div>
+  <div class="step2">
+    <p>2</p>
+    <h1>Read</h1>
+    <p>Get results that highlight the good and bad in your food, backed by real nutritional science. </p>
+  </div>
+  <div class="step3">
+    <p>3</p>
+    <h1>Eat</h1>
+    <p>Eat based on personalized suggestions tailored to your diet plan.</p>
+  </div>
+</div>
 </body>
 </html>

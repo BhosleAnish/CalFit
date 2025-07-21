@@ -1,0 +1,230 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Kaisei+Tokumin:wght@400;500;700;800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Montserrat", sans-serif;
+  min-height: 100vh;
+  background: url('https://i.pinimg.com/1200x/72/60/95/7260950c90c74e81d0206b3476a0a6c7.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: white;
+  position: relative;
+  line-height: 1.6;
+  overflow: hidden;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dark overlay background */
+body::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  z-index: 0;
+}
+
+/* Header Section */
+.header {
+  position: relative;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-size: 26px;
+  font-weight: 700;
+  color: white;
+}
+
+/* Centered Navigation */
+.main-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 25px;
+}
+
+.main-nav a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 8px 10px;
+  transition: all 0.3s ease;
+}
+
+.main-nav a:hover {
+  color: #10B981;
+  text-decoration: underline;
+}
+
+/* Dropdown menu */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropbtn {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.3s ease;
+}
+
+.dropbtn:hover {
+  color: #10B981;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: rgba(16, 185, 129, 0.95);
+  min-width: 180px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 2;
+  border-radius: 5px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.dropdown-content a {
+  color: white;
+  padding: 10px 15px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+  background-color: #059669;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* Container Box */
+.container {
+  position: relative;
+  z-index: 1;
+  margin-top: 20px;
+  margin: 10px auto;
+  max-width: 800px;
+  padding: 35px 30px;
+  border-radius: 12px;
+}
+
+/* Headings */
+h2 {
+  text-align: center;
+  color: white;
+  margin-bottom: 25px;
+  font-size: 28px;
+}
+.table-container {
+  height: 100vh; /* or set to calc(100vh - header height) if header exists */
+  overflow-y: auto;
+  padding: 1rem;
+  
+}
+/* Table Styling */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.5s ease; /* Add this */
+}
+
+.slide-left {
+  transform: translateX(-20%);
+}
+
+th, td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+th {
+  background-color: #073047;
+  color: white;
+  font-weight: 600;
+}
+
+td {
+  color: #f0f0f0;
+  font-size: 15px;
+}
+
+tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Responsive tweaks */
+@media screen and (max-width: 768px) {
+  .main-nav {
+    position: static;
+    transform: none;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .container {
+    margin: 30px 20px;
+    padding: 25px 20px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  th, td {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+}
+.main-content {
+  display: flex;
+  gap: 20px;
+  transition: all 0.5s ease;
+  align-items: flex-start;
+}
+
+.detail-panel {
+  width: 50%;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  color: white;
+  transition: all 0.5s ease;
+}
+
+.detail-panel.hidden {
+  display: none;
+}

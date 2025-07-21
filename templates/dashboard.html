@@ -3,179 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>Dashboard | Cal-FIT</title>
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Segoe UI', sans-serif;
-  min-height: 100vh;
-  background: url('https://i.pinimg.com/736x/fe/69/fd/fe69fd41d5810c692df832c600d0996a.jpg') no-repeat center center fixed;
-  background-size: cover;
-  color: white;
-  position: relative;
-}
-
-body::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  z-index: 0;
-}
-
-header {
-  position: relative;
-  z-index: 1;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 20px 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
-}
-
-/* Navbar Links */
-.main-nav {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.main-nav a {
-  color: white;
-  text-decoration: none;
-  font-size: 16px;
-  padding: 8px;
-  transition: color 0.3s ease;
-}
-
-.main-nav a:hover {
-  color: #10B981;
-}
-
-/* Dropdown */
-.dropdown {
-  position: relative;
-}
-
-.dropbtn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  padding: 8px;
-}
-
-.dropdown:hover .dropdown-content,
-.dropdown:focus-within .dropdown-content {
-  display: block;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: rgba(16, 185, 129, 0.95);
-  min-width: 180px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 2;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.dropdown-content a {
-  color: white;
-  padding: 10px 15px;
-  text-decoration: none;
-  display: block;
-  white-space: nowrap;
-}
-
-.dropdown-content a:hover {
-  background-color: #059669;
-}
-
-/* Container + Cards */
-.container {
-  position: relative;
-  z-index: 1;
-  padding: 60px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-h2 {
-  margin-bottom: 40px;
-  color: #fff;
-  text-align: center;
-}
-
-.card-wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  justify-content: center;
-}
-
-.card {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 30px;
-  width: 280px;
-  text-align: center;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 0 12px rgba(0,0,0,0.3);
-  transition: transform 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-}
-
-.card h3 {
-  margin-bottom: 15px;
-  color: #10B981;
-}
-
-.card p {
-  color: #ddd;
-  margin-bottom: 20px;
-}
-
-.card a {
-  background-color: #10B981;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.card a:hover {
-  background-color: #059669;
-}
-</style>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"><link rel="preconnect" href="https://fonts.googleapis.com">
 </head>
 <body>
 
   <header>
-  <div class="logo">Cal-FIT Dashboard</div>
+  <div class="logo">Cal-FIT</div>
   <nav class="main-nav">
     <a href="{{ url_for('dashboard') }}">Home</a>
     <a href="#explore">Explore</a>
@@ -184,36 +17,273 @@ h2 {
 
   </nav>
 </header>
+<div class="hero-text">
+<h1>Your Fastest Path to Fitness</h1>
+<p>Cal-FIT helps you make smarter food choices, one scan at a time.</p>
+<a href="#" class="hero-btn">Get App</a>
+</div>
+</div>
+<div class="card-wrapper">
+  <!-- First Card: Aligned Left -->
+<div class="card card-left hidden" id="scan-card">
+  <div class="card-inner">
+    <div class="hover-bar"></div> <!-- Left vertical bar -->
+    
+    <div class="card-content1">
+      <h3>Scan & Analyze</h3>
+      <p>Upload a food label and instantly check for health risks.</p>
+      <a href="{{ url_for('scan_label') }}">Start Scan</a>
+    </div>
 
-
-  <div class="container">
-    <h2>Welcome, {{ username }} </h2>
-
-    <div class="card-wrapper">
-
-      <div class="card">
-        <h3>Scan & Analyze</h3>
-        <p>Upload a food label and instantly check for health risks.</p>
-        <a href="{{ url_for('scan_label') }}">Start Scan</a>
-
-      </div>
-
-      <div class="card">
-        <h3>Health Report</h3>
-        <p>See personalized health insights based on your scans.</p>
-        <a href="/health-report">View Report</a>
-      </div>
-
-      <div class="card">
-        <h3>Track Food Intake</h3>
-        <p>Search and add food items to calculate your daily nutrient intake.</p>
-        <a href="{{ url_for('food_tracker') }}">Open Food Tracker</a>
-      </div>
-
-      </div>
-
+    <img src="{{ url_for('static', filename='images/scan1.png') }}" 
+        class="card-img slideshow-img" 
+        id="scan-image"
+        alt="Scan Image">
+  </div>
+</div>
+<!-- Second Card: Aligned Right (but starts from left) -->
+<div class="card card-right hidden" id="food-card">
+  <div class="card-inner reverse"> <!-- REVERSES layout: image on left, text on right -->
+    
+    <div class="card-img-wrapper">
+      <img src="{{ url_for('static', filename='images/scan4.png') }}" 
+          class="card-img slideshow-img" 
+          id="food-image" 
+          alt="Scan Image">
+    </div>
+    
+    <div class="card-content2">
+      <h3>Track Food Intake</h3>
+      <p>Search and add food items to calculate your daily nutrient intake.</p>
+      <a href="{{ url_for('food_tracker') }}">Open Food Tracker</a>
+      
+    </div>
+    <div class="hover-bar"></div>
+  </div>
+</div>
+</div>
+<div class="slideshow-section" id="fruits-slideshow">
+  <div class="slide active" id="fruit-slide">
+    <div class="slide-text">
+      <p id="fruit-caption">
+        Fruits are naturally low in fat and calories but high in fiber, essential vitamins, and antioxidants.
+        They help regulate blood pressure, support immune function, and promote healthy digestion.
+        Including a variety of fruits in your diet can reduce the risk of chronic diseases.
+        Aim for at least 2 servings of seasonal fruits daily.
+      </p>
+    </div>
+    <div class="slide-img">
+      <img id="fruit-img" src="{{ url_for('static', filename='images/fruits4.png') }}" alt="Fruit Image">
     </div>
   </div>
+</div>
+<div class="trust">
+    <h3>Cal-FIT</h3>
+      <p>Your partner in smart food decisions and better health.</p>
+  <h1>
+    Cal-FIT securely collects and analyzes nutritional data using scientifically backed methods, 
+    referencing guidelines from trusted authorities such as the FDA, FSSAI, and WHO.
+  </h1>
+
+  <div class="company-logos">
+    <div class="company">
+      <img id="company-1" src="{{ url_for('static', filename='images/FDA.png') }}" alt="FDA">
+      <p>U.S. Food and Drug Administration</p>
+    </div>
+    <div class="company">
+      <img id="company-2" src="{{ url_for('static', filename='images/FSSAI.png') }}" alt="FSSAI">
+      <p>Food Safety and Standards Authority of India</p>
+    </div>
+    <div class="company">
+      <img id="company-3" src="{{ url_for('static', filename='images/WHO.png') }}" alt="WHO">
+      <p>World Health Organization</p>
+    </div>
+  </div>
+</div>
+
+
+</div>
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-right">
+      <p>&copy; 2025 Cal-FIT. All rights reserved.</p>
+      <div class="socials">
+        <!-- Gmail link -->
+        <a href="mailto:anish22it@mes.ac.in" target="_blank" rel="noopener noreferrer">
+          <img src="{{ url_for('static', filename='icons/gmail.svg') }}" alt="Email">
+        </a>
+
+        <!-- LinkedIn profile -->
+        <a href="https://www.linkedin.com/in/anishbhosle04/" target="_blank" rel="noopener noreferrer">
+          <img src="{{ url_for('static', filename='icons/linkedin.svg') }}" alt="LinkedIn">
+        </a>
+
+        <!-- GitHub profile -->
+        <a href="https://github.com/BhosleAnish" target="_blank" rel="noopener noreferrer">
+          <img src="{{ url_for('static', filename='icons/github.svg') }}" alt="GitHub">
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<script>
+  const scanCard = document.getElementById('scan-card');
+  const scanImage = document.getElementById('scan-image');
+
+  const scanImages = [
+    "{{ url_for('static', filename='images/scan1.png') }}",
+    "{{ url_for('static', filename='images/scan2.png') }}",
+    "{{ url_for('static', filename='images/scan3.png') }}"
+  ];
+
+  let currentIndex = 0;
+  let intervalId = null;
+
+  scanCard.addEventListener('mouseenter', () => {
+    intervalId = setInterval(() => {
+      currentIndex = (currentIndex + 1) % scanImages.length;
+      scanImage.src = scanImages[currentIndex];
+    }, 1000);
+  });
+
+  scanCard.addEventListener('mouseleave', () => {
+    clearInterval(intervalId);
+    currentIndex = 0;
+    scanImage.src = scanImages[0];  // Reset to first image
+  });
+  const foodCard = document.getElementById("food-card");
+  const foodImage = document.getElementById("food-image");
+
+  const foodImages = [
+    "{{ url_for('static', filename='images/scan4.png') }}",
+    "{{ url_for('static', filename='images/scan5.png') }}",
+    "{{ url_for('static', filename='images/scan6.png') }}"
+  ];
+
+  let foodIndex = 0;
+  let foodInterval = null;
+
+  foodCard.addEventListener("mouseenter", () => {
+    foodInterval = setInterval(() => {
+      foodIndex = (foodIndex + 1) % foodImages.length;
+      foodImage.src = foodImages[foodIndex];
+    }, 1000); // change image every 1 second
+  });
+
+  foodCard.addEventListener("mouseleave", () => {
+    clearInterval(foodInterval);
+    foodImage.src = foodImages[0]; // Reset to first image
+    foodIndex = 0;
+  });
+function isInViewport(elem) {
+    const rect = elem.getBoundingClientRect();
+    return (
+      rect.top < window.innerHeight &&
+      rect.bottom > 0
+    );
+  }
+
+  function animateOnScroll() {
+    const leftCard = document.querySelector('.card-left');
+    const rightCard = document.querySelector('.card-right');
+    const cardWrapper = document.querySelector('.card-wrapper');
+
+    if (isInViewport(leftCard)) {
+      leftCard.classList.add('animate');
+      leftCard.classList.remove('hidden');
+    }
+
+    if (isInViewport(rightCard)) {
+      rightCard.classList.add('animate');
+      rightCard.classList.remove('hidden');
+    }
+
+    if (isInViewport(cardWrapper)) {
+      cardWrapper.classList.add('animate-bg');
+    }
+  }
+
+  window.addEventListener('scroll', animateOnScroll);
+  window.addEventListener('load', animateOnScroll); 
+const fruitSlides = [
+  {
+    text: "Fruits are naturally low in fat and calories but high in fiber, essential vitamins, and antioxidants. They help regulate blood pressure, support immune function, and promote healthy digestion. Including a variety of fruits in your diet can reduce the risk of chronic diseases. Aim for at least 2 servings of seasonal fruits daily.",
+    img: "{{ url_for('static', filename='images/fruits4.png') }}"
+  },
+  {
+    text: "Apples are rich in soluble fiber like pectin, which slows down digestion and stabilizes blood sugar levels. They also contain polyphenols that may improve insulin sensitivity. Their high water content helps keep you full longer. Ideal as a pre-workout or mid-morning snack.",
+    img: "{{ url_for('static', filename='images/fruits1.png') }}"
+  },
+
+  {
+    text: "Berries like blueberries, strawberries, and raspberries are high in anthocyanins—potent antioxidants that reduce inflammation and oxidative stress. They're also packed with vitamin C and fiber. Regular consumption supports heart and brain health. Add them to yogurt, smoothies, or oatmeal.",
+    img: "{{ url_for('static', filename='images/fruits3.png') }}"
+  },
+  {
+    text: "Bananas are an excellent source of potassium, which supports heart and muscle function. They provide quick-release carbohydrates, making them ideal for pre- or post-workout energy. Rich in vitamin B6, bananas also help with red blood cell production. Combine with peanut butter for added protein.",
+    img: "{{ url_for('static', filename='images/fruits2.png') }}"
+  },
+  {
+  text: "Potatoes are a good source of complex carbohydrates, providing steady energy. They contain potassium, vitamin C, and resistant starch, which may support gut health. When cooked and cooled, they form more resistant starch. Opt for boiled or baked potatoes over fried ones.",
+  img: "{{ url_for('static', filename='images/veggie1.png') }}"
+},
+{
+  text: "Carrots are rich in beta-carotene, an antioxidant that the body converts to vitamin A, essential for eye health and immune function. They're also high in fiber and low in calories, making them a great crunchy snack. Best consumed raw or lightly steamed.",
+  img: "{{ url_for('static', filename='images/veggie2.png') }}"
+},
+{
+  text: "Broccoli is a cruciferous vegetable rich in sulforaphane, a compound linked to cancer prevention. It provides vitamin C, K, and fiber. Steaming broccoli helps retain its nutrients. Add it to stir-fries, salads, or soups for a detoxifying boost.",
+  img: "{{ url_for('static', filename='images/veggie3.png') }}"
+}
+
+];
+
+let fruitSlideIndex = 0;
+const fruitSlideEl = document.getElementById("fruit-slide");
+const fruitImgEl = document.getElementById("fruit-img");
+const fruitCaptionEl = document.getElementById("fruit-caption");
+
+setInterval(() => {
+  // Start slide out
+  fruitSlideEl.classList.remove("active");
+
+  setTimeout(() => {
+    // Move to next slide data
+    fruitSlideIndex = (fruitSlideIndex + 1) % fruitSlides.length;
+    fruitImgEl.src = fruitSlides[fruitSlideIndex].img;
+    fruitCaptionEl.textContent = fruitSlides[fruitSlideIndex].text;
+
+    // Slide in
+    fruitSlideEl.classList.add("active");
+  }, 600); // match transition duration
+}, 5000);
+function isInViewport(elem) {
+    const rect = elem.getBoundingClientRect();
+    return (
+      rect.top <= window.innerHeight - 100 &&
+      rect.bottom >= 0
+    );
+  }
+
+  function animateTrustSection() {
+    const trustSection = document.querySelector('.trust');
+    const companies = document.querySelectorAll('.company');
+
+    if (trustSection && isInViewport(trustSection)) {
+      trustSection.classList.add('animate-in');
+      companies.forEach(company => {
+        company.classList.add('animate-in');
+      });
+      // Optional: remove scroll listener after first animation
+      window.removeEventListener('scroll', animateTrustSection);
+    }
+  }
+
+  window.addEventListener('scroll', animateTrustSection);
+  window.addEventListener('load', animateTrustSection);
+</script>
 
 </body>
 </html>

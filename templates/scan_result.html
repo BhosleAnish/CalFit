@@ -3,186 +3,88 @@
 <head>
   <meta charset="UTF-8">
   <title>Cal-FIT | Scan Results</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      background: url('https://i.pinimg.com/736x/ae/5d/7f/ae5d7fd96ec1b89daa5a446198e4e04c.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-      position: relative;
-    }
-
-    body::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
-      z-index: 0;
-    }
-
-    header {
-      position: relative;
-      z-index: 1;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 20px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: white;
-    }
-
-    .main-nav {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .main-nav a {
-      color: white;
-      text-decoration: none;
-      font-size: 16px;
-      padding: 8px;
-      transition: color 0.3s ease;
-    }
-
-    .main-nav a:hover {
-      color: #10B981;
-    }
-
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .dropbtn {
-      background-color: transparent;
-      border: none;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      padding: 8px;
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      right: 0;
-      background-color: rgba(16, 185, 129, 0.95);
-      min-width: 180px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 2;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-
-    .dropdown-content a {
-      color: white;
-      padding: 10px 15px;
-      text-decoration: none;
-      display: block;
-    }
-
-    .dropdown-content a:hover {
-      background-color: #059669;
-    }
-
-    .dropdown:hover .dropdown-content {
-      display: block;
-    }
-
-    .container {
-      position: relative;
-      z-index: 1;
-      margin: 50px auto;
-      max-width: 700px;
-      background-color: rgba(255, 255, 255, 0.08);
-      padding: 30px;
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 12px rgba(0,0,0,0.3);
-    }
-
-    h2 {
-      text-align: center;
-      color: #10B981;
-      margin-bottom: 20px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: rgba(255, 255, 255, 0.1);
-      margin-top: 20px;
-    }
-
-    th, td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    th {
-      background-color: rgba(16, 185, 129, 0.5);
-      color: white;
-    }
-
-    td {
-      color: #eee;
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/scan_result.css') }}">
 </head>
-<body>
+<body class="body">
 
-<header>
-  <div class="logo">Cal-FIT Dashboard</div>
+<header class="header">
+  <div class="logo">Cal-FIT</div>
   <nav class="main-nav">
     <a href="{{ url_for('dashboard') }}">Home</a>
     <a href="#explore">Explore</a>
     <a href="{{ url_for('about') }}">About Us</a>
     <a href="{{ url_for('profile') }}">Profile</a>
-
   </nav>
 </header>
 
 <div class="container">
-  <h2>Risky Ingredients Found</h2>
+  <h2 class="h2">Nutritional Breakdown</h2>
 
-  {% if risks %}
-  <table>
-    <thead>
-      <tr>
-        <th>Nutrient</th>
-        <th>Value</th>
-        <th>Unit</th>
-        <th>Health Advice</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in risks %}
-      <tr>
-        <td>{{ item.nutrient }}</td>
-        <td>{{ item.value }}</td>
-        <td>{{ item.unit }}</td>
-        <td>{{ item.advice }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  {% if structured_nutrients %}
+  <div class="main-content">
+    <div class="scroll-table-wrapper">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="th">Nutrient</th>
+            <th class="th">Value</th>
+            <th class="th">Unit</th>
+            <th class="th">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for nutrient in structured_nutrients %}
+          <tr onclick="showDetails('{{ nutrient.nutrient }}', '{{ nutrient.value }}', '{{ nutrient.unit }}', '{{ nutrient.status }}', '{{ nutrient.message }}')">
+
+            <td class="td">{{ nutrient.nutrient | capitalize }}</td>
+            <td class="td">{{ nutrient.value }}</td>
+            <td class="td">{{ nutrient.unit }}</td>
+            <td class="td">{{ nutrient.status }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div id="detail-panel" class="detail-panel hidden">
+      <h3 id="detail-title">Nutrient Info</h3>
+      <p><strong>Nutrient:</strong> <span id="info-nutrient"></span></p>
+      <p><strong>Value:</strong> <span id="info-value"></span></p>
+      <p><strong>Unit:</strong> <span id="info-unit"></span></p>
+      <p><strong>Status:</strong> <span id="info-status"></span></p>
+      <p id="extra-info"></p>
+      <button onclick="hideDetails()">Close</button>
+    </div>
+  </div>
   {% else %}
-    <p style="text-align:center;">No risky ingredients detected. </p>
+    <p style="text-align:center;">No nutrients extracted from the label.</p>
   {% endif %}
 </div>
 
+<script>
+function showDetails(nutrient, value, unit, status, message) {
+  document.querySelector(".table").classList.add("slide-left");
+
+  const panel = document.getElementById("detail-panel");
+  panel.classList.remove("hidden");
+  panel.classList.add("show");
+
+  document.getElementById("info-nutrient").textContent = nutrient;
+  document.getElementById("info-value").textContent = value;
+  document.getElementById("info-unit").textContent = unit;
+  document.getElementById("info-status").textContent = status;
+
+  // Use the dynamic message from backend (DB)
+  document.getElementById("extra-info").textContent = message;
+}
+
+function hideDetails() {
+  document.querySelector(".table").classList.remove("slide-left");
+
+  const panel = document.getElementById("detail-panel");
+  panel.classList.remove("show");
+  setTimeout(() => panel.classList.add("hidden"), 500);
+}
+</script>
 
 
 </body>

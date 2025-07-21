@@ -1,0 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Kaisei+Tokumin:wght@400;500;700;800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: "Montserrat", sans-serif;
+  min-height: 100vh;
+  background: url('https://i.pinimg.com/1200x/72/60/95/7260950c90c74e81d0206b3476a0a6c7.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: white;
+  position: relative;
+}
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 1;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .main-nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .main-nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 8px;
+      transition: color 0.3s ease;
+    }
+
+    .main-nav a:hover {
+      color: #10B981;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropbtn {
+      background-color: transparent;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background-color: rgba(16, 185, 129, 0.95);
+      min-width: 180px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 2;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .dropdown-content a {
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .dropdown-content a:hover {
+      background-color: #059669;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      margin: 60px auto;
+      max-width: 500px;
+      background-color: rgba(255, 255, 255, 0.08);
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #10B981;
+    }
+
+    input[type="file"] {
+      margin: 20px 0;
+      background: white;
+      color: black;
+      padding: 8px;
+      border-radius: 6px;
+    }
+
+    button {
+      background-color: #10B981;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #059669;
+    }
+
+    .result {
+      margin-top: 30px;
+      background: rgba(0,0,0,0.2);
+      padding: 20px;
+      border-radius: 10px;
+    }
+.text {
+  z-index: 2;
+  position: relative;
+  backdrop-filter: none !important;
+  display: flex;
+  flex-direction: row;
+  gap: 20px; /* spacing between steps */
+  padding: 40px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 29vh;
+  background-color: black;
+  border-top: 1px solid grey;
+}
+
+.tutorial {
+  z-index: 2;
+  position: relative;
+  backdrop-filter: none !important;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 0; /* No gap so borders touch perfectly */
+  padding:  0px;
+  background-color: black;
+
+}
+
+.tutorial > div {
+  flex: 1;
+  padding: 20px;
+  border-left: 1px solid #45C4B0;
+  border-top: 1px solid #45C4B0; /* match top border */
+  border-bottom:  1px solid #45C4B0;
+}
+
+/* Remove extra left border on the first box */
+.tutorial > div:first-child {
+  border-left: none;
+}
+.tutorial > div p:first-of-type {
+  background-color: #10B981; /* Cal-FIT green */
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 10px auto; /* centers and adds spacing */
+}
+.tutorial h1 {
+  font-size: 30px; /* Adjust as needed */
+  color:white;
+  margin-bottom: 10px;
+}
+
+.tutorial p {
+  font-size: 20px; /* Adjust as needed */
+  color: #eee;
+  line-height: 1.5;
+}

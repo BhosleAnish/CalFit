@@ -1,2 +1,5 @@
 username,full_name,height_cm,weight_kg,age,gender,activity_level,medical_conditions,allergies
 testuser1,anish bhosle,170,60,20,Male,sedentary,none,none
+its_anish,Anish,130,55,15,Male,moderate,,
+ANISH,atharva,170,70,20,Male,active,NA,NA
+anish,Atharva,150,55,19,Male,active,NA,NA

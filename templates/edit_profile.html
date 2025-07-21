@@ -239,7 +239,8 @@
   </header>
   <div class="container">
     <h2>Edit Your Profile</h2>
-    <form method="POST" action="{{ url_for('edit_profile') }}">
+    <form method="POST" action="{{ url_for('profile_form') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <table>
         <tr>
           <td>Full Name</td>

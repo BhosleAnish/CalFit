@@ -198,6 +198,20 @@
       showForm('login'); // default form
     };
   </script>
+  <script>
+    function showForm(type) {
+      document.getElementById('loginForm').classList.remove('active');
+      document.getElementById('signupForm').classList.remove('active');
+      document.getElementById(type + 'Form').classList.add('active');
+
+      document.getElementById('loginBtn').classList.remove('active');
+      document.getElementById('signupBtn').classList.remove('active');
+      document.getElementById(type + 'Btn').classList.add('active');
+    }
+    window.onload = function () {
+      showForm('login');
+    };
+  </script>
 </head>
 
 <body>
@@ -247,15 +261,19 @@
 
       <!-- Login Form -->
       <form id="loginForm" method="POST" action="/login">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="username" placeholder="Username" autocomplete="off" required>
+        <input type="password" name="password" placeholder="Password" autocomplete="off" required>
         <button type="submit">Login</button>
+        
+
       </form>
 
-      <!--  Signup Form -->
+      <!-- Signup Form -->
       <form id="signupForm" method="POST" action="/signup">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="username" placeholder="Username" autocomplete="off" required>
+        <input type="password" name="password" placeholder="Password" autocomplete="off" required>
         <button type="submit">Sign Up</button>
       </form>
     </div>
