@@ -1,5 +1,5 @@
 import sqlite3
-
+import pandas as pd
 data = [
     ("Sugar", "g", 25.0, None, "macronutrient",
      "High sugar intake can increase the risk of diabetes and obesity.",
@@ -230,3 +230,10 @@ conn.commit()
 conn.close()
 
 print("✅ Database with risk messages created and populated.")
+
+conn = sqlite3.connect('food_thresholds.db')
+
+df = pd.read_sql_query("SELECT * FROM ingredient_thresholds", conn)
+print(df)
+
+conn.close()

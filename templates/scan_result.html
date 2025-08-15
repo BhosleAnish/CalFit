@@ -62,25 +62,36 @@
 
 <script>
 function showDetails(nutrient, value, unit, status, message) {
-  document.querySelector(".table").classList.add("slide-left");
-
+  const mainContent = document.querySelector(".main-content");
+  const table = document.querySelector(".table");
   const panel = document.getElementById("detail-panel");
+  
+  // Add classes for layout changes
+  mainContent.classList.add("detail-active");
+  table.classList.add("slide-left");
+  
+  // Show the panel
   panel.classList.remove("hidden");
   panel.classList.add("show");
-
+  
+  // Update panel content
   document.getElementById("info-nutrient").textContent = nutrient;
   document.getElementById("info-value").textContent = value;
   document.getElementById("info-unit").textContent = unit;
   document.getElementById("info-status").textContent = status;
-
-  // Use the dynamic message from backend (DB)
   document.getElementById("extra-info").textContent = message;
 }
 
 function hideDetails() {
-  document.querySelector(".table").classList.remove("slide-left");
-
+  const mainContent = document.querySelector(".main-content");
+  const table = document.querySelector(".table");
   const panel = document.getElementById("detail-panel");
+  
+  // Remove classes for layout changes
+  mainContent.classList.remove("detail-active");
+  table.classList.remove("slide-left");
+  
+  // Hide the panel
   panel.classList.remove("show");
   setTimeout(() => panel.classList.add("hidden"), 500);
 }
