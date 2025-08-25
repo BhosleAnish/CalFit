@@ -10,8 +10,11 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from ocr_utils import process_label_image,extract_nutrients
 from PIL import Image
+import pillow_avif  # enables AVIF support in Pillow
 from io import BytesIO
 import sqlite3
+import pymongo
+from bson import ObjectId
 
 load_dotenv()
 
@@ -44,6 +47,254 @@ for file, headers in {
         with open(file, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(headers)
+
+# MongoDB Configuration
+class MongoConfig:
+    def __init__(self):
+        # MongoDB connection string - replace with your actual connection details
+        self.MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/')
+        self.DATABASE_NAME = os.getenv('MONGO_DB_NAME', 'nutrition_app')
+        self.COLLECTION_NAME = 'user_scans'
+        
+        try:
+            # Connect to MongoDB Atlas with additional options
+            self.client = pymongo.MongoClient(
+                self.MONGO_URI,
+                retryWrites=True,
+                w='majority',
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=10000,
+                socketTimeoutMS=20000
+            )
+            
+            self.db = self.client[self.DATABASE_NAME]
+            self.collection = self.db[self.COLLECTION_NAME]
+            
+            # Test connection
+            self.client.admin.command('ping')
+            print("✅ MongoDB connection successful")
+            print(f"✅ Connected to database: {self.DATABASE_NAME}")
+            
+            # Create indexes for better performance and automatic cleanup
+            self.setup_indexes()
+            
+        except pymongo.errors.ServerSelectionTimeoutError as e:
+            print(f"❌ MongoDB connection timeout: {e}")
+            self.client = None
+            self.db = None
+            self.collection = None
+        except Exception as e:
+            print(f"❌ MongoDB connection failed: {e}")
+            self.client = None
+            self.db = None
+            self.collection = None
+    
+    def setup_indexes(self):
+        """Create indexes for better performance and automatic cleanup"""
+        try:
+            # Index for faster user queries
+            self.collection.create_index("username")
+            
+            # Index for date-based queries
+            self.collection.create_index("scan_date")
+            
+            # Compound index for user + date queries
+            self.collection.create_index([("username", 1), ("scan_date", -1)])
+            
+            # TTL (Time To Live) index for automatic cleanup after 30 days
+            self.collection.create_index("expires_at", expireAfterSeconds=0)
+            
+            print("✅ Database indexes created successfully")
+            
+        except Exception as e:
+            print(f"⚠️ Could not create indexes: {e}")
+
+# MongoDB utility functions
+class ScanStorage:
+    def __init__(self):
+        self.mongo_config = MongoConfig()
+        self.collection = self.mongo_config.collection
+    
+    def save_scan_data(self, username, raw_text, cleaned_text, structured_nutrients, image_filename=None):
+        """Save scan data to MongoDB"""
+        if self.collection is None:
+            print("❌ MongoDB not available, cannot save scan data")
+            return None
+        
+        try:
+            # Create nutrition summary
+            summary = self._create_nutrition_summary(structured_nutrients)
+            
+            scan_document = {
+                "username": username,
+                "scan_date": datetime.utcnow(),
+                "scan_metadata": {
+                    "image_filename": image_filename,
+                    "nutrients_count": len(structured_nutrients) if structured_nutrients else 0,
+                    "processing_timestamp": datetime.utcnow().isoformat()
+                },
+                "ocr_data": {
+                    "raw_text": raw_text,
+                    "cleaned_text": cleaned_text
+                },
+                "nutrition_analysis": {
+                    "structured_nutrients": structured_nutrients,
+                    "summary": summary
+                },
+                "system_info": {
+                    "created_at": datetime.utcnow(),
+                    "expires_at": datetime.utcnow() + timedelta(days=30),
+                    "app_version": "1.0"
+                }
+            }
+            
+            result = self.collection.insert_one(scan_document)
+            print(f"✅ Scan data saved to MongoDB with ID: {result.inserted_id}")
+            return str(result.inserted_id)
+            
+        except Exception as e:
+            print(f"❌ Failed to save scan data to MongoDB: {e}")
+            return None
+    
+    def _create_nutrition_summary(self, structured_nutrients):
+        """Create a summary of nutrition data for easier viewing in Atlas"""
+        if not structured_nutrients:
+            return {}
+        
+        summary = {
+            "total_nutrients": len(structured_nutrients),
+            "high_risk_count": len([n for n in structured_nutrients if n.get('status') == 'High']),
+            "low_risk_count": len([n for n in structured_nutrients if n.get('status') == 'Low']),
+            "normal_count": len([n for n in structured_nutrients if n.get('status') == 'Normal']),
+            "unknown_count": len([n for n in structured_nutrients if n.get('status') == 'Unknown']),
+            "categories": {}
+        }
+        
+        # Group by categories
+        for nutrient in structured_nutrients:
+            category = nutrient.get('category', 'unknown')
+            if category not in summary["categories"]:
+                summary["categories"][category] = 0
+            summary["categories"][category] += 1
+        
+        return summary
+    
+    def get_user_scans(self, username, limit=50):
+        """Retrieve all scans for a specific user"""
+        if self.collection is None:
+            return []
+        
+        try:
+            scans = list(self.collection.find(
+                {"username": username},
+                sort=[("scan_date", -1)]  # Most recent first
+            ).limit(limit))
+            
+            # Convert ObjectId to string for JSON serialization
+            for scan in scans:
+                scan['_id'] = str(scan['_id'])
+            
+            return scans
+            
+        except Exception as e:
+            print(f"❌ Failed to retrieve user scans: {e}")
+            return []
+    
+    def get_scan_by_id(self, scan_id):
+        """Get a specific scan by its MongoDB ID"""
+        if self.collection is None:
+            return None
+        
+        try:
+            scan = self.collection.find_one({"_id": ObjectId(scan_id)})
+            if scan:
+                scan['_id'] = str(scan['_id'])
+            return scan
+            
+        except Exception as e:
+            print(f"❌ Failed to retrieve scan by ID: {e}")
+            return None
+    
+    def delete_scan(self, scan_id, username):
+        """Delete a specific scan (with username verification for security)"""
+        if self.collection is None:
+            return False
+        
+        try:
+            result = self.collection.delete_one({
+                "_id": ObjectId(scan_id),
+                "username": username
+            })
+            return result.deleted_count > 0
+            
+        except Exception as e:
+            print(f"❌ Failed to delete scan: {e}")
+            return False
+    
+    def get_user_scan_stats(self, username):
+        """Get statistics about user's scans"""
+        if self.collection is None:
+            return {
+                "total_scans": 0,
+                "recent_scans": 0,
+                "latest_scan_date": None,
+                "has_scans": False
+            }
+        
+        try:
+            # Total scans
+            total_scans = self.collection.count_documents({"username": username})
+            
+            # Scans in last 7 days
+            week_ago = datetime.utcnow() - timedelta(days=7)
+            recent_scans = self.collection.count_documents({
+                "username": username,
+                "scan_date": {"$gte": week_ago}
+            })
+            
+            # Most recent scan date
+            latest_scan = self.collection.find_one(
+                {"username": username},
+                sort=[("scan_date", -1)]
+            )
+            
+            latest_date = latest_scan['scan_date'] if latest_scan else None
+            
+            return {
+                "total_scans": total_scans,
+                "recent_scans": recent_scans,
+                "latest_scan_date": latest_date,
+                "has_scans": total_scans > 0
+            }
+            
+        except Exception as e:
+            print(f"❌ Failed to get user scan stats: {e}")
+            return {
+                "total_scans": 0,
+                "recent_scans": 0,
+                "latest_scan_date": None,
+                "has_scans": False
+            }
+    
+    def cleanup_expired_scans(self):
+        """Remove expired scans (older than 30 days)"""
+        if self.collection is None:
+            return 0
+        
+        try:
+            result = self.collection.delete_many({
+                "expires_at": {"$lt": datetime.utcnow()}
+            })
+            
+            print(f"🧹 Cleaned up {result.deleted_count} expired scans")
+            return result.deleted_count
+            
+        except Exception as e:
+            print(f"❌ Failed to cleanup expired scans: {e}")
+            return 0
+
+# Initialize scan storage
+scan_storage = ScanStorage()
 
 # Utility functions
 def load_users():
@@ -107,7 +358,7 @@ def get_weekly_summary(scans):
         'avg_carbs': round(total('carbs') / count, 1) if count else 0,
         'avg_fats': round(total('fats') / count, 1) if count else 0
     }
-import sqlite3
+
 def evaluate_nutrient_status(nutrient_name, value):
     conn = sqlite3.connect('food_thresholds.db')
     cursor = conn.cursor()
@@ -133,6 +384,77 @@ def evaluate_nutrient_status(nutrient_name, value):
     else:
         return {"status": "Normal", "message": "This level is within the healthy range."}
 
+# Enhanced evaluate_nutrient_status function
+def evaluate_nutrient_status_enhanced(nutrient_name, value):
+    """Enhanced function to evaluate nutrient status with better name matching"""
+    conn = sqlite3.connect('food_thresholds.db')
+    cursor = conn.cursor()
+
+    # First, try exact match (case insensitive)
+    cursor.execute("""
+        SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
+        FROM ingredient_thresholds 
+        WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
+    """, (nutrient_name,))
+    
+    result = cursor.fetchone()
+    
+    # If no exact match, try partial matching for common variations
+    if not result:
+        # Common nutrient name mappings
+        name_mappings = {
+            'sugar': ['sugar', 'added sugar', 'total sugar', 'total sugars'],
+            'fat': ['fat', 'total fat', 'fats'],
+            'saturated fat': ['saturated fat', 'sat fat'],
+            'trans fat': ['trans fat'],
+            'sodium': ['sodium', 'salt'],
+            'carbohydrates': ['carbohydrates', 'carbs', 'total carbohydrates', 'total carbohydrate'],
+            'protein': ['protein'],
+            'fiber': ['fiber', 'dietary fiber'],
+            'cholesterol': ['cholesterol'],
+            'calcium': ['calcium'],
+            'iron': ['iron'],
+            'vitamin c': ['vitamin c', 'ascorbic acid'],
+            'vitamin a': ['vitamin a'],
+            'vitamin d': ['vitamin d'],
+            'potassium': ['potassium']
+        }
+        
+        # Try to find a match using mappings
+        for db_name, variations in name_mappings.items():
+            if nutrient_name.lower() in [v.lower() for v in variations]:
+                cursor.execute("""
+                    SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
+                    FROM ingredient_thresholds 
+                    WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
+                """, (db_name,))
+                result = cursor.fetchone()
+                if result:
+                    break
+    
+    # If still no match, try LIKE search
+    if not result:
+        cursor.execute("""
+            SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
+            FROM ingredient_thresholds 
+            WHERE LOWER(name) LIKE LOWER(?)
+        """, (f'%{nutrient_name}%',))
+        result = cursor.fetchone()
+    
+    conn.close()
+
+    if not result:
+        return {"status": "Unknown", "message": f"No threshold data available for {nutrient_name}."}
+
+    max_threshold, min_threshold, high_msg, low_msg = result
+
+    # Evaluate status based on thresholds
+    if max_threshold is not None and value > max_threshold:
+        return {"status": "High", "message": high_msg}
+    elif min_threshold is not None and value < min_threshold:
+        return {"status": "Low", "message": low_msg}
+    else:
+        return {"status": "Normal", "message": "This level is within the healthy range."}
 
 # ---------------- ROUTES ---------------- #
 
@@ -148,6 +470,7 @@ def about():
 def ratelimit_handler(e):
     flash("Too many login attempts. Try again later.", "error")
     return redirect(url_for('landing'))
+
 @limiter.limit("3 per minute", methods=["POST"])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -188,8 +511,17 @@ def signup():
 def dashboard():
     if 'username' not in session:
         return redirect(url_for('landing'))
-    return render_template('dashboard.html', username=session['username'])
+    
+    username = session['username']
+    
+    # Get scan statistics for dashboard
+    scan_stats = scan_storage.get_user_scan_stats(username)
+    
+    return render_template('dashboard.html', 
+                        username=username, 
+                        scan_stats=scan_stats)
 
+# Modified scan-label route to store image filename and cleaned text
 @app.route('/scan-label', methods=['GET', 'POST'])
 def scan_label():
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
@@ -213,7 +545,12 @@ def scan_label():
             return render_template('scan_label.html', error="Uploaded file is not an image")
 
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        # Create unique filename with timestamp to avoid conflicts
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"{name}_{timestamp}{ext}"
+        
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         filepath = filepath.replace("\\", "/")  # Windows fix
 
         try:
@@ -223,11 +560,17 @@ def scan_label():
             # Verify the image
             image_stream.seek(0)
             img = Image.open(image_stream)
+
+# Extra check for unsupported formats (like AVIF)
+            if img.format not in ("PNG", "JPEG"):
+                return render_template('scan_label.html', error=f"Unsupported format: {img.format}. Please upload JPG or PNG.")
+
             img.verify()
 
-            # Reopen and convert the image to RGB
+# Reopen and convert the image to RGB
             image_stream.seek(0)
             img = Image.open(image_stream).convert("RGB")
+
 
             # Save the image
             img.save(filepath)
@@ -235,16 +578,19 @@ def scan_label():
             print(f"✅ File saved to {filepath}")
 
             # Process the image with OCR
-            raw_text, structured_nutrients = process_label_image(filepath)
-            print("✅ OCR Text:", raw_text)
+            cleaned_text, structured_nutrients = process_label_image(filepath)
+            print("✅ OCR Cleaned Text:", cleaned_text)
             print("✅ Nutrients:", structured_nutrients)
 
-            session['scan_raw_text'] = raw_text
+            session['scan_raw_text'] = cleaned_text  # Store cleaned text as raw text for now
+            session['scan_cleaned_text'] = cleaned_text
             session['scan_structured_nutrients'] = structured_nutrients
+            session['scan_image_filename'] = unique_filename
+            
             return redirect(url_for('scan_result'))
 
         except Exception as e:
-            print(f" Error while handling image: {e}")
+            print(f"❌ Error while handling image: {e}")
             return render_template('scan_label.html', error=f"Could not process image: {e}")
 
     return render_template('scan_label.html')
@@ -252,10 +598,16 @@ def scan_label():
 @app.route('/scan-result')
 def scan_result():
     raw_text = session.get('scan_raw_text')
+    cleaned_text = session.get('scan_cleaned_text')
     structured_nutrients = session.get('scan_structured_nutrients')
+    username = session.get('username')
 
     if not raw_text or not structured_nutrients:
         return redirect(url_for('scan_label'))
+
+    if not username:
+        flash("Please log in to save scan results.", "error")
+        return redirect(url_for('landing'))
 
     # Evaluate each nutrient's status and risk message properly
     for nutrient in structured_nutrients:
@@ -269,8 +621,8 @@ def scan_result():
 
         nutrient_name = nutrient.get('nutrient', '').strip()
         
-        # Get status evaluation from database
-        status_info = evaluate_nutrient_status(nutrient_name, value)
+        # Get status evaluation from database using enhanced function
+        status_info = evaluate_nutrient_status_enhanced(nutrient_name, value)
         
         # Update nutrient info
         nutrient['value'] = value  # Clean numeric value
@@ -280,85 +632,116 @@ def scan_result():
         # Debug output
         print(f"🔍 Nutrient: {nutrient_name}, Value: {value}, Status: {status_info['status']}")
 
+    # Save scan data to MongoDB
+    try:
+        image_filename = session.get('scan_image_filename')
+        
+        scan_id = scan_storage.save_scan_data(
+            username=username,
+            raw_text=raw_text,
+            cleaned_text=cleaned_text or raw_text,
+            structured_nutrients=structured_nutrients,
+            image_filename=image_filename
+        )
+        
+        if scan_id:
+            session['last_scan_id'] = scan_id
+            flash("Scan results saved successfully!", "success")
+        else:
+            flash("Could not save scan results to database.", "warning")
+            
+    except Exception as e:
+        print(f"❌ Error saving scan to MongoDB: {e}")
+        flash("Error saving scan results.", "warning")
+
     return render_template('scan_result.html', raw_text=raw_text, structured_nutrients=structured_nutrients)
 
-
-def evaluate_nutrient_status(nutrient_name, value):
-    """
-    Enhanced function to evaluate nutrient status with better name matching
-    """
-    conn = sqlite3.connect('food_thresholds.db')
-    cursor = conn.cursor()
-
-    # First, try exact match (case insensitive)
-    cursor.execute("""
-        SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
-        FROM ingredient_thresholds 
-        WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
-    """, (nutrient_name,))
+@app.route('/my-scans')
+def my_scans():
+    """View all user's saved scans"""
+    if 'username' not in session:
+        flash("Please log in to view your scans.", "error")
+        return redirect(url_for('landing'))
     
-    result = cursor.fetchone()
+    username = session['username']
+    scans = scan_storage.get_user_scans(username)
+    stats = scan_storage.get_user_scan_stats(username)
     
-    # If no exact match, try partial matching for common variations
-    if not result:
-        # Common nutrient name mappings
-        name_mappings = {
-            'sugar': ['sugar', 'added sugar', 'total sugar'],
-            'fat': ['fat', 'total fat', 'fats'],
-            'saturated fat': ['saturated fat', 'sat fat'],
-            'trans fat': ['trans fat'],
-            'sodium': ['sodium', 'salt'],
-            'carbohydrates': ['carbohydrates', 'carbs', 'total carbohydrates'],
-            'protein': ['protein'],
-            'fiber': ['fiber', 'dietary fiber'],
-            'cholesterol': ['cholesterol'],
-            'calcium': ['calcium'],
-            'iron': ['iron'],
-            'vitamin c': ['vitamin c', 'ascorbic acid'],
-            'vitamin a': ['vitamin a'],
-            'vitamin d': ['vitamin d'],
-            'potassium': ['potassium']
-        }
-        
-        # Try to find a match using mappings
-        for db_name, variations in name_mappings.items():
-            if nutrient_name.lower() in [v.lower() for v in variations]:
-                cursor.execute("""
-                    SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
-                    FROM ingredient_thresholds 
-                    WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
-                """, (db_name,))
-                result = cursor.fetchone()
-                if result:
-                    break
+    return render_template('my_scans.html', scans=scans, stats=stats)
+
+@app.route('/view-scan/<scan_id>')
+def view_scan(scan_id):
+    """View a specific scan by ID"""
+    if 'username' not in session:
+        flash("Please log in to view scans.", "error")
+        return redirect(url_for('landing'))
     
-    # If still no match, try LIKE search
-    if not result:
-        cursor.execute("""
-            SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
-            FROM ingredient_thresholds 
-            WHERE LOWER(name) LIKE LOWER(?)
-        """, (f'%{nutrient_name}%',))
-        result = cursor.fetchone()
+    scan = scan_storage.get_scan_by_id(scan_id)
     
-    conn.close()
+    if not scan or scan['username'] != session['username']:
+        flash("Scan not found or access denied.", "error")
+        return redirect(url_for('my_scans'))
+    
+    return render_template('view_scan.html', scan=scan)
 
-    if not result:
-        print(f"⚠️ No threshold data found for: {nutrient_name}")
-        return {"status": "Unknown", "message": f"No threshold data available for {nutrient_name}."}
-
-    max_threshold, min_threshold, high_msg, low_msg = result
-
-    # Evaluate status based on thresholds
-    if max_threshold is not None and value > max_threshold:
-        return {"status": "High", "message": high_msg}
-    elif min_threshold is not None and value < min_threshold:
-        return {"status": "Low", "message": low_msg}
+@app.route('/delete-scan/<scan_id>', methods=['POST'])
+def delete_scan(scan_id):
+    """Delete a specific scan"""
+    if 'username' not in session:
+        flash("Please log in.", "error")
+        return redirect(url_for('landing'))
+    
+    username = session['username']
+    
+    if scan_storage.delete_scan(scan_id, username):
+        flash("Scan deleted successfully.", "success")
     else:
-        return {"status": "Normal", "message": "This level is within the healthy range."}
+        flash("Failed to delete scan.", "error")
+    
+    return redirect(url_for('my_scans'))
 
+@app.route('/admin/cleanup-scans')
+def cleanup_scans():
+    """Admin route to manually trigger scan cleanup"""
+    deleted_count = scan_storage.cleanup_expired_scans()
+    return jsonify({"message": f"Cleaned up {deleted_count} expired scans"})
 
-# Also add this debug route to check your database content
+@app.route('/debug/mongodb-info')
+def mongodb_info():
+    """Debug route to check MongoDB connection and stats"""
+    if 'username' not in session:
+        return redirect(url_for('landing'))
+    
+    if scan_storage.collection is None:
+        return "<h2>MongoDB Status: Not Connected</h2><p>Check your MONGO_URI in .env file</p>"
+    
+    try:
+        # Get connection stats
+        server_info = scan_storage.mongo_config.client.server_info()
+        db_stats = scan_storage.mongo_config.db.command("dbstats")
+        
+        total_scans = scan_storage.collection.count_documents({})
+        user_scans = scan_storage.collection.count_documents({"username": session['username']})
+        
+        html = f"""
+        <h2>MongoDB Atlas Connection Info</h2>
+        <div style="font-family: monospace; background: #f5f5f5; padding: 20px; border-radius: 5px;">
+            <p><strong>Status:</strong> ✅ Connected</p>
+            <p><strong>Database:</strong> {scan_storage.mongo_config.DATABASE_NAME}</p>
+            <p><strong>Collection:</strong> {scan_storage.mongo_config.COLLECTION_NAME}</p>
+            <p><strong>Server Version:</strong> {server_info.get('version', 'N/A')}</p>
+            <p><strong>Total Scans:</strong> {total_scans}</p>
+            <p><strong>Your Scans:</strong> {user_scans}</p>
+            <p><strong>Database Size:</strong> {db_stats.get('dataSize', 0)} bytes</p>
+        </div>
+        <p><a href="{url_for('dashboard')}">← Back to Dashboard</a></p>
+        """
+        
+        return html
+        
+    except Exception as e:
+        return f"<h2>MongoDB Error</h2><p>Error: {e}</p>"
+
 @app.route('/debug-thresholds')
 def debug_thresholds():
     """Debug route to see what's in your thresholds database"""
@@ -405,7 +788,7 @@ def profile():
 
     profile = load_user_health_profile(session['username'])
     if not profile:
-        flash("Your Profile Doesnt exists , Create a profile")
+        flash("Your Profile Doesn't exist, Create a profile")
         return redirect(url_for('profile_form'))
 
     recommendation = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
@@ -435,6 +818,7 @@ def logout():
     session.clear()
     flash("Logged out.", "info")
     return redirect(url_for('landing'))
+
 @app.route('/food-tracker', methods=['GET', 'POST'])
 def food_tracker():
     if 'username' not in session:
@@ -488,7 +872,7 @@ def food_tracker():
             session.modified = True
             flash("Food item added/updated.")
 
-    # 🟩 Add this block to fix the UndefinedError
+    # Calculate totals
     total = {
         'protein': sum(item['protein'] for item in session['food_items']),
         'carbs': sum(item['carbs'] for item in session['food_items']),
@@ -501,6 +885,7 @@ def food_tracker():
 def download_report():
     # Example dummy response
     return "Download functionality not implemented yet."
+
 @app.route('/edit-profile')
 def edit_profile():
     if 'username' not in session:
@@ -512,7 +897,6 @@ def edit_profile():
         return redirect(url_for('profile_form'))
 
     return render_template('edit_profile.html', profile=profile)
-
 
 # Final app launch
 if __name__ == '__main__':
