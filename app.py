@@ -16,7 +16,25 @@ import sqlite3
 import pymongo
 from bson import ObjectId
 from process_label import process_nutrition_label
+import google.generativeai as genai
+from datetime import datetime, timedelta
+import json
 load_dotenv()
+
+# --- CONFIGURE THE AI MODEL ---
+# This loads the key from your .env file
+try:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if api_key:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        print("✅ Gemini AI Model configured successfully.")
+    else:
+        model = None
+        print("⚠️ GEMINI_API_KEY not found in .env file. AI features will be disabled.")
+except Exception as e:
+    print(f"⚠️ Could not configure AI model: {e}")
+    model = None
 
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key'
@@ -460,6 +478,100 @@ def evaluate_nutrient_status_enhanced(nutrient_name, value):
     else:
         return {"status": "Normal", "message": "This level is within the healthy range."}
 
+
+def get_user_habit_summary(username, days=30):
+    """
+    Aggregates a user's scan history from MongoDB to create a 30-day habit summary.
+    """
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=days)
+    
+    pipeline = [
+        {"$match": {"username": username, "scan_date": {"$gte": start_date}}},
+        {"$unwind": "$nutrition_analysis.structured_nutrients"},
+        {
+            "$group": {
+                "_id": "$nutrition_analysis.structured_nutrients.nutrient",
+                "total_value": {"$sum": "$nutrition_analysis.structured_nutrients.value"},
+                "count": {"$sum": 1},
+                "high_risk_count": {
+                    "$sum": {
+                        "$cond": [
+                            {"$eq": ["$nutrition_analysis.structured_nutrients.status", "High"]},
+                            1, 0
+                        ]
+                    }
+                },
+                "avg_value": {"$avg": "$nutrition_analysis.structured_nutrients.value"},
+                "unit": {"$first": "$nutrition_analysis.structured_nutrients.unit"},
+                "category": {"$first": "$nutrition_analysis.structured_nutrients.category"}
+            }
+        },
+        {"$sort": {"high_risk_count": -1, "total_value": -1}},
+        {"$limit": 10}
+    ]
+    
+    try:
+        summary = list(scan_storage.collection.aggregate(pipeline))
+        total_scans = scan_storage.collection.count_documents(
+            {"username": username, "scan_date": {"$gte": start_date}}
+        )
+        
+        # Reformat results
+        for item in summary:
+            item['nutrient'] = item.pop('_id')
+            item['avg_value_per_scan'] = round(item['avg_value'], 2)
+            item['total_value'] = round(item['total_value'], 2)
+
+        return {"total_scans": total_scans, "nutrient_summary": summary}
+    except Exception as e:
+        print(f"❌ Error during habit aggregation: {e}")
+        return None
+def get_comprehensive_ai_analysis(user_profile, habit_summary):
+    """
+    Generates a direct, data-driven analysis of eating habits.
+    """
+    if not model:
+        return "<h2>AI Analysis Unavailable</h2><p>The AI service could not be reached.</p>"
+
+    data_for_prompt = {
+        "user_profile": user_profile,
+        "eating_habits_summary_past_30_days": habit_summary
+    }
+    data_json = json.dumps(data_for_prompt, indent=2)
+
+    prompt = f"""
+    You are a nutrition data analyst. Your analysis must be direct, concise, and strictly based on the provided JSON data.
+    - DO NOT comment on the quantity of data.
+    - ONLY analyze the nutrients present.
+
+    Here is the user's data:
+    ```json
+    {data_json}
+    ```
+
+    Based ONLY on this data, generate a report with three sections:
+
+    <h2>Key Nutritional Observations</h2>
+    <p>Highlight the nutrients with the highest <strong>high_risk_count</strong>, or if none exist, state that intake is within normal limits and mention the most frequent nutrients.</p>
+
+    <h2>Associated Health Risks</h2>
+    <p>For each high-risk nutrient, explain possible long-term health risks. Connect them to any relevant <strong>medical_condition</strong> from the profile.</p>
+
+    <h2>Data-Driven Suggestions</h2>
+    <ul>
+      <li>Provide actionable, nutrient-specific suggestions to reduce high-risk nutrients.</li>
+      <li>If no high-risk nutrients exist, provide a positive reinforcement tip.</li>
+    </ul>
+    """
+
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print(f"❌ Comprehensive AI analysis failed: {e}")
+        return "<h2>Error</h2><p>An error occurred while generating your analysis.</p>"
+
 # ---------------- ROUTES ---------------- #
 
 @app.route('/')
@@ -836,37 +948,53 @@ def profile_form():
 
     return render_template('profile_form.html')
 
+
 @app.route('/profile')
 def profile():
     if 'username' not in session:
         return redirect(url_for('landing'))
 
-    profile = load_user_health_profile(session['username'])
+    username = session['username']
+    profile = load_user_health_profile(username)
     if not profile:
         flash("Your Profile Doesn't exist, Create a profile")
         return redirect(url_for('profile_form'))
 
+    # --- Part 1: Calculate TODAY'S stats (existing logic) ---
     recommendation = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
-    scans = load_user_scans(session['username'])
-
+    scans = load_user_scans(username) # This should be querying MongoDB now, but using your function for consistency
     today = datetime.now().strftime('%Y-%m-%d')
     today_scans = [s for s in scans if s['date'] == today]
-
     sum_nutrients = lambda key: sum(float(s.get(key, 0)) for s in today_scans)
     intake = {
         'protein_g': round(sum_nutrients('protein'), 1),
         'carbs_g': round(sum_nutrients('carbs'), 1),
         'fats_g': round(sum_nutrients('fats'), 1)
     }
-
     percent = lambda val, ref: round((val / ref) * 100) if ref else 0
     percentages = {
         'protein': percent(intake['protein_g'], recommendation['protein_g']),
         'carbs': percent(intake['carbs_g'], recommendation['carbs_g']),
         'fats': percent(intake['fats_g'], recommendation['fats_g'])
     }
+    
+    # --- Part 2: Generate COMPREHENSIVE AI analysis (new logic) ---
+    ai_analysis_html = None # Default to None
+    habit_summary = get_user_habit_summary(username) # Fetch 30-day history
+    
+    # Only generate analysis if the user has enough data
+    if habit_summary and habit_summary.get('total_scans', 0) >= 10:
+        ai_analysis_html = get_comprehensive_ai_analysis(profile, habit_summary)
 
-    return render_template('profile.html', profile=profile, intake=intake, recommendation=recommendation, percentages=percentages, scans=scans, summary=get_weekly_summary(scans))
+    # --- Part 3: Render the template with ALL data ---
+    return render_template(
+        'profile.html', 
+        profile=profile, 
+        intake=intake, 
+        recommendation=recommendation, 
+        percentages=percentages,
+        ai_analysis_html=ai_analysis_html # Pass the new AI data to the template
+    )
 
 @app.route('/logout')
 def logout():
@@ -952,7 +1080,31 @@ def edit_profile():
         return redirect(url_for('profile_form'))
 
     return render_template('edit_profile.html', profile=profile)
-
+# --- NEW AI ANALYSIS ROUTE ---
+@app.route('/comprehensive_analysis')
+def comprehensive_analysis():
+    if 'username' not in session:
+        return redirect(url_for('landing'))
+    
+    username = session['username']
+    
+    profile = load_user_health_profile(username)
+    if not profile:
+        flash("Please create a profile to get a comprehensive analysis.", "warning")
+        return redirect(url_for('profile_form'))
+        
+    habit_summary = get_user_habit_summary(username)
+    if not habit_summary or habit_summary['total_scans'] < 10:
+        flash("Track at least 10 items over time to generate a comprehensive analysis.", "info")
+        return redirect(url_for('profile'))
+        
+    ai_analysis_html = get_comprehensive_ai_analysis(profile, habit_summary)
+    
+    return render_template(
+        'comprehensive_analysis.html', 
+        ai_analysis_html=ai_analysis_html,
+        user_name=profile.get('full_name', username)
+    )
 # Final app launch
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, use_reloader=False)
