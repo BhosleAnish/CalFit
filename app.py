@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf import CSRFProtect
-from flask_wtf.csrf import generate_csrf 
+from flask_wtf.csrf import generate_csrf
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import csv, os, re
@@ -15,7 +15,7 @@ from io import BytesIO
 import sqlite3
 import pymongo
 from bson import ObjectId
-
+from process_label import process_nutrition_label
 load_dotenv()
 
 app = Flask(__name__)
@@ -115,7 +115,7 @@ class ScanStorage:
         self.mongo_config = MongoConfig()
         self.collection = self.mongo_config.collection
     
-    def save_scan_data(self, username, raw_text, cleaned_text, structured_nutrients, image_filename=None):
+    def save_scan_data(self, username, raw_text, cleaned_text, structured_nutrients, image_filename=None, product_name=None, product_image_url=None):
         """Save scan data to MongoDB"""
         if self.collection is None:
             print("❌ MongoDB not available, cannot save scan data")
@@ -128,6 +128,10 @@ class ScanStorage:
             scan_document = {
                 "username": username,
                 "scan_date": datetime.utcnow(),
+                "product_info": {
+                    "name": product_name or "Scanned Item",
+                    "image_url": product_image_url
+                },
                 "scan_metadata": {
                     "image_filename": image_filename,
                     "nutrients_count": len(structured_nutrients) if structured_nutrients else 0,
@@ -518,76 +522,67 @@ def dashboard():
     scan_stats = scan_storage.get_user_scan_stats(username)
     
     return render_template('dashboard.html', 
-                        username=username, 
-                        scan_stats=scan_stats)
+                           username=username, 
+                           scan_stats=scan_stats)
 
-# Modified scan-label route to store image filename and cleaned text
 @app.route('/scan-label', methods=['GET', 'POST'])
 def scan_label():
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-
-    def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
     if request.method == 'POST':
-        if 'label_image' not in request.files:
-            return render_template('scan_label.html', error="No file part")
-
-        file = request.files['label_image']
-
-        if file.filename == '':
-            return render_template('scan_label.html', error="No selected file")
+        # --- Case 1: Food Label OCR ---
+        if 'label_image' in request.files and request.files['label_image'].filename != '':
+            file = request.files['label_image']
+            scan_type = "label"
+        # --- Case 2: Barcode Image ---
+        elif 'barcode_image' in request.files and request.files['barcode_image'].filename != '':
+            file = request.files['barcode_image']
+            scan_type = "barcode"
+        else:
+            return render_template('scan_label.html', error="No file selected")
 
         if not allowed_file(file.filename):
             return render_template('scan_label.html', error="Only .jpg, .jpeg, .png files allowed")
 
-        if not file.mimetype.startswith('image/'):
-            return render_template('scan_label.html', error="Uploaded file is not an image")
-
         filename = secure_filename(file.filename)
-        # Create unique filename with timestamp to avoid conflicts
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         name, ext = os.path.splitext(filename)
         unique_filename = f"{name}_{timestamp}{ext}"
-        
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-        filepath = filepath.replace("\\", "/")  # Windows fix
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename).replace("\\", "/")
 
         try:
-            # Read the uploaded file once into memory
+            # Save the uploaded image
             image_stream = BytesIO(file.read())
-
-            # Verify the image
-            image_stream.seek(0)
             img = Image.open(image_stream)
 
-# Extra check for unsupported formats (like AVIF)
             if img.format not in ("PNG", "JPEG"):
                 return render_template('scan_label.html', error=f"Unsupported format: {img.format}. Please upload JPG or PNG.")
 
             img.verify()
-
-# Reopen and convert the image to RGB
             image_stream.seek(0)
             img = Image.open(image_stream).convert("RGB")
-
-
-            # Save the image
             img.save(filepath)
 
-            print(f"✅ File saved to {filepath}")
+            # --- Decide which form was used and redirect accordingly ---
+            if scan_type == "label":
+                # OCR flow - redirect to scan_result
+                cleaned_text, structured_nutrients = process_label_image(filepath)
 
-            # Process the image with OCR
-            cleaned_text, structured_nutrients = process_label_image(filepath)
-            print("✅ OCR Cleaned Text:", cleaned_text)
-            print("✅ Nutrients:", structured_nutrients)
+                session['scan_type'] = "label"
+                session['scan_raw_text'] = cleaned_text
+                session['scan_structured_nutrients'] = structured_nutrients
+                session['scan_image_filename'] = unique_filename
 
-            session['scan_raw_text'] = cleaned_text  # Store cleaned text as raw text for now
-            session['scan_cleaned_text'] = cleaned_text
-            session['scan_structured_nutrients'] = structured_nutrients
-            session['scan_image_filename'] = unique_filename
-            
-            return redirect(url_for('scan_result'))
+                return redirect(url_for('scan_result'))
+
+            elif scan_type == "barcode":
+                # Barcode flow - redirect to index
+                processed_data = process_nutrition_label(filepath)
+
+                session['scan_type'] = "barcode"
+                session['barcode_processed'] = True
+                session['scan_data'] = processed_data
+                session['scan_image_filename'] = unique_filename
+
+                return redirect(url_for('index'))  # Redirect to index.html instead
 
         except Exception as e:
             print(f"❌ Error while handling image: {e}")
@@ -595,10 +590,18 @@ def scan_label():
 
     return render_template('scan_label.html')
 
+
 @app.route('/scan-result')
 def scan_result():
+    # This route now only handles label scans
+    scan_type = session.get('scan_type')
+    
+    # Ensure this is a label scan, not barcode
+    if scan_type != "label":
+        flash("No label scan data found.", "error")
+        return redirect(url_for('scan_label'))
+    
     raw_text = session.get('scan_raw_text')
-    cleaned_text = session.get('scan_cleaned_text')
     structured_nutrients = session.get('scan_structured_nutrients')
     username = session.get('username')
 
@@ -639,9 +642,11 @@ def scan_result():
         scan_id = scan_storage.save_scan_data(
             username=username,
             raw_text=raw_text,
-            cleaned_text=cleaned_text or raw_text,
+            cleaned_text=raw_text,  # Using raw_text as cleaned_text since cleaned_text isn't set
             structured_nutrients=structured_nutrients,
-            image_filename=image_filename
+            image_filename=image_filename,
+            product_name="Scanned from Label (OCR)",
+            product_image_url=None
         )
         
         if scan_id:
@@ -655,6 +660,56 @@ def scan_result():
         flash("Error saving scan results.", "warning")
 
     return render_template('scan_result.html', raw_text=raw_text, structured_nutrients=structured_nutrients)
+
+@app.route('/index')
+def index():
+    barcode_processed = session.get('barcode_processed', False)
+    scan_data = session.get('scan_data', {})
+
+    return render_template(
+        'index.html',
+        barcode_processed=barcode_processed,
+        scan_data=scan_data
+    )
+
+@app.route('/add_to_diet', methods=['POST'])
+def add_to_diet():
+    username = session.get('username')
+    scan_data = session.get('scan_data', {})
+    image_filename = session.get('scan_image_filename')
+
+    if not username:
+        flash("Please log in to save items to your diet.", "error")
+        return redirect(url_for('index'))
+
+    # Extract data from the standardized dictionary
+    product_name = scan_data.get('product_name')
+    product_image_url = scan_data.get('product_image_url')
+    structured_nutrients = scan_data.get('structured_nutrients', [])
+
+    try:
+        scan_id = scan_storage.save_scan_data(
+            username=username,
+            raw_text=f"Barcode scan for: {product_name}",
+            cleaned_text=f"Product: {product_name}",
+            structured_nutrients=structured_nutrients,
+            image_filename=image_filename,
+            product_name=product_name,
+            product_image_url=product_image_url
+        )
+        if scan_id:
+            flash("Item added to your diet successfully!", "success")
+        else:
+            flash("Could not add item to your diet.", "warning")
+    except Exception as e:
+        print(f"❌ Error saving barcode scan to MongoDB: {e}")
+        flash("Error saving item to your diet.", "error")
+
+    # Clear session data after saving
+    session.pop('scan_data', None)
+    session.pop('barcode_processed', None)
+
+    return redirect(url_for('index'))
 
 @app.route('/my-scans')
 def my_scans():

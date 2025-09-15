@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cal-FIT | Scan Results</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/scan_label.css') }}">
+  <style>
+    /* --- Results Styles (styles are fine, no changes needed here) --- */
+    .results { margin-top: 30px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; z-index: 10; }
+    .results h2 { color: #333; margin-bottom: 20px; text-align: center; font-size: 1.8em; }
+    .product-info { display: flex; align-items: center; gap: 20px; background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 25px; border-left: 5px solid #667eea; }
+    .product-image { max-width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
+    .product-name { font-size: 1.5em; font-weight: 600; color: #333; margin: 0; }
+    .scan-type-badge { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 5px 15px; border-radius: 15px; font-size: 0.8em; font-weight: 500; text-transform: uppercase; margin-top: 5px; }
+    .nutrient-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .nutrient-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; transition: all 0.3s ease; }
+    .nutrient-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .nutrient-name { font-weight: 600; color: #333; font-size: 1.1em; margin-bottom: 8px; text-transform: capitalize; }
+    .nutrient-value { font-size: 1.3em; font-weight: 700; color: #667eea; margin-bottom: 5px; }
+    .nutrient-status { display: inline-block; padding: 4px 12px; border-radius: 15px; font-size: 0.8em; font-weight: 500; text-transform: uppercase; }
+    .status-normal { background: #d4edda; color: #155724; }
+    .status-high { background: #f8d7da; color: #721c24; }
+    .status-low { background: #fff3cd; color: #856404; }
+    .status-unknown { background: #e2e3e5; color: #495057; }
+    .no-results { text-align: center; color: #666; padding: 40px; font-size: 1.1em; }
+    .actions { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
+    .btn { display: inline-block; padding: 12px 25px; margin: 0 10px; text-decoration: none; border-radius: 25px; font-weight: 500; transition: all 0.3s ease; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; cursor: pointer; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    .flash-messages { margin: 20px 0; }
+    .flash { padding: 15px; border-radius: 8px; margin-bottom: 10px; font-weight: 500; }
+    .flash.success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+    .flash.warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
+    .flash.error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+    .flash.info { background: #cce7ff; color: #004085; border-left: 4px solid #007bff; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">Cal-FIT</div>
+  <nav class="main-nav">
+    <a href="{{ url_for('dashboard') }}">Home</a>
+    <a href="#explore">Explore</a>
+    <a href="#about">About Us</a>
+    <a href="{{ url_for('profile') }}">Profile</a>
+  </nav>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% if barcode_processed and scan_data and scan_data.structured_nutrients %}
+  <div class="results">
+    <h2>Barcode Scan Results</h2>
+    
+    <div class="product-info">
+      {% if scan_data.product_image_url %}
+        <img src="{{ scan_data.product_image_url }}" alt="{{ scan_data.product_name }}" class="product-image">
+      {% endif %}
+      <div>
+        <div class="product-name">{{ scan_data.product_name }}</div>
+        <span class="scan-type-badge">Barcode Scan</span>
+      </div>
+    </div>
+
+    <div class="nutrient-grid">
+      {% for nutrient in scan_data.structured_nutrients %}
+        <div class="nutrient-card">
+          <div class="nutrient-name">
+            {{ nutrient.nutrient }}
+          </div>
+          <div class="nutrient-value">
+            {{ nutrient.value }} {{ nutrient.unit }}
+          </div>
+          <span class="nutrient-status status-{{ nutrient.status|lower }}">
+            {{ nutrient.status }}
+          </span>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="actions">
+      <form action="{{ url_for('add_to_diet') }}" method="POST" style="display:inline;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn">Add to Diet</button>
+      </form>
+      <a href="{{ url_for('scan_label') }}" class="btn">Scan Another Item</a>
+      <a href="{{ url_for('dashboard') }}" class="btn">Back to Dashboard</a>
+    </div>
+  </div>
+
+{% else %}
+  <div style="position: relative; z-index: 1; text-align: center; margin-top: 60px;">
+    <p style="max-width: 700px; margin: 0 auto 30px auto; font-size: 18px; color: #ddd;">
+      Cal-FIT provides comprehensive analysis of your food labels, offering valuable insights into nutritional content and potential health risks.
+    </p>
+  </div>
+
+  <div class="parent">
+    <div class="container">
+      <h2>Upload a Food Label</h2>
+      <form method="POST" enctype="multipart/form-data" action="{{ url_for('scan_label') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="file" name="label_image" accept="image/*" required>
+        <button type="submit">Scan</button>
+      </form>
+    </div>
+    <div class="container">
+      <h2>Scan a Barcode</h2>
+      <form method="POST" enctype="multipart/form-data" action="{{ url_for('scan_label') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="file" name="barcode_image" accept="image/*" required>
+        <button type="submit">Scan Barcode</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="text">
+    <h1>How To Use Cal-FIT</h1>
+  </div>
+  <div class="tutorial">
+    <div class="step1">
+      <p>1</p>
+      <h1>Scan</h1>
+      <p>Scan your item using camera or uploading an image</p>
+    </div>
+    <div class="step2">
+      <p>2</p>
+      <h1>Read</h1>
+      <p>Get results that highlight the good and bad in your food, backed by real nutritional science. </p>
+    </div>
+    <div class="step3">
+      <p>3</p>
+      <h1>Eat</h1>
+      <p>Eat based on personalized suggestions tailored to your diet plan.</p>
+    </div>
+  </div>
+{% endif %}
+
+</body>
+</html>

@@ -179,7 +179,8 @@ class WordCount:
 
 wc = WordCount("Python is really powerful")
 print(wc.count_words())'''
-import re
+'''import re
 text = "my mail is "
 result = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",text)
-print(result)
+print(result)'''
+

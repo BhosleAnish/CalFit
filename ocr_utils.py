@@ -26,20 +26,20 @@ def load_thresholds_from_db():
 
 # ---- 2) Known nutrients, aliases, expected units -----------------------------
 NUTRIENT_SPECS = {
-    "total fat":         {"aliases": ["fat", "total fats"],                   "unit": "g",   "category": "macronutrient"},
-    "saturated fat":     {"aliases": ["sat fat", "saturated fats"],           "unit": "g",   "category": "macronutrient"},
-    "trans fat":         {"aliases": ["trans fats"],                          "unit": "g",   "category": "macronutrient"},
-    "cholesterol":       {"aliases": [],                                      "unit": "mg",  "category": "mineral"},
-    "sodium":            {"aliases": ["salt"],                                "unit": "mg",  "category": "mineral"},
+    "total fat":         {"aliases": ["fat", "total fats"],                                                         "unit": "g",   "category": "macronutrient"},
+    "saturated fat":     {"aliases": ["sat fat", "saturated fats"],                                                   "unit": "g",   "category": "macronutrient"},
+    "trans fat":         {"aliases": ["trans fats"],                                                                "unit": "g",   "category": "macronutrient"},
+    "cholesterol":       {"aliases": [],                                                                            "unit": "mg",  "category": "mineral"},
+    "sodium":            {"aliases": ["salt"],                                                                      "unit": "mg",  "category": "mineral"},
     "total carbohydrate":{"aliases": ["total carb", "total carbs", "carbs", "carbohydrate", "carbohydrates", "total carb."], "unit": "g", "category": "macronutrient"},
-    "dietary fiber":     {"aliases": ["fiber"],                               "unit": "g",   "category": "macronutrient"},
-    "total sugars":      {"aliases": ["total sugar", "sugars"],               "unit": "g",   "category": "macronutrient"},
+    "dietary fiber":     {"aliases": ["fiber"],                                                                     "unit": "g",   "category": "macronutrient"},
+    "total sugars":      {"aliases": ["total sugar", "sugars"],                                                     "unit": "g",   "category": "macronutrient"},
     "added sugar":       {"aliases": ["added sugars", "incl. added sugars", "includes added sugars", "incl added sugars"], "unit": "g", "category": "macronutrient"},
-    "protein":           {"aliases": [],                                      "unit": "g",   "category": "macronutrient"},
-    "vitamin d":         {"aliases": ["vit d", "vitamin d."],                 "unit": "mcg", "category": "vitamin"},
-    "calcium":           {"aliases": [],                                      "unit": "mg",  "category": "mineral"},
-    "iron":              {"aliases": [],                                      "unit": "mg",  "category": "mineral"},
-    "potassium":         {"aliases": [],                                      "unit": "mg",  "category": "mineral"},
+    "protein":           {"aliases": [],                                                                            "unit": "g",   "category": "macronutrient"},
+    "vitamin d":         {"aliases": ["vit d", "vitamin d."],                                                       "unit": "mcg", "category": "vitamin"},
+    "calcium":           {"aliases": [],                                                                            "unit": "mg",  "category": "mineral"},
+    "iron":              {"aliases": [],                                                                            "unit": "mg",  "category": "mineral"},
+    "potassium":         {"aliases": [],                                                                            "unit": "mg",  "category": "mineral"},
 }
 
 # Build a lookup of all names -> canonical
@@ -71,7 +71,7 @@ def _basic_ocr_fixes(s: str) -> str:
     s = re.sub(r'\bimg\b', 'mg', s, flags=re.IGNORECASE)        # "img" -> "mg"
     s = re.sub(r'\bOg\b', '0g', s, flags=re.IGNORECASE)         # Og -> 0g
     s = re.sub(r'\b0 g\b', '0g', s, flags=re.IGNORECASE)        # normalize spacing
-    s = re.sub(r'«', '', s)                                     # stray symbol
+    s = re.sub(r'«', '', s)                                      # stray symbol
     # Fix common OCR errors
     s = re.sub(r'\b59\s+6%\b', '5g 6%', s, flags=re.IGNORECASE)  # "59 6%" -> "5g 6%"
     s = re.sub(r'\b129\s+43%\b', '12g 43%', s, flags=re.IGNORECASE)  # "129 43%" -> "12g 43%"

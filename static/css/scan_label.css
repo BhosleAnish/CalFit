@@ -102,14 +102,15 @@ body {
     .container {
       position: relative;
       z-index: 1;
-      margin: 60px auto;
+      margin: 0px;
       max-width: 500px;
       background-color: rgba(255, 255, 255, 0.08);
       padding: 30px;
       border-radius: 12px;
       text-align: center;
-      backdrop-filter: blur(10px);
       box-shadow: 0 0 12px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
     }
 
     h2 {
@@ -208,4 +209,10 @@ body {
   font-size: 20px; /* Adjust as needed */
   color: #eee;
   line-height: 1.5;
+}
+.parent{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
 }

@@ -23,17 +23,28 @@
   </p>
 </div>
 </div>
+<div class="parent">
+  <!-- Card 1 -->
+  <div class="container">
+    <h2>Upload a Food Label</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="file" name="label_image">
+      <button type="submit">Scan</button>
+    </form>
+  </div>
 
-<div class="container">
-  <h2>Upload a Food Label</h2>
-  <form method="POST" enctype="multipart/form-data">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <input type="file" name="label_image">
-  <button type="submit">Scan</button>
-</form>
-
-
+  <!-- Card 2 -->
+  <div class="container">
+    <h2>Scan a Barcode</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="file" name="barcode_image">
+      <button type="submit">Scan Barcode</button>
+    </form>
+  </div>
 </div>
+
 <div class="text">
   <h1>How To Use Cal-FIT</h1>
 </div>
