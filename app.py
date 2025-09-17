@@ -18,23 +18,24 @@ from bson import ObjectId
 from process_label import process_nutrition_label
 import google.generativeai as genai
 from datetime import datetime, timedelta
+import openai
 import json
 load_dotenv()
 
 # --- CONFIGURE THE AI MODEL ---
 # This loads the key from your .env file
 try:
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY")
     if api_key:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
-        print("✅ Gemini AI Model configured successfully.")
+        # Instantiate the client
+        client = openai.OpenAI(api_key=api_key)
+        print("✅ OpenAI client configured successfully.")
     else:
-        model = None
-        print("⚠️ GEMINI_API_KEY not found in .env file. AI features will be disabled.")
+        client = None
+        print("⚠️ OPENAI_API_KEY not found in .env file. AI features will be disabled.")
 except Exception as e:
-    print(f"⚠️ Could not configure AI model: {e}")
-    model = None
+    print(f"⚠️ Could not configure OpenAI client: {e}")
+    client = None
 
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key'
@@ -527,50 +528,225 @@ def get_user_habit_summary(username, days=30):
     except Exception as e:
         print(f"❌ Error during habit aggregation: {e}")
         return None
-def get_comprehensive_ai_analysis(user_profile, habit_summary):
+def get_today_scan_visualization():
     """
-    Generates a direct, data-driven analysis of eating habits.
+    Get today's scans for visualization on profile page
     """
-    if not model:
-        return "<h2>AI Analysis Unavailable</h2><p>The AI service could not be reached.</p>"
+    username = session.get("username")
+    if not username or scan_storage.collection is None:  # Fixed: use 'is None' instead of 'not'
+        return []
 
-    data_for_prompt = {
-        "user_profile": user_profile,
-        "eating_habits_summary_past_30_days": habit_summary
+    try:
+        # Get today's date range
+        today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+
+        # Fetch today's scans
+        today_scans = list(scan_storage.collection.find({
+            "username": username,
+            "scan_date": {
+                "$gte": today_start,
+                "$lt": today_end
+            }
+        }).sort("scan_date", -1))
+
+        # Process scans for visualization
+        visualization_data = []
+        for scan in today_scans:
+            product_name = scan.get("product_info", {}).get("name", "Unknown Product")
+            nutrients = scan.get("nutrition_analysis", {}).get("structured_nutrients", [])
+            
+            # Extract key nutrients for visualization
+            key_nutrients = {}
+            for nutrient in nutrients:
+                nutrient_name = nutrient.get("nutrient", "").lower()
+                if nutrient_name in ["protein", "carbohydrates", "carbs", "fat", "fats", "sodium", "sugar"]:
+                    key_nutrients[nutrient_name] = {
+                        "value": nutrient.get("value", 0),
+                        "unit": nutrient.get("unit", ""),
+                        "status": nutrient.get("status", "Unknown")
+                    }
+            
+            visualization_data.append({
+                "product_name": product_name,
+                "scan_time": scan.get("scan_date"),
+                "nutrients": key_nutrients,
+                "total_nutrients": len(nutrients)
+            })
+
+        return visualization_data
+
+    except Exception as e:
+        print(f"❌ Error fetching today's scans: {e}")
+        return []
+
+
+def get_comprehensive_ai_analysis():
+    """
+    Generates a personalized, doctor-style analysis of eating habits 
+    using all scans saved by the logged-in user and their profile data.
+    """
+    username = session.get("username")
+    if not username:
+        return "<h2>Error</h2><p>No user logged in.</p>"
+
+    if scan_storage.collection is None:  # Fixed: use 'is None' instead of 'not'
+        return "<h2>AI Analysis Unavailable</h2><p>Database not connected.</p>"
+
+    try:
+        # Fetch all scans for this user
+        user_scans = list(scan_storage.collection.find({"username": username}))
+        
+        # Get user profile
+        user_profile = load_user_health_profile(username)
+        
+        if not user_profile:
+            return "<h2>Profile Required</h2><p>Please complete your profile to get personalized analysis.</p>"
+            
+    except Exception as e:
+        print(f"❌ Could not fetch data: {e}")
+        return "<h2>Error</h2><p>Could not fetch user data.</p>"
+
+    if not user_scans:
+        return "<h2>No Data</h2><p>No scans found for your profile. Start scanning some food items!</p>"
+
+    # Aggregate nutritional data
+    total_nutrients = {}
+    risk_counts = {"High": 0, "Low": 0, "Normal": 0, "Unknown": 0}
+    product_names = []
+    scan_count = len(user_scans)
+    
+    for scan in user_scans:
+        # Collect product names
+        product_name = scan.get("product_info", {}).get("name", "Unknown")
+        if product_name != "Unknown":
+            product_names.append(product_name)
+        
+        # Process nutrients
+        structured_nutrients = scan.get("nutrition_analysis", {}).get("structured_nutrients", [])
+        for nutrient in structured_nutrients:
+            nutrient_name = nutrient.get("nutrient", "").lower()
+            value = nutrient.get("value", 0)
+            status = nutrient.get("status", "Unknown")
+            
+            # Aggregate nutrient values
+            if nutrient_name:
+                if nutrient_name not in total_nutrients:
+                    total_nutrients[nutrient_name] = {"total": 0, "count": 0, "unit": nutrient.get("unit", "")}
+                total_nutrients[nutrient_name]["total"] += value
+                total_nutrients[nutrient_name]["count"] += 1
+            
+            # Count risk statuses
+            if status in risk_counts:
+                risk_counts[status] += 1
+
+    # Calculate averages
+    avg_nutrients = {}
+    for nutrient, data in total_nutrients.items():
+        if data["count"] > 0:
+            avg_nutrients[nutrient] = {
+                "average": round(data["total"] / data["count"], 2),
+                "unit": data["unit"],
+                "total": round(data["total"], 2)
+            }
+
+    # Prepare data for AI prompt
+    analysis_data = {
+        "user_profile": {
+            "name": user_profile.get("full_name", "User"),
+            "age": user_profile.get("age", "Not specified"),
+            "gender": user_profile.get("gender", "Not specified"),
+            "height_cm": user_profile.get("height_cm", "Not specified"),
+            "weight_kg": user_profile.get("weight_kg", "Not specified"),
+            "activity_level": user_profile.get("activity_level", "Not specified"),
+            "medical_conditions": user_profile.get("medical_conditions", "None specified"),
+            "allergies": user_profile.get("allergies", "None specified")
+        },
+        "scan_summary": {
+            "total_scans": scan_count,
+            "products_scanned": list(set(product_names)),
+            "risk_distribution": risk_counts,
+            "average_nutrients": avg_nutrients
+        }
     }
-    data_json = json.dumps(data_for_prompt, indent=2)
 
+    # Calculate daily nutritional needs based on profile
+    if user_profile.get("weight_kg") and user_profile.get("activity_level"):
+        try:
+            daily_needs = calculate_daily_needs(user_profile["weight_kg"], user_profile["activity_level"])
+            analysis_data["daily_recommendations"] = daily_needs
+        except Exception as e:
+            print(f"Warning: Could not calculate daily needs: {e}")
+
+    data_json = json.dumps(analysis_data, indent=2)
+
+    # Doctor-style AI prompt
     prompt = f"""
-    You are a nutrition data analyst. Your analysis must be direct, concise, and strictly based on the provided JSON data.
-    - DO NOT comment on the quantity of data.
-    - ONLY analyze the nutrients present.
+    You are a qualified nutritionist and dietitian providing a comprehensive health assessment. 
+    Analyze the following complete dietary data for your patient:
 
-    Here is the user's data:
     ```json
     {data_json}
     ```
 
-    Based ONLY on this data, generate a report with three sections:
+    Provide a thorough, personalized analysis in HTML format with these sections:
 
-    <h2>Key Nutritional Observations</h2>
-    <p>Highlight the nutrients with the highest <strong>high_risk_count</strong>, or if none exist, state that intake is within normal limits and mention the most frequent nutrients.</p>
+    <h3>Patient Overview</h3>
+    - Summarize key demographic and health information
+    - Note any medical conditions or allergies that affect dietary recommendations
 
-    <h2>Associated Health Risks</h2>
-    <p>For each high-risk nutrient, explain possible long-term health risks. Connect them to any relevant <strong>medical_condition</strong> from the profile.</p>
+    <h3>Dietary Pattern Analysis</h3>
+    - Analyze the types of products frequently consumed
+    - Identify eating patterns and food choices
+    - Comment on diet diversity and balance
 
-    <h2>Data-Driven Suggestions</h2>
-    <ul>
-      <li>Provide actionable, nutrient-specific suggestions to reduce high-risk nutrients.</li>
-      <li>If no high-risk nutrients exist, provide a positive reinforcement tip.</li>
-    </ul>
+    <h3>Nutritional Assessment</h3>
+    - Evaluate key nutrients (protein, carbs, fats, sodium, sugar, fiber)
+    - Compare intake patterns to recommended daily values for this individual
+    - Highlight both deficiencies and excesses
+
+    <h3>Health Risks Identified</h3>
+    - List specific health risks based on the nutritional data
+    - Connect risks to the patient's profile (age, activity level, medical conditions)
+    - Prioritize risks by severity
+
+    <h3>Positive Aspects</h3>
+    - Acknowledge any healthy choices or balanced nutrients
+    - Recognize good dietary habits observed
+
+    <h3>Personalized Recommendations</h3>
+    - Provide specific, actionable dietary changes
+    - Suggest foods to increase or decrease
+    - Consider the patient's lifestyle and preferences
+    - Include portion size guidance where relevant
+
+    <h3>Action Plan</h3>
+    - Create a prioritized list of 3-5 key changes to implement
+    - Suggest a timeline for implementing changes
+    - Recommend follow-up monitoring
+
+    Keep the tone professional but compassionate. Be direct about health risks while providing constructive guidance. Focus on sustainable, realistic changes.
     """
 
     try:
-        response = model.generate_content(prompt)
-        return response.text
+        if not client:
+            return "<h2>AI Analysis Unavailable</h2><p>OpenAI client not configured.</p>"
+            
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a qualified nutritionist and dietitian providing comprehensive health assessments based on dietary data."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=1500
+        )
+        return response.choices[0].message.content
+
     except Exception as e:
-        print(f"❌ Comprehensive AI analysis failed: {e}")
-        return "<h2>Error</h2><p>An error occurred while generating your analysis.</p>"
+        print(f"❌ AI analysis failed: {e}")
+        return "<h2>Analysis Error</h2><p>Could not generate AI analysis. Please try again later.</p>"
+
 
 # ---------------- ROUTES ---------------- #
 
@@ -948,7 +1124,22 @@ def profile_form():
 
     return render_template('profile_form.html')
 
+# Add new route for AI analysis
+@app.route('/get-ai-analysis', methods=['POST'])
+def get_ai_analysis():
+    """Route to generate and return AI analysis"""
+    if 'username' not in session:
+        return jsonify({"error": "Please log in to get analysis"}), 401
+    
+    try:
+        analysis_html = get_comprehensive_ai_analysis()
+        return jsonify({"success": True, "analysis": analysis_html})
+    except Exception as e:
+        print(f"❌ Error generating AI analysis: {e}")
+        return jsonify({"error": "Failed to generate analysis"}), 500
 
+
+# Update the existing profile route
 @app.route('/profile')
 def profile():
     if 'username' not in session:
@@ -960,42 +1151,47 @@ def profile():
         flash("Your Profile Doesn't exist, Create a profile")
         return redirect(url_for('profile_form'))
 
-    # --- Part 1: Calculate TODAY'S stats (existing logic) ---
+    # Calculate daily recommendations
     recommendation = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
-    scans = load_user_scans(username) # This should be querying MongoDB now, but using your function for consistency
-    today = datetime.now().strftime('%Y-%m-%d')
-    today_scans = [s for s in scans if s['date'] == today]
-    sum_nutrients = lambda key: sum(float(s.get(key, 0)) for s in today_scans)
-    intake = {
-        'protein_g': round(sum_nutrients('protein'), 1),
-        'carbs_g': round(sum_nutrients('carbs'), 1),
-        'fats_g': round(sum_nutrients('fats'), 1)
-    }
+    
+    # Get today's scan data for visualization
+    today_scans_data = get_today_scan_visualization()
+    
+    # Calculate today's totals from scans
+    today_totals = {"protein": 0, "carbs": 0, "fats": 0}
+    for scan in today_scans_data:
+        for nutrient_name, nutrient_data in scan["nutrients"].items():
+            if nutrient_name in ["protein"]:
+                today_totals["protein"] += nutrient_data["value"]
+            elif nutrient_name in ["carbohydrates", "carbs"]:
+                today_totals["carbs"] += nutrient_data["value"]
+            elif nutrient_name in ["fat", "fats"]:
+                today_totals["fats"] += nutrient_data["value"]
+
+    # Calculate percentages
     percent = lambda val, ref: round((val / ref) * 100) if ref else 0
     percentages = {
-        'protein': percent(intake['protein_g'], recommendation['protein_g']),
-        'carbs': percent(intake['carbs_g'], recommendation['carbs_g']),
-        'fats': percent(intake['fats_g'], recommendation['fats_g'])
+        'protein': percent(today_totals['protein'], recommendation['protein_g']),
+        'carbs': percent(today_totals['carbs'], recommendation['carbs_g']),
+        'fats': percent(today_totals['fats'], recommendation['fats_g'])
     }
-    
-    # --- Part 2: Generate COMPREHENSIVE AI analysis (new logic) ---
-    ai_analysis_html = None # Default to None
-    habit_summary = get_user_habit_summary(username) # Fetch 30-day history
-    
-    # Only generate analysis if the user has enough data
-    if habit_summary and habit_summary.get('total_scans', 0) >= 10:
-        ai_analysis_html = get_comprehensive_ai_analysis(profile, habit_summary)
 
-    # --- Part 3: Render the template with ALL data ---
+    # Get scan statistics
+    scan_stats = scan_storage.get_user_scan_stats(username)
+
     return render_template(
         'profile.html', 
         profile=profile, 
-        intake=intake, 
+        intake={
+            'protein_g': round(today_totals['protein'], 1),
+            'carbs_g': round(today_totals['carbs'], 1),
+            'fats_g': round(today_totals['fats'], 1)
+        }, 
         recommendation=recommendation, 
         percentages=percentages,
-        ai_analysis_html=ai_analysis_html # Pass the new AI data to the template
+        today_scans=today_scans_data,
+        scan_stats=scan_stats
     )
-
 @app.route('/logout')
 def logout():
     session.clear()
