@@ -783,7 +783,7 @@ def login():
     if check_password_hash(hashed, password):
         session['username'] = username
         flash("Logged in successfully!", "success")
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('profile'))
 
     flash("Incorrect password.", "error")
     return redirect(url_for('landing'))

@@ -1,0 +1,1001 @@
+Nutrient,Min_Val,Max_Val,Min_Val_Risks,Max_Val_Risks
+Protein Variant 1,133.54,234.59,Muscle weakness,Diabetes
+Vitamin B6 Variant 2,149.08,193.48,Fatigue,Nerve damage
+Vitamin B2 Variant 3,164.29,409.82,Poor growth,Hypertension
+Artificial Chocolate Flavor Variant 4,106.88,155.27,Poor growth,Hypertension
+Taurine Variant 5,88.94,198.43,Muscle weakness,Toxicity
+Textured Vegetable Protein Variant 6,175.27,188.63,Muscle weakness,Liver strain
+Sucralose Variant 7,45.8,331.8,Poor digestion,Stroke
+Phosphorus Variant 8,106.02,396.46,Memory problems,Liver strain
+Peanuts Variant 9,96.72,346.82,Anemia,Heart disease
+Guar Gum Variant 10,124.27,270.03,Muscle weakness,Heart disease
+Artificial Strawberry Flavor Variant 11,142.48,218.39,Poor digestion,Diabetes
+Caffeine Variant 12,10.68,229.29,Muscle weakness,Toxicity
+Caffeine Variant 13,169.02,410.8,Anemia,Gastro issues
+Trans Fat Variant 14,111.53,216.99,Bone weakness,Liver strain
+Sucralose Variant 15,186.04,407.05,Low immunity,Kidney damage
+Calcium Variant 16,102.34,334.39,Poor digestion,Liver strain
+TBHQ (Tertiary Butylhydroquinone) Variant 17,120.83,136.76,Memory problems,Obesity
+Vitamin C Variant 18,163.69,436.64,Anemia,Heart disease
+Folic Acid Variant 19,47.41,206.47,Memory problems,Hypertension
+Omega-6 Variant 20,97.51,166.32,Anemia,Obesity
+Propyl Gallate Variant 21,36.68,321.38,Poor growth,Gastro issues
+Vitamin A Variant 22,75.7,261.73,Low immunity,Liver strain
+Beta-Carotene Variant 23,195.11,384.24,Anemia,Gastro issues
+Selenium Variant 24,41.82,100.97,Anemia,Nerve damage
+Beta-Carotene Variant 25,145.43,228.97,Fatigue,Hypertension
+Selenium Variant 26,54.39,265.05,Anemia,Stroke
+Omega-3 Variant 27,57.83,153.31,Poor digestion,Heart disease
+Preservatives (Sodium Benzoate) Variant 28,106.78,393.55,Bone weakness,Kidney damage
+Milk Powder Variant 29,80.32,238.27,Vision issues,Nerve damage
+Vitamin D Variant 30,4.33,242.82,Muscle weakness,Hypertension
+High Fructose Corn Syrup Variant 31,16.02,64.99,Bone weakness,Nerve damage
+Hydrolyzed Vegetable Protein Variant 32,187.53,205.58,Hormonal imbalance,Obesity
+Zinc Variant 33,181.24,223.67,Fatigue,Stroke
+Cocoa Powder Variant 34,25.13,132.49,Memory problems,Hypertension
+Malic Acid Variant 35,46.42,245.3,Poor digestion,Nerve damage
+Manganese Variant 36,39.87,257.39,Anemia,Stroke
+Vitamin B6 Variant 37,48.67,235.23,Fatigue,Nerve damage
+Potassium Sorbate Variant 38,30.11,146.34,Muscle weakness,Kidney damage
+Antioxidants Variant 39,128.2,335.5,Low immunity,Kidney damage
+Sugar Variant 40,66.03,357.45,Muscle weakness,Liver strain
+Carbohydrates Variant 41,12.1,277.05,Vision issues,Diabetes
+Probiotics Variant 42,164.49,376.77,Anemia,Liver strain
+Chromium Variant 43,85.17,141.88,Bone weakness,Obesity
+Whey Protein Variant 44,93.03,379.23,Vision issues,Stroke
+Selenium Variant 45,162.44,356.9,Vision issues,Hypertension
+Cocoa Powder Variant 46,126.01,159.09,Memory problems,Liver strain
+Phosphorus Variant 47,139.47,193.05,Hormonal imbalance,Liver strain
+Omega-6 Variant 48,16.64,253.53,Poor digestion,Heart disease
+Coconut Oil Variant 49,120.46,156.88,Muscle weakness,Nerve damage
+Vitamin B6 Variant 50,139.25,168.8,Low immunity,Liver strain
+Copper Variant 51,115.63,345.51,Muscle weakness,Kidney damage
+Iron Variant 52,175.53,261.26,Hormonal imbalance,Heart disease
+Beetroot Powder Variant 53,75.34,306.89,Fatigue,Obesity
+Lactic Acid Variant 54,13.04,31.21,Memory problems,Obesity
+Sodium Nitrite Variant 55,49.95,274.09,Bone weakness,Nerve damage
+Caramel Color Variant 56,31.48,269.3,Bone weakness,Diabetes
+Copper Variant 57,5.91,176.59,Bone weakness,Hypertension
+Chlorella Variant 58,109.91,177.79,Poor digestion,Gastro issues
+Pectin Variant 59,192.85,310.73,Poor digestion,Heart disease
+Vitamin B2 Variant 60,100.66,266.58,Bone weakness,Hypertension
+Artificial Sweeteners Variant 61,90.92,293.1,Memory problems,Hypertension
+Chromium Variant 62,92.49,389.34,Poor digestion,Diabetes
+Gluten Variant 63,20.96,162.19,Memory problems,Obesity
+Dextrose Variant 64,180.34,431.6,Memory problems,Kidney damage
+Iron Variant 65,28.65,168.03,Poor growth,Stroke
+Phosphorus Variant 66,27.01,248.14,Fatigue,Gastro issues
+MSG (Monosodium Glutamate) Variant 67,8.47,250.3,Memory problems,Kidney damage
+Malic Acid Variant 68,75.4,108.48,Anemia,Toxicity
+Lactic Acid Variant 69,51.32,342.38,Low immunity,Heart disease
+Casein Variant 70,82.63,229.53,Hormonal imbalance,Heart disease
+Maltodextrin Variant 71,12.05,182.99,Memory problems,Liver strain
+Gelatin Variant 72,171.33,260.09,Fatigue,Nerve damage
+Vitamin B12 Variant 73,165.98,400.43,Poor digestion,Diabetes
+Vitamin B6 Variant 74,12.25,147.7,Low immunity,Toxicity
+BHA (Butylated Hydroxyanisole) Variant 75,18.42,104.12,Muscle weakness,Kidney damage
+Antioxidants Variant 76,163.99,270.8,Vision issues,Gastro issues
+Potassium Sorbate Variant 77,183.64,315.66,Memory problems,Gastro issues
+Salt (Sodium) Variant 78,141.74,417.61,Bone weakness,Heart disease
+Magnesium Variant 79,47.87,250.38,Low immunity,Nerve damage
+Pectin Variant 80,192.58,252.48,Vision issues,Heart disease
+Gelatin Variant 81,66.48,186.99,Low immunity,Obesity
+Gelatin Variant 82,100.67,380.21,Hormonal imbalance,Obesity
+Zinc Variant 83,156.16,202.51,Low immunity,Kidney damage
+Sodium Sorbate Variant 84,72.41,295.16,Hormonal imbalance,Toxicity
+Annatto Variant 85,128.51,375.54,Fatigue,Stroke
+Tartaric Acid Variant 86,158.79,341.56,Hormonal imbalance,Gastro issues
+Carbohydrates Variant 87,132.58,142.96,Hormonal imbalance,Hypertension
+Vitamin B2 Variant 88,140,386.54,Fatigue,Hypertension
+Stevia Variant 89,41.03,203.07,Vision issues,Obesity
+Dextrose Variant 90,7.39,30.98,Hormonal imbalance,Kidney damage
+Sodium Nitrate Variant 91,183.24,283.38,Fatigue,Heart disease
+Potassium Variant 92,131.3,202.33,Fatigue,Kidney damage
+Fiber Variant 93,128.69,362.19,Anemia,Heart disease
+Erythritol Variant 94,73.72,180.67,Bone weakness,Toxicity
+Vitamin B3 (Niacin) Variant 95,185.46,360.32,Hormonal imbalance,Toxicity
+Peanuts Variant 96,105.39,283.64,Anemia,Stroke
+Artificial Vanilla Flavor Variant 97,158.69,369.31,Fatigue,Hypertension
+Copper Variant 98,19.57,79.98,Vision issues,Nerve damage
+Sugar Variant 99,45.93,301.09,Muscle weakness,Toxicity
+Annatto Variant 100,163.75,223.55,Vision issues,Nerve damage
+Calcium Variant 101,86.97,214.29,Poor growth,Heart disease
+Tartaric Acid Variant 102,134.18,314.64,Poor digestion,Gastro issues
+Calcium Variant 103,31.76,325.46,Low immunity,Liver strain
+Casein Variant 104,77.69,146.32,Vision issues,Heart disease
+Vitamin D Variant 105,14.23,146.78,Poor growth,Obesity
+Benzoic Acid Variant 106,45.14,109.21,Memory problems,Liver strain
+Salt (Sodium) Variant 107,17.33,102.12,Low immunity,Kidney damage
+Folic Acid Variant 108,58.62,239.2,Low immunity,Stroke
+Almonds Variant 109,47.8,172.13,Anemia,Gastro issues
+Chromium Variant 110,157.48,330.44,Anemia,Gastro issues
+Folic Acid Variant 111,18.43,209.25,Poor growth,Liver strain
+Vanillin Variant 112,28.55,260.56,Bone weakness,Kidney damage
+Milk Powder Variant 113,125.04,357,Anemia,Heart disease
+Pectin Variant 114,190.16,224.43,Muscle weakness,Diabetes
+BHT (Butylated Hydroxytoluene) Variant 115,47.95,165.67,Hormonal imbalance,Liver strain
+Salt (Sodium) Variant 116,190.96,441.9,Anemia,Nerve damage
+Pectin Variant 117,89.34,321.76,Muscle weakness,Heart disease
+Vitamin B12 Variant 118,194.04,467.06,Vision issues,Stroke
+Sodium Sorbate Variant 119,178.51,189.3,Poor digestion,Kidney damage
+Gluten Variant 120,188.74,254.98,Low immunity,Hypertension
+Sorbitol Variant 121,148.41,413.6,Anemia,Gastro issues
+Aspartame Variant 122,37.08,222.14,Poor digestion,Toxicity
+Stevia Variant 123,76.08,88.23,Fatigue,Toxicity
+Acetic Acid Variant 124,22.82,308.94,Vision issues,Nerve damage
+Guar Gum Variant 125,44.83,71.47,Poor growth,Heart disease
+Saturated Fat Variant 126,194.91,349.3,Hormonal imbalance,Obesity
+Caramel Color Variant 127,85.44,202,Bone weakness,Stroke
+Artificial Sweeteners Variant 128,15.84,236.85,Memory problems,Toxicity
+Vitamin B6 Variant 129,72.31,221.4,Vision issues,Heart disease
+Erythritol Variant 130,31.28,226.67,Muscle weakness,Obesity
+Vitamin C Variant 131,57.43,328.55,Memory problems,Nerve damage
+Caffeine Variant 132,181.19,234.92,Vision issues,Gastro issues
+Lactose Variant 133,101.35,205.1,Bone weakness,Nerve damage
+Aspartame Variant 134,17.89,188.72,Poor digestion,Stroke
+Citric Acid Variant 135,33.71,47.61,Anemia,Stroke
+Caffeine Variant 136,164.28,193.63,Hormonal imbalance,Nerve damage
+Phosphorus Variant 137,156.89,394.28,Muscle weakness,Liver strain
+Trans Fat Variant 138,39.4,271.48,Fatigue,Gastro issues
+Copper Variant 139,169.59,449.26,Anemia,Stroke
+Stevia Variant 140,113.24,167.91,Anemia,Hypertension
+Vitamin B3 Variant 141,121.19,235.05,Vision issues,Toxicity
+Iron Variant 142,150.68,256.63,Muscle weakness,Diabetes
+Magnesium Variant 143,60.86,185.45,Hormonal imbalance,Liver strain
+Sorbitol Variant 144,189.41,234.96,Low immunity,Heart disease
+Selenium Variant 145,178.58,208.9,Anemia,Gastro issues
+Magnesium Variant 146,31.62,162.65,Memory problems,Nerve damage
+Fumaric Acid Variant 147,164.44,317.13,Memory problems,Hypertension
+Textured Vegetable Protein Variant 148,11.58,244.35,Bone weakness,Kidney damage
+MSG (Monosodium Glutamate) Variant 149,178.7,333.9,Bone weakness,Heart disease
+Vitamin C Variant 150,104.63,179.04,Anemia,Kidney damage
+Vitamin B1 (Thiamine) Variant 151,176.91,403.59,Vision issues,Nerve damage
+Yeast Extract Variant 152,183.55,351.33,Poor growth,Heart disease
+Antioxidants Variant 153,197.76,473.88,Vision issues,Nerve damage
+Pectin Variant 154,53.49,315.18,Fatigue,Liver strain
+BHA (Butylated Hydroxyanisole) Variant 155,107.45,152.92,Low immunity,Obesity
+Omega-6 Fatty Acids Variant 156,91.36,156.6,Fatigue,Liver strain
+Iron Variant 157,48.58,311.2,Vision issues,Toxicity
+Copper Variant 158,92.86,323.43,Hormonal imbalance,Heart disease
+Vitamin K Variant 159,118.73,273.34,Muscle weakness,Nerve damage
+Artificial Vanilla Flavor Variant 160,124.47,265.13,Vision issues,Heart disease
+Vitamin C Variant 161,71.25,205.12,Hormonal imbalance,Kidney damage
+Rice Flour Variant 162,158.64,316.48,Memory problems,Obesity
+Chlorella Variant 163,95.38,221.34,Bone weakness,Gastro issues
+Vitamin B12 Variant 164,34.56,207.09,Muscle weakness,Kidney damage
+Gelatin Variant 165,57.07,209.38,Fatigue,Gastro issues
+Propyl Gallate Variant 166,151.02,347.52,Fatigue,Hypertension
+Vitamin B12 Variant 167,33.2,99.86,Fatigue,Kidney damage
+Vitamin C Variant 168,48.75,169.82,Anemia,Heart disease
+Vitamin A Variant 169,184.49,458.84,Poor digestion,Liver strain
+Iron Variant 170,19.87,252.12,Poor growth,Diabetes
+Sucralose Variant 171,68.32,103.18,Poor digestion,Hypertension
+Salt (Sodium) Variant 172,162.87,404.09,Bone weakness,Diabetes
+Phosphorus Variant 173,153.4,197.54,Muscle weakness,Heart disease
+MSG (Monosodium Glutamate) Variant 174,83.29,346.08,Memory problems,Hypertension
+Sugar Variant 175,88.77,169.77,Hormonal imbalance,Kidney damage
+Preservatives (Sodium Benzoate) Variant 176,48.98,289.03,Fatigue,Obesity
+Lactic Acid Variant 177,193.5,358.8,Hormonal imbalance,Toxicity
+Vitamin K Variant 178,171.66,406.73,Vision issues,Hypertension
+Zinc Variant 179,184.92,200.71,Bone weakness,Kidney damage
+Carrageenan Variant 180,140.51,356.08,Low immunity,Kidney damage
+Calcium Propionate Variant 181,129.32,329.87,Hormonal imbalance,Heart disease
+Annatto Variant 182,32.95,263.78,Vision issues,Diabetes
+Sorbitol Variant 183,25.3,203.63,Muscle weakness,Kidney damage
+Zinc Variant 184,147.1,430.4,Fatigue,Stroke
+Selenium Variant 185,10.75,47.29,Low immunity,Nerve damage
+Artificial Vanilla Flavor Variant 186,16.02,238.7,Hormonal imbalance,Gastro issues
+Fluoride Variant 187,155.77,253.98,Anemia,Gastro issues
+Chlorella Variant 188,121.52,270.95,Anemia,Diabetes
+Phytic Acid Variant 189,73.58,345.8,Hormonal imbalance,Gastro issues
+Protein Variant 190,36.82,253.58,Muscle weakness,Liver strain
+Cocoa Powder Variant 191,169.29,234.27,Low immunity,Diabetes
+Lecithin Variant 192,89.35,369.65,Anemia,Diabetes
+Malic Acid Variant 193,130.94,223.05,Anemia,Obesity
+Vitamin B2 (Riboflavin) Variant 194,128.78,186.75,Anemia,Nerve damage
+Folic Acid Variant 195,141.8,198.82,Muscle weakness,Toxicity
+Mannitol Variant 196,47.2,143.43,Low immunity,Obesity
+Vitamin A Variant 197,54.36,199.12,Vision issues,Diabetes
+Vitamin B6 Variant 198,39.42,136.61,Poor growth,Gastro issues
+Canola Oil Variant 199,138.54,392.22,Low immunity,Toxicity
+Calcium Propionate Variant 200,125.21,198.48,Poor digestion,Diabetes
+Xanthan Gum Variant 201,43.97,177.76,Fatigue,Diabetes
+Milk Powder Variant 202,154.63,334.5,Bone weakness,Stroke
+Copper Variant 203,134.25,173.65,Fatigue,Kidney damage
+Peanuts Variant 204,57.49,128.47,Fatigue,Heart disease
+Caseinate Variant 205,158.81,386.81,Memory problems,Nerve damage
+Aspartame Variant 206,13.76,98.99,Low immunity,Nerve damage
+Iron Variant 207,132.26,386.9,Fatigue,Stroke
+Malic Acid Variant 208,58.98,247.41,Poor digestion,Diabetes
+Iron Variant 209,132.44,398.88,Fatigue,Liver strain
+Caffeine Variant 210,171.74,427.84,Vision issues,Heart disease
+Gluten Variant 211,123.21,413.56,Poor growth,Heart disease
+Olive Oil Variant 212,10.82,197.07,Vision issues,Liver strain
+Whey Protein Variant 213,155.64,340.58,Muscle weakness,Heart disease
+Iodine Variant 214,108.58,216.02,Bone weakness,Heart disease
+Vitamin B3 (Niacin) Variant 215,143.26,329.43,Muscle weakness,Hypertension
+BHA (Butylated Hydroxyanisole) Variant 216,99.3,114.78,Anemia,Diabetes
+Magnesium Variant 217,45.65,260.25,Poor growth,Stroke
+Phosphorus Variant 218,17.12,133.39,Anemia,Hypertension
+Vitamin B6 Variant 219,188.95,251.38,Poor digestion,Hypertension
+Probiotics Variant 220,139.62,431.16,Low immunity,Hypertension
+Aspartame Variant 221,96.14,263.54,Muscle weakness,Nerve damage
+Corn Syrup Variant 222,67.47,98.87,Anemia,Diabetes
+Sodium Nitrate Variant 223,157.82,408.93,Memory problems,Heart disease
+Propyl Gallate Variant 224,139.69,435.7,Low immunity,Stroke
+Textured Vegetable Protein Variant 225,185.27,208.4,Vision issues,Nerve damage
+Sodium Sorbate Variant 226,47.88,245.26,Bone weakness,Diabetes
+Manganese Variant 227,115.99,322.91,Vision issues,Toxicity
+Vitamin C Variant 228,68.17,217.1,Poor digestion,Hypertension
+Trans Fat Variant 229,104.38,314.06,Low immunity,Diabetes
+BHT (Butylated Hydroxytoluene) Variant 230,80.54,221.11,Vision issues,Toxicity
+Calcium Propionate Variant 231,18.19,269.77,Poor growth,Heart disease
+Artificial Strawberry Flavor Variant 232,164.23,371.65,Muscle weakness,Liver strain
+Taurine Variant 233,51.86,130.37,Muscle weakness,Obesity
+Almonds Variant 234,90.17,276.98,Poor digestion,Toxicity
+Beta-Carotene Variant 235,54.29,254.25,Anemia,Obesity
+Fat (Total) Variant 236,25.34,302.1,Fatigue,Gastro issues
+Spirulina Variant 237,32.68,66.24,Memory problems,Hypertension
+Trans Fat Variant 238,83.26,343,Anemia,Toxicity
+Coconut Oil Variant 239,45.46,251.49,Poor growth,Hypertension
+Manganese Variant 240,20.2,290.01,Poor growth,Obesity
+Sugar Variant 241,119.91,195.92,Memory problems,Stroke
+Yeast Extract Variant 242,141.74,393.13,Bone weakness,Stroke
+Selenium Variant 243,26.04,244.81,Hormonal imbalance,Kidney damage
+Paprika Extract Variant 244,78.46,333.73,Bone weakness,Heart disease
+Calcium Variant 245,65.34,151.77,Vision issues,Obesity
+Calcium Variant 246,111.94,213.64,Memory problems,Hypertension
+Sugar Variant 247,111.25,316.63,Fatigue,Heart disease
+Trans Fat Variant 248,174.36,232.67,Muscle weakness,Hypertension
+Gelatin Variant 249,178.88,356.88,Memory problems,Obesity
+Potassium Variant 250,178.82,437.62,Memory problems,Stroke
+Vitamin K Variant 251,13.98,36.92,Low immunity,Hypertension
+Carrageenan Variant 252,79.63,190.12,Vision issues,Obesity
+Hydrolyzed Vegetable Protein Variant 253,192.17,476.88,Poor digestion,Heart disease
+Chromium Variant 254,71.72,92.68,Vision issues,Diabetes
+Unsaturated Fat Variant 255,104.97,186.66,Memory problems,Obesity
+Acetic Acid Variant 256,74.3,184.94,Fatigue,Liver strain
+Vitamin B2 Variant 257,176.18,204.63,Hormonal imbalance,Hypertension
+Phosphorus Variant 258,6.35,264.22,Hormonal imbalance,Liver strain
+Acetic Acid Variant 259,116.88,269.96,Bone weakness,Diabetes
+Vitamin D Variant 260,26.07,129.76,Memory problems,Gastro issues
+Artificial Vanilla Flavor Variant 261,70,262.24,Muscle weakness,Gastro issues
+Lactose Variant 262,159.15,433.04,Fatigue,Kidney damage
+Vitamin B12 Variant 263,2.12,208.42,Bone weakness,Kidney damage
+Potassium Sorbate Variant 264,36.15,165.95,Hormonal imbalance,Toxicity
+Cholesterol Variant 265,81.14,360.01,Muscle weakness,Diabetes
+Selenium Variant 266,153.06,415.24,Bone weakness,Diabetes
+Antioxidants Variant 267,158.06,248.68,Low immunity,Kidney damage
+Sodium Nitrite Variant 268,111.1,311.36,Anemia,Nerve damage
+Taurine Variant 269,30.84,200.55,Poor growth,Heart disease
+Canola Oil Variant 270,46.68,226.79,Poor growth,Hypertension
+Probiotics Variant 271,146.16,381.29,Hormonal imbalance,Heart disease
+Calcium Variant 272,163.87,458.2,Poor growth,Gastro issues
+Artificial Strawberry Flavor Variant 273,175.98,254.97,Low immunity,Nerve damage
+Antioxidants Variant 274,6.51,192.19,Muscle weakness,Gastro issues
+High Fructose Corn Syrup Variant 275,148.74,317.53,Fatigue,Stroke
+Corn Syrup Variant 276,167.95,405.76,Low immunity,Obesity
+Casein Variant 277,35.43,248.64,Bone weakness,Stroke
+Magnesium Variant 278,35.61,80.79,Fatigue,Diabetes
+Vitamin C Variant 279,170.62,242.01,Poor digestion,Kidney damage
+Cholesterol Variant 280,195.11,414.02,Memory problems,Heart disease
+Casein Variant 281,58.17,233.13,Vision issues,Liver strain
+Vitamin B1 (Thiamine) Variant 282,113.64,374.07,Hormonal imbalance,Nerve damage
+Omega-6 Fatty Acids Variant 283,140.99,224.44,Anemia,Stroke
+Lecithin Variant 284,1.93,279.96,Vision issues,Liver strain
+Coconut Oil Variant 285,55.18,269.55,Memory problems,Hypertension
+Aspartame Variant 286,46.31,164.83,Memory problems,Obesity
+Sodium Nitrate Variant 287,122.88,407.07,Low immunity,Heart disease
+Canola Oil Variant 288,95.05,223.78,Bone weakness,Obesity
+Vitamin D Variant 289,45.23,63.14,Poor growth,Liver strain
+Gluten Variant 290,90.09,316.24,Memory problems,Stroke
+Soy Protein Variant 291,131.98,366.94,Low immunity,Gastro issues
+Fat (Total) Variant 292,97.83,375.26,Vision issues,Liver strain
+Vitamin B3 Variant 293,68,119.24,Poor digestion,Liver strain
+Vitamin E Variant 294,114.68,334.34,Bone weakness,Nerve damage
+Copper Variant 295,78.49,314.78,Memory problems,Hypertension
+Vitamin K Variant 296,171.54,304.84,Vision issues,Hypertension
+Manganese Variant 297,52.86,92.56,Memory problems,Obesity
+Vitamin A Variant 298,143.33,347.39,Poor growth,Nerve damage
+Fiber Variant 299,123.71,380.03,Memory problems,Hypertension
+Beta-Carotene Variant 300,28.46,113.89,Low immunity,Obesity
+Vitamin B2 (Riboflavin) Variant 301,33.57,127.35,Memory problems,Nerve damage
+Vitamin C Variant 302,12.4,151.46,Vision issues,Stroke
+Yeast Extract Variant 303,115.14,137.08,Muscle weakness,Toxicity
+Yeast Extract Variant 304,109.51,401.47,Fatigue,Gastro issues
+Sugar Variant 305,62.87,120.75,Poor growth,Hypertension
+Mannitol Variant 306,164.53,428.7,Hormonal imbalance,Diabetes
+Caseinate Variant 307,16.97,148.81,Poor digestion,Nerve damage
+Iodine Variant 308,110.19,279.64,Low immunity,Toxicity
+Selenium Variant 309,35.14,290.4,Low immunity,Diabetes
+Vitamin C Variant 310,127.28,369.01,Anemia,Kidney damage
+Vitamin B6 Variant 311,11.64,105.08,Bone weakness,Liver strain
+Aspartame Variant 312,86.14,114.34,Hormonal imbalance,Hypertension
+Fluoride Variant 313,168.96,189.02,Low immunity,Heart disease
+Magnesium Variant 314,133.01,219.95,Memory problems,Stroke
+Selenium Variant 315,50.95,175.61,Fatigue,Stroke
+Preservatives (Sodium Benzoate) Variant 316,48.92,336.91,Poor growth,Diabetes
+Caseinate Variant 317,141.16,253.01,Poor digestion,Obesity
+Copper Variant 318,187.89,386.82,Hormonal imbalance,Gastro issues
+High Fructose Corn Syrup Variant 319,184.43,230.03,Memory problems,Diabetes
+Mannitol Variant 320,132.79,356.95,Hormonal imbalance,Diabetes
+Copper Variant 321,120.94,383.43,Poor digestion,Kidney damage
+Artificial Vanilla Flavor Variant 322,11.05,155.32,Vision issues,Stroke
+Manganese Variant 323,24.18,55.19,Poor growth,Obesity
+Pectin Variant 324,152.3,178.23,Hormonal imbalance,Obesity
+MSG (Monosodium Glutamate) Variant 325,103.58,134.07,Memory problems,Hypertension
+Canola Oil Variant 326,148.39,332.1,Poor digestion,Nerve damage
+Peanuts Variant 327,27.37,177.68,Anemia,Gastro issues
+Calcium Propionate Variant 328,91.57,343.49,Bone weakness,Gastro issues
+Aspartame Variant 329,117.57,276.11,Muscle weakness,Obesity
+Phosphorus Variant 330,173.04,368.27,Hormonal imbalance,Toxicity
+Vitamin C Variant 331,8.99,230.11,Memory problems,Kidney damage
+Cholesterol Variant 332,197.73,456.81,Muscle weakness,Heart disease
+Erythritol Variant 333,64.42,199.98,Memory problems,Heart disease
+Zinc Variant 334,84.85,125.02,Poor digestion,Liver strain
+Citric Acid Variant 335,58.38,293.64,Poor digestion,Gastro issues
+Lecithin Variant 336,128.7,416.99,Memory problems,Heart disease
+Pectin Variant 337,31.46,304.45,Low immunity,Nerve damage
+Peanuts Variant 338,175.16,367.5,Poor growth,Kidney damage
+Vitamin B3 (Niacin) Variant 339,68.95,274.72,Memory problems,Diabetes
+Gluten Variant 340,108.6,373.74,Poor digestion,Toxicity
+Sodium Nitrate Variant 341,173.55,361.64,Hormonal imbalance,Diabetes
+Magnesium Variant 342,95.74,305,Fatigue,Liver strain
+Whey Protein Variant 343,182.95,449.43,Poor digestion,Heart disease
+Canola Oil Variant 344,129.9,357.05,Low immunity,Kidney damage
+BHT (Butylated Hydroxytoluene) Variant 345,129.79,396.8,Low immunity,Kidney damage
+TBHQ (Tertiary Butylhydroquinone) Variant 346,98.67,286.68,Fatigue,Obesity
+Salt (Sodium) Variant 347,12.95,146.16,Vision issues,Liver strain
+Vitamin C Variant 348,195.77,396.19,Memory problems,Nerve damage
+Acetic Acid Variant 349,168.45,398.28,Muscle weakness,Heart disease
+Beta-Carotene Variant 350,100.82,275.71,Memory problems,Kidney damage
+Iron Variant 351,146.65,229.69,Vision issues,Toxicity
+Potassium Variant 352,40.44,197.14,Poor digestion,Kidney damage
+Lecithin Variant 353,157.73,292.19,Muscle weakness,Heart disease
+Textured Vegetable Protein Variant 354,150.95,361.07,Low immunity,Kidney damage
+Calcium Variant 355,123.03,372.95,Memory problems,Obesity
+Caramel Color Variant 356,99.17,368.09,Muscle weakness,Hypertension
+Magnesium Variant 357,165.09,416.94,Vision issues,Hypertension
+Artificial Vanilla Flavor Variant 358,105.12,216.43,Poor growth,Liver strain
+Hydrolyzed Vegetable Protein Variant 359,91.45,105.68,Anemia,Hypertension
+TBHQ (Tertiary Butylhydroquinone) Variant 360,4.47,282.63,Poor growth,Obesity
+Manganese Variant 361,108.75,267.9,Fatigue,Diabetes
+Sodium Sorbate Variant 362,16.27,198.99,Hormonal imbalance,Gastro issues
+Coconut Oil Variant 363,122.75,147.62,Memory problems,Nerve damage
+Caffeine Variant 364,151.83,247.8,Bone weakness,Liver strain
+Vitamin C Variant 365,183.97,201.64,Vision issues,Nerve damage
+Gluten Variant 366,153.3,178.63,Poor digestion,Toxicity
+TBHQ (Tertiary Butylhydroquinone) Variant 367,112.02,244.49,Poor growth,Kidney damage
+Gluten Variant 368,58.92,178.08,Bone weakness,Stroke
+Carbohydrates Variant 369,199.9,419.05,Fatigue,Stroke
+Spirulina Variant 370,30.89,304.64,Muscle weakness,Hypertension
+Sodium Nitrite Variant 371,45.36,66.68,Memory problems,Liver strain
+Lactose Variant 372,52.82,105.19,Poor growth,Nerve damage
+Rice Flour Variant 373,147.67,253.6,Memory problems,Gastro issues
+BHA (Butylated Hydroxyanisole) Variant 374,60.58,201.8,Vision issues,Gastro issues
+Yeast Extract Variant 375,86.74,385.24,Muscle weakness,Toxicity
+Artificial Vanilla Flavor Variant 376,108.85,406.76,Muscle weakness,Hypertension
+Phytic Acid Variant 377,184.9,394.52,Bone weakness,Obesity
+Phosphorus Variant 378,107.8,182.5,Bone weakness,Gastro issues
+Magnesium Variant 379,111.77,333.91,Hormonal imbalance,Nerve damage
+MSG (Monosodium Glutamate) Variant 380,17,216.74,Hormonal imbalance,Nerve damage
+Beetroot Powder Variant 381,54.97,160.65,Bone weakness,Stroke
+Spirulina Variant 382,156.71,334.13,Hormonal imbalance,Gastro issues
+Beetroot Powder Variant 383,182.03,371.48,Vision issues,Stroke
+Protein Variant 384,27.74,76.78,Muscle weakness,Toxicity
+Iodine Variant 385,165.98,240.65,Fatigue,Nerve damage
+Vitamin A Variant 386,95.32,196.99,Bone weakness,Liver strain
+Antioxidants Variant 387,46.31,184.34,Muscle weakness,Heart disease
+Copper Variant 388,139.5,355.1,Low immunity,Stroke
+Vitamin D Variant 389,41.97,103.4,Vision issues,Toxicity
+Artificial Chocolate Flavor Variant 390,39.81,83.6,Memory problems,Obesity
+Saturated Fat Variant 391,69.76,146.87,Low immunity,Liver strain
+Vitamin C Variant 392,190.31,261.63,Anemia,Heart disease
+Sodium Sorbate Variant 393,186.51,426.63,Poor digestion,Toxicity
+Vitamin B3 Variant 394,11.36,199.24,Memory problems,Nerve damage
+Gluten Variant 395,186.25,328.47,Bone weakness,Nerve damage
+Selenium Variant 396,87.58,196.5,Muscle weakness,Heart disease
+Citric Acid Variant 397,78.88,120.56,Poor growth,Toxicity
+Tartaric Acid Variant 398,180.27,317.03,Fatigue,Kidney damage
+Vitamin D Variant 399,115.7,141.35,Muscle weakness,Heart disease
+Fat (Total) Variant 400,153.62,188.64,Fatigue,Liver strain
+Chlorella Variant 401,156.03,390.69,Poor digestion,Stroke
+Sodium Nitrate Variant 402,185.77,224.08,Muscle weakness,Heart disease
+Trans Fat Variant 403,62.1,218.62,Poor digestion,Gastro issues
+Textured Vegetable Protein Variant 404,3.92,287.27,Vision issues,Liver strain
+Magnesium Variant 405,60.08,91.41,Vision issues,Hypertension
+Tartaric Acid Variant 406,82.62,233.93,Poor growth,Nerve damage
+Cocoa Powder Variant 407,4.97,227.98,Memory problems,Nerve damage
+Potassium Variant 408,110.4,351.76,Fatigue,Heart disease
+Textured Vegetable Protein Variant 409,92.29,272.19,Fatigue,Toxicity
+Magnesium Variant 410,158.52,399.89,Memory problems,Kidney damage
+Milk Powder Variant 411,101.36,134.46,Memory problems,Toxicity
+Hydrolyzed Vegetable Protein Variant 412,144.24,275.17,Memory problems,Obesity
+Omega-3 Fatty Acids Variant 413,175.26,316.44,Muscle weakness,Gastro issues
+Gluten Variant 414,100.41,262.64,Hormonal imbalance,Nerve damage
+Whey Protein Variant 415,189.05,334.86,Fatigue,Hypertension
+Vitamin B3 (Niacin) Variant 416,96.85,348.54,Muscle weakness,Hypertension
+Phosphorus Variant 417,62.51,153.98,Vision issues,Gastro issues
+Fructose Variant 418,134.31,404.26,Bone weakness,Gastro issues
+Caramel Color Variant 419,115.52,390.9,Fatigue,Diabetes
+Calcium Variant 420,156.98,366.63,Memory problems,Nerve damage
+Acetic Acid Variant 421,25.87,73.81,Vision issues,Obesity
+Palm Oil Variant 422,130.72,320.1,Bone weakness,Nerve damage
+Spirulina Variant 423,25.6,292,Poor growth,Diabetes
+Hydrolyzed Vegetable Protein Variant 424,85.74,163.09,Muscle weakness,Toxicity
+MSG (Monosodium Glutamate) Variant 425,161.07,270.14,Vision issues,Obesity
+Omega-3 Fatty Acids Variant 426,153.56,221.08,Low immunity,Toxicity
+Sugar Variant 427,136.14,186.93,Memory problems,Nerve damage
+Lecithin Variant 428,97.43,279.02,Bone weakness,Obesity
+Calcium Propionate Variant 429,84.04,237.11,Vision issues,Stroke
+Vitamin B12 Variant 430,37.5,251.77,Vision issues,Toxicity
+Caffeine Variant 431,114.13,144.06,Poor digestion,Heart disease
+Magnesium Variant 432,168.47,397.7,Vision issues,Toxicity
+Coconut Oil Variant 433,86.04,384.79,Poor growth,Obesity
+Trans Fat Variant 434,133.98,309.67,Muscle weakness,Toxicity
+Peanuts Variant 435,105.27,340.05,Vision issues,Nerve damage
+Omega-6 Variant 436,88.61,313.54,Fatigue,Obesity
+Palm Oil Variant 437,42.95,252.24,Poor growth,Hypertension
+Guar Gum Variant 438,157.11,435.55,Low immunity,Gastro issues
+Peanuts Variant 439,142.1,374.72,Memory problems,Obesity
+Omega-6 Fatty Acids Variant 440,97.67,296.22,Low immunity,Nerve damage
+Lactose Variant 441,83.33,326.53,Poor growth,Heart disease
+Vitamin B6 Variant 442,106.48,134.98,Memory problems,Hypertension
+Tartaric Acid Variant 443,169.85,288.39,Poor growth,Diabetes
+Vanillin Variant 444,132.24,307.89,Hormonal imbalance,Liver strain
+Vitamin D Variant 445,152.68,374.29,Anemia,Kidney damage
+Vitamin A Variant 446,119.24,148.65,Poor growth,Heart disease
+Acetic Acid Variant 447,25.29,145.91,Vision issues,Kidney damage
+Aspartame Variant 448,21.81,170.04,Memory problems,Kidney damage
+Textured Vegetable Protein Variant 449,1.78,63.29,Poor digestion,Diabetes
+Salt (Sodium) Variant 450,171.97,226.15,Memory problems,Stroke
+Lactose Variant 451,43.89,298.04,Muscle weakness,Gastro issues
+Sodium Nitrate Variant 452,21.15,32.92,Low immunity,Stroke
+Mannitol Variant 453,190.72,343.94,Fatigue,Heart disease
+Saturated Fat Variant 454,93.89,272.29,Low immunity,Diabetes
+Manganese Variant 455,109.79,362.43,Muscle weakness,Liver strain
+Vitamin C Variant 456,32.62,307.36,Poor growth,Stroke
+Zinc Variant 457,182.6,342.26,Bone weakness,Liver strain
+Propyl Gallate Variant 458,8.19,175.35,Muscle weakness,Diabetes
+Yeast Extract Variant 459,63.69,266.38,Muscle weakness,Heart disease
+Guar Gum Variant 460,60.17,144.41,Bone weakness,Kidney damage
+Vitamin B1 (Thiamine) Variant 461,175.19,467.77,Poor digestion,Hypertension
+Vitamin B1 (Thiamine) Variant 462,55.93,263.33,Hormonal imbalance,Obesity
+Vitamin A Variant 463,110.02,408.66,Memory problems,Obesity
+Unsaturated Fat Variant 464,187.8,372.85,Poor growth,Diabetes
+Preservatives (Sodium Benzoate) Variant 465,19.45,123.08,Poor digestion,Obesity
+Omega-3 Fatty Acids Variant 466,27.22,312.78,Muscle weakness,Toxicity
+Omega-3 Fatty Acids Variant 467,95.96,298.54,Low immunity,Toxicity
+Gluten Variant 468,92.94,257.71,Hormonal imbalance,Kidney damage
+Vitamin B12 Variant 469,169.89,272.96,Vision issues,Diabetes
+Protein Variant 470,80.37,298.85,Fatigue,Nerve damage
+Dextrose Variant 471,1.99,288.65,Bone weakness,Toxicity
+Carrageenan Variant 472,93.99,317.34,Vision issues,Heart disease
+Soy Protein Variant 473,48.01,288.77,Anemia,Obesity
+Potassium Sorbate Variant 474,89.85,215.72,Poor digestion,Gastro issues
+Caramel Color Variant 475,56.76,97.16,Low immunity,Stroke
+Calcium Variant 476,175.27,398.85,Vision issues,Toxicity
+Saturated Fat Variant 477,18.48,281.45,Low immunity,Hypertension
+Gelatin Variant 478,196.98,454.55,Anemia,Hypertension
+Artificial Strawberry Flavor Variant 479,87.53,242.79,Poor digestion,Kidney damage
+Malic Acid Variant 480,71.66,347.97,Memory problems,Toxicity
+Vitamin B2 Variant 481,118.94,269.77,Hormonal imbalance,Diabetes
+Phosphorus Variant 482,159.54,334.31,Fatigue,Obesity
+Omega-3 Variant 483,184.99,300.82,Hormonal imbalance,Gastro issues
+Vitamin B3 Variant 484,157.67,253.27,Memory problems,Toxicity
+Casein Variant 485,124.58,253.33,Hormonal imbalance,Obesity
+Vitamin B2 (Riboflavin) Variant 486,90.83,159.97,Fatigue,Hypertension
+Zinc Variant 487,64.3,181.04,Fatigue,Diabetes
+Phosphorus Variant 488,102.08,273.03,Hormonal imbalance,Nerve damage
+Vitamin B12 Variant 489,146.4,280.9,Vision issues,Diabetes
+Beetroot Powder Variant 490,134.16,200.22,Low immunity,Hypertension
+Iodine Variant 491,132.21,160.72,Memory problems,Liver strain
+Potassium Sorbate Variant 492,114,191.22,Poor digestion,Stroke
+Vitamin B3 (Niacin) Variant 493,116.64,150.43,Poor digestion,Obesity
+Salt (Sodium) Variant 494,59.41,123.29,Muscle weakness,Hypertension
+Omega-6 Variant 495,187.11,305.41,Poor digestion,Liver strain
+Corn Syrup Variant 496,38.05,282.67,Fatigue,Toxicity
+Annatto Variant 497,120.72,253.04,Muscle weakness,Gastro issues
+Selenium Variant 498,77.04,269.43,Anemia,Stroke
+Acetic Acid Variant 499,9.53,61.4,Fatigue,Hypertension
+Copper Variant 500,179.9,352.65,Poor digestion,Kidney damage
+Vitamin E Variant 501,174.98,409.23,Low immunity,Gastro issues
+Cocoa Powder Variant 502,23.41,206.37,Muscle weakness,Nerve damage
+Fluoride Variant 503,102.53,336.52,Hormonal imbalance,Diabetes
+Xanthan Gum Variant 504,4.71,101.32,Memory problems,Diabetes
+Soy Protein Variant 505,119.02,351.59,Vision issues,Obesity
+Fat (Total) Variant 506,176.68,235.58,Poor growth,Obesity
+Saturated Fat Variant 507,175.24,321.79,Poor growth,Heart disease
+Annatto Variant 508,159.08,449.66,Vision issues,Toxicity
+Saturated Fat Variant 509,101.63,354.28,Poor growth,Heart disease
+Omega-6 Fatty Acids Variant 510,126.55,359.07,Low immunity,Liver strain
+Caffeine Variant 511,122.17,181.13,Vision issues,Nerve damage
+Calcium Propionate Variant 512,185.63,409.48,Vision issues,Heart disease
+Artificial Chocolate Flavor Variant 513,79.7,228.9,Muscle weakness,Stroke
+Trans Fat Variant 514,117.9,227.5,Poor digestion,Gastro issues
+Chlorella Variant 515,3.67,207.25,Muscle weakness,Diabetes
+Propyl Gallate Variant 516,155.37,395.45,Anemia,Nerve damage
+Mannitol Variant 517,190.62,365.43,Memory problems,Kidney damage
+Stevia Variant 518,80.91,350.44,Fatigue,Nerve damage
+Caramel Color Variant 519,19.26,38.13,Bone weakness,Hypertension
+Selenium Variant 520,59.1,303.79,Vision issues,Stroke
+Vitamin B1 Variant 521,93.22,143.32,Muscle weakness,Toxicity
+Olive Oil Variant 522,18.1,280.79,Muscle weakness,Hypertension
+Sodium Nitrate Variant 523,107.57,375,Low immunity,Kidney damage
+Benzoic Acid Variant 524,57.91,346.8,Poor growth,Nerve damage
+Carrageenan Variant 525,132.49,178.79,Fatigue,Liver strain
+Omega-6 Variant 526,199.43,330.92,Poor growth,Nerve damage
+Annatto Variant 527,71.13,147.9,Memory problems,Toxicity
+Vitamin A Variant 528,98.26,132.69,Hormonal imbalance,Toxicity
+Zinc Variant 529,181.8,225.53,Anemia,Nerve damage
+Caseinate Variant 530,153.14,241.58,Memory problems,Hypertension
+Vitamin D Variant 531,38.32,292.27,Memory problems,Diabetes
+Vitamin B12 Variant 532,38.68,208.48,Bone weakness,Stroke
+Calcium Variant 533,22.31,238.32,Fatigue,Kidney damage
+Paprika Extract Variant 534,87.6,140.75,Poor digestion,Obesity
+MSG (Monosodium Glutamate) Variant 535,107.22,332.49,Anemia,Gastro issues
+Hydrolyzed Vegetable Protein Variant 536,103.37,319.13,Vision issues,Nerve damage
+Folic Acid Variant 537,13.92,234.64,Memory problems,Heart disease
+Unsaturated Fat Variant 538,16.96,188.63,Vision issues,Liver strain
+Vitamin K Variant 539,45.9,111.42,Hormonal imbalance,Obesity
+Trans Fat Variant 540,50.3,286.79,Fatigue,Obesity
+Vitamin C Variant 541,183.88,249.16,Muscle weakness,Nerve damage
+Vitamin C Variant 542,85.81,368.46,Bone weakness,Hypertension
+Textured Vegetable Protein Variant 543,32.84,46.05,Memory problems,Liver strain
+Vitamin B1 Variant 544,20.78,208.52,Vision issues,Hypertension
+Citric Acid Variant 545,37.08,147.88,Bone weakness,Nerve damage
+Aspartame Variant 546,26.08,157.96,Fatigue,Gastro issues
+Zinc Variant 547,73.75,218.77,Muscle weakness,Kidney damage
+Magnesium Variant 548,65.63,199.16,Anemia,Hypertension
+Aspartame Variant 549,10.82,62.63,Vision issues,Obesity
+Benzoic Acid Variant 550,39.76,208.54,Low immunity,Diabetes
+Fiber Variant 551,44.12,282.88,Fatigue,Obesity
+Fat (Total) Variant 552,53.19,216.35,Anemia,Kidney damage
+Lecithin Variant 553,181.5,393.55,Vision issues,Gastro issues
+Vitamin A Variant 554,82.98,130.14,Vision issues,Kidney damage
+Probiotics Variant 555,190.1,440.19,Bone weakness,Toxicity
+Caseinate Variant 556,183.54,318.53,Poor growth,Nerve damage
+Copper Variant 557,151.5,273.81,Hormonal imbalance,Liver strain
+Antioxidants Variant 558,162.8,214.49,Bone weakness,Toxicity
+Whey Protein Variant 559,5.63,176.71,Anemia,Diabetes
+Peanuts Variant 560,160.91,294.52,Fatigue,Kidney damage
+Casein Variant 561,182.65,370.27,Bone weakness,Nerve damage
+Oxalic Acid Variant 562,190.18,363.02,Low immunity,Liver strain
+Probiotics Variant 563,194.64,332.89,Memory problems,Heart disease
+Beetroot Powder Variant 564,71.64,340.35,Anemia,Obesity
+Spirulina Variant 565,167.24,196.55,Anemia,Toxicity
+Carbohydrates Variant 566,190.34,201.87,Muscle weakness,Stroke
+Potassium Sorbate Variant 567,195.28,365.81,Vision issues,Heart disease
+Omega-3 Fatty Acids Variant 568,153.29,163.48,Anemia,Obesity
+Stevia Variant 569,37.64,109.27,Vision issues,Stroke
+Tartaric Acid Variant 570,33.94,66.95,Vision issues,Obesity
+Calcium Variant 571,161.42,239.02,Memory problems,Stroke
+Caffeine Variant 572,178.89,420.09,Muscle weakness,Liver strain
+Iron Variant 573,54.87,98.56,Muscle weakness,Liver strain
+Sodium Nitrate Variant 574,150,303.15,Vision issues,Nerve damage
+Vitamin B3 Variant 575,88.98,194.84,Hormonal imbalance,Gastro issues
+Preservatives (Sodium Benzoate) Variant 576,187.37,476.67,Low immunity,Liver strain
+Erythritol Variant 577,18.35,36.65,Vision issues,Kidney damage
+Erythritol Variant 578,40.62,127.89,Fatigue,Obesity
+Fiber Variant 579,30.99,154.2,Anemia,Hypertension
+Potassium Variant 580,199.37,445.57,Anemia,Nerve damage
+Iron Variant 581,112.92,277.78,Anemia,Gastro issues
+Vitamin K Variant 582,102.49,311.57,Anemia,Liver strain
+Copper Variant 583,9.53,61.01,Muscle weakness,Kidney damage
+Vitamin D Variant 584,44.8,244.89,Muscle weakness,Hypertension
+Taurine Variant 585,182,351.19,Hormonal imbalance,Hypertension
+Soy Protein Variant 586,159.79,188.9,Bone weakness,Diabetes
+Propyl Gallate Variant 587,179.74,343.67,Vision issues,Toxicity
+Paprika Extract Variant 588,136.08,355.66,Muscle weakness,Heart disease
+Potassium Variant 589,92.99,194.5,Poor growth,Heart disease
+Sucralose Variant 590,47.52,234.96,Fatigue,Kidney damage
+Hydrolyzed Vegetable Protein Variant 591,131.57,176.85,Bone weakness,Nerve damage
+Lecithin Variant 592,92.39,114.78,Poor digestion,Heart disease
+Malic Acid Variant 593,51.01,280.55,Fatigue,Diabetes
+Trans Fat Variant 594,110.39,223.54,Low immunity,Nerve damage
+Cholesterol Variant 595,150.43,280.83,Vision issues,Toxicity
+Vitamin B12 Variant 596,36.76,295.49,Fatigue,Stroke
+Fructose Variant 597,61.33,148.71,Poor growth,Gastro issues
+Calcium Variant 598,170.82,280.45,Anemia,Gastro issues
+Magnesium Variant 599,190.16,252.59,Poor growth,Obesity
+Guar Gum Variant 600,21,295.72,Vision issues,Kidney damage
+High Fructose Corn Syrup Variant 601,115.72,414.29,Hormonal imbalance,Toxicity
+Beetroot Powder Variant 602,90.41,380.62,Low immunity,Hypertension
+Calcium Propionate Variant 603,94.09,258.59,Muscle weakness,Diabetes
+Caffeine Variant 604,97.76,270.23,Hormonal imbalance,Hypertension
+Sugar Variant 605,99.5,127.58,Memory problems,Stroke
+Calcium Propionate Variant 606,4.44,68.49,Anemia,Nerve damage
+Soy Protein Variant 607,42.75,270.82,Low immunity,Stroke
+Sodium Nitrate Variant 608,153.6,177.49,Bone weakness,Obesity
+Cholesterol Variant 609,97.7,232.05,Fatigue,Gastro issues
+Dextrose Variant 610,61.12,252.05,Muscle weakness,Heart disease
+Chromium Variant 611,55.44,340.57,Anemia,Gastro issues
+Fructose Variant 612,174.03,230.31,Memory problems,Obesity
+Beta-Carotene Variant 613,119.36,340.12,Vision issues,Stroke
+Vitamin A Variant 614,28.91,184.91,Muscle weakness,Obesity
+Tartaric Acid Variant 615,18.24,98.25,Memory problems,Liver strain
+Sorbitol Variant 616,76.59,111.38,Anemia,Obesity
+Vitamin B2 (Riboflavin) Variant 617,114.29,237.05,Hormonal imbalance,Liver strain
+Olive Oil Variant 618,46.27,165.63,Anemia,Stroke
+Phytic Acid Variant 619,121.85,317.43,Fatigue,Hypertension
+Vitamin B6 Variant 620,177.27,274.56,Low immunity,Obesity
+Omega-6 Fatty Acids Variant 621,88.71,338.08,Low immunity,Hypertension
+Artificial Sweeteners Variant 622,179.54,318.11,Poor growth,Nerve damage
+Fiber Variant 623,5.13,40.87,Bone weakness,Toxicity
+Selenium Variant 624,128.89,412.91,Memory problems,Kidney damage
+Vitamin K Variant 625,130.63,267.51,Muscle weakness,Diabetes
+Benzoic Acid Variant 626,93.94,201.84,Low immunity,Nerve damage
+Magnesium Variant 627,97.79,256.09,Bone weakness,Heart disease
+Vitamin B6 Variant 628,31.4,125.42,Fatigue,Gastro issues
+Vitamin A Variant 629,81.05,216.58,Anemia,Heart disease
+Iodine Variant 630,61.95,135.51,Bone weakness,Toxicity
+Tartaric Acid Variant 631,152.32,449.22,Fatigue,Hypertension
+Vitamin E Variant 632,5.61,163.82,Muscle weakness,Diabetes
+Sodium Nitrate Variant 633,47.89,101.14,Anemia,Diabetes
+Folic Acid Variant 634,42.47,155.1,Poor growth,Nerve damage
+Gelatin Variant 635,71.43,302.95,Vision issues,Liver strain
+Sodium Nitrate Variant 636,22.46,265.5,Bone weakness,Liver strain
+Sorbitol Variant 637,48.07,127.63,Anemia,Nerve damage
+Mannitol Variant 638,186.79,289.94,Muscle weakness,Gastro issues
+Olive Oil Variant 639,162.24,351.4,Muscle weakness,Liver strain
+Caramel Color Variant 640,100.65,239.83,Anemia,Diabetes
+Sodium Sorbate Variant 641,48.78,129.03,Bone weakness,Gastro issues
+Cholesterol Variant 642,164.54,356.6,Vision issues,Toxicity
+Vitamin B6 Variant 643,102.42,205.56,Hormonal imbalance,Hypertension
+Almonds Variant 644,91.68,381.02,Muscle weakness,Gastro issues
+Calcium Variant 645,152.5,338.97,Poor digestion,Obesity
+Phytic Acid Variant 646,154.19,391.11,Muscle weakness,Heart disease
+Vitamin B2 Variant 647,29.07,61.57,Vision issues,Toxicity
+Omega-6 Variant 648,2.49,231.71,Low immunity,Diabetes
+BHT (Butylated Hydroxytoluene) Variant 649,23.26,314.5,Bone weakness,Toxicity
+Fumaric Acid Variant 650,15.65,85.77,Vision issues,Gastro issues
+Magnesium Variant 651,38.35,104.51,Bone weakness,Nerve damage
+Selenium Variant 652,88.03,162.33,Muscle weakness,Kidney damage
+Magnesium Variant 653,66.54,182.97,Memory problems,Kidney damage
+Selenium Variant 654,25.18,90.76,Muscle weakness,Nerve damage
+Annatto Variant 655,64.36,289.86,Low immunity,Kidney damage
+Annatto Variant 656,171.76,393.95,Vision issues,Nerve damage
+Selenium Variant 657,128.29,337.33,Vision issues,Heart disease
+Dextrose Variant 658,35.09,117.83,Vision issues,Hypertension
+Calcium Propionate Variant 659,117.79,183.72,Bone weakness,Gastro issues
+Iron Variant 660,21.25,174.44,Low immunity,Hypertension
+Sodium Sorbate Variant 661,115.34,383.56,Muscle weakness,Liver strain
+Rice Flour Variant 662,174.05,371.58,Poor growth,Gastro issues
+BHA (Butylated Hydroxyanisole) Variant 663,107.94,138.54,Muscle weakness,Nerve damage
+Lactic Acid Variant 664,134.4,263.39,Vision issues,Kidney damage
+Carbohydrates Variant 665,190,321.13,Poor digestion,Liver strain
+Probiotics Variant 666,147.78,436.32,Memory problems,Stroke
+Spirulina Variant 667,182.18,419.27,Anemia,Liver strain
+Carbohydrates Variant 668,6.16,188.3,Hormonal imbalance,Nerve damage
+Vitamin E Variant 669,145.74,386.78,Vision issues,Hypertension
+Stevia Variant 670,155.06,278.72,Bone weakness,Kidney damage
+Probiotics Variant 671,188.49,422.8,Memory problems,Toxicity
+Caramel Color Variant 672,108.62,357.08,Memory problems,Obesity
+Carbohydrates Variant 673,1.25,249.49,Muscle weakness,Obesity
+Almonds Variant 674,128.27,346.34,Anemia,Liver strain
+Sorbitol Variant 675,114.87,383.9,Poor digestion,Stroke
+Sorbitol Variant 676,64.69,265.42,Poor digestion,Nerve damage
+Calcium Variant 677,130.88,184.4,Low immunity,Kidney damage
+Vitamin K Variant 678,109.56,267.55,Fatigue,Kidney damage
+Omega-3 Fatty Acids Variant 679,135.34,274.62,Vision issues,Obesity
+BHA (Butylated Hydroxyanisole) Variant 680,91.16,112.43,Bone weakness,Kidney damage
+Artificial Chocolate Flavor Variant 681,57.94,68.51,Low immunity,Stroke
+Sodium Sorbate Variant 682,22.5,256.22,Poor growth,Obesity
+Iodine Variant 683,93.45,267.03,Anemia,Stroke
+Cocoa Powder Variant 684,82.75,352.95,Bone weakness,Diabetes
+Magnesium Variant 685,118.63,408.64,Bone weakness,Nerve damage
+Phytic Acid Variant 686,191.53,418.11,Muscle weakness,Stroke
+Aspartame Variant 687,124.66,336.21,Memory problems,Kidney damage
+Sodium Nitrite Variant 688,148.56,367.13,Bone weakness,Obesity
+Vitamin C Variant 689,102.15,392.3,Muscle weakness,Liver strain
+Rice Flour Variant 690,87.19,148.35,Poor digestion,Kidney damage
+Zinc Variant 691,12.62,245.95,Fatigue,Stroke
+Vitamin D Variant 692,142.32,391.79,Hormonal imbalance,Nerve damage
+Vitamin B2 (Riboflavin) Variant 693,30.59,209.8,Fatigue,Hypertension
+Whey Protein Variant 694,166.37,193.93,Memory problems,Hypertension
+Vitamin B2 (Riboflavin) Variant 695,21.64,104.94,Vision issues,Diabetes
+Vitamin A Variant 696,190.36,435.76,Hormonal imbalance,Obesity
+Spirulina Variant 697,178.78,416.68,Poor growth,Nerve damage
+Calcium Propionate Variant 698,36.96,297.43,Fatigue,Hypertension
+Calcium Propionate Variant 699,180.5,216.68,Bone weakness,Hypertension
+Sodium Nitrite Variant 700,45.86,190.66,Poor growth,Heart disease
+Vitamin B2 (Riboflavin) Variant 701,171.37,367.59,Hormonal imbalance,Obesity
+Fructose Variant 702,14.39,204.13,Bone weakness,Liver strain
+Phosphorus Variant 703,94.46,176.15,Bone weakness,Toxicity
+Vitamin A Variant 704,16.34,203.78,Poor growth,Toxicity
+Magnesium Variant 705,199.67,320.04,Vision issues,Stroke
+Protein Variant 706,64.86,97.54,Fatigue,Nerve damage
+Yeast Extract Variant 707,6.07,229.15,Vision issues,Stroke
+Textured Vegetable Protein Variant 708,166.82,322.58,Vision issues,Heart disease
+Vitamin D Variant 709,48.85,292.37,Low immunity,Liver strain
+Calcium Variant 710,150,227.36,Low immunity,Kidney damage
+Phytic Acid Variant 711,145.7,408.83,Bone weakness,Heart disease
+Fructose Variant 712,24.62,158.65,Fatigue,Heart disease
+Xanthan Gum Variant 713,132.76,343.9,Bone weakness,Nerve damage
+Iron Variant 714,156.08,236.26,Bone weakness,Heart disease
+Saturated Fat Variant 715,41.45,322.33,Fatigue,Diabetes
+Yeast Extract Variant 716,84.09,219.55,Poor growth,Nerve damage
+Paprika Extract Variant 717,19.91,267.74,Memory problems,Stroke
+Fat (Total) Variant 718,5.68,291.45,Hormonal imbalance,Liver strain
+Manganese Variant 719,123.93,210.7,Muscle weakness,Toxicity
+Omega-3 Variant 720,160.62,244.6,Fatigue,Diabetes
+Vitamin B6 Variant 721,113.36,276.1,Low immunity,Obesity
+Salt (Sodium) Variant 722,160.1,311.23,Poor growth,Stroke
+Copper Variant 723,173.39,208.21,Hormonal imbalance,Gastro issues
+Guar Gum Variant 724,22.86,238.78,Memory problems,Liver strain
+Stevia Variant 725,101.58,248.86,Bone weakness,Liver strain
+Folic Acid Variant 726,19.16,46.37,Memory problems,Liver strain
+MSG (Monosodium Glutamate) Variant 727,126.49,346.25,Bone weakness,Heart disease
+Xanthan Gum Variant 728,121.48,321.1,Poor digestion,Stroke
+Antioxidants Variant 729,108.29,144.37,Memory problems,Heart disease
+Oxalic Acid Variant 730,177,313.3,Poor growth,Heart disease
+Caffeine Variant 731,106.23,139.22,Hormonal imbalance,Hypertension
+Vitamin E Variant 732,42.25,97.56,Vision issues,Liver strain
+Gluten Variant 733,26.93,244,Hormonal imbalance,Hypertension
+Canola Oil Variant 734,60.59,274.96,Fatigue,Diabetes
+Protein Variant 735,19.94,201.65,Memory problems,Hypertension
+Vitamin B2 Variant 736,62.98,299.54,Hormonal imbalance,Heart disease
+Fumaric Acid Variant 737,129.54,426.41,Hormonal imbalance,Stroke
+Salt (Sodium) Variant 738,199.21,344.32,Low immunity,Nerve damage
+Sucralose Variant 739,46.03,145.46,Low immunity,Obesity
+Annatto Variant 740,100.77,175.9,Low immunity,Heart disease
+Vitamin B2 (Riboflavin) Variant 741,142.24,277.72,Vision issues,Hypertension
+MSG (Monosodium Glutamate) Variant 742,107.15,256.62,Fatigue,Obesity
+Sugar Variant 743,21.78,142.6,Memory problems,Diabetes
+Milk Powder Variant 744,171.56,369.78,Bone weakness,Heart disease
+Lactose Variant 745,63.8,340.97,Anemia,Obesity
+Textured Vegetable Protein Variant 746,145.66,167.65,Bone weakness,Heart disease
+Vitamin B6 Variant 747,174.79,272.68,Anemia,Kidney damage
+Cocoa Powder Variant 748,86.54,282.17,Poor digestion,Stroke
+Vanillin Variant 749,152.99,183.26,Fatigue,Kidney damage
+Artificial Vanilla Flavor Variant 750,145.86,411.79,Memory problems,Obesity
+Sucralose Variant 751,34.79,95.39,Memory problems,Toxicity
+Tartaric Acid Variant 752,164.9,218.33,Anemia,Nerve damage
+Calcium Variant 753,46.46,292.1,Poor growth,Kidney damage
+Selenium Variant 754,72.95,217.98,Poor digestion,Gastro issues
+Potassium Variant 755,77.33,263,Fatigue,Hypertension
+Carbohydrates Variant 756,89.29,273.61,Hormonal imbalance,Hypertension
+Tartaric Acid Variant 757,125.37,423.21,Poor digestion,Stroke
+Caseinate Variant 758,124.42,344.72,Poor growth,Obesity
+Propyl Gallate Variant 759,178.39,397.37,Poor growth,Kidney damage
+Omega-3 Variant 760,30.24,164.81,Poor growth,Nerve damage
+Propyl Gallate Variant 761,53.41,115.61,Anemia,Hypertension
+Artificial Sweeteners Variant 762,105.8,219.22,Vision issues,Liver strain
+Olive Oil Variant 763,48.97,202.77,Poor growth,Hypertension
+Protein Variant 764,86.71,362.33,Low immunity,Liver strain
+Probiotics Variant 765,93.15,377.96,Low immunity,Kidney damage
+TBHQ (Tertiary Butylhydroquinone) Variant 766,148.13,359.79,Muscle weakness,Obesity
+Trans Fat Variant 767,7.27,265.34,Vision issues,Obesity
+Cocoa Powder Variant 768,141.11,251.17,Bone weakness,Kidney damage
+Taurine Variant 769,165.6,333.6,Hormonal imbalance,Liver strain
+Peanuts Variant 770,155.01,433.42,Vision issues,Toxicity
+Iodine Variant 771,89.63,347.65,Fatigue,Hypertension
+Vitamin A Variant 772,70.32,170.39,Low immunity,Gastro issues
+Fiber Variant 773,16.38,147.64,Fatigue,Stroke
+Vitamin E Variant 774,49.84,153.81,Poor growth,Toxicity
+Iodine Variant 775,153.68,175.26,Muscle weakness,Stroke
+Vitamin B12 Variant 776,119.78,384.09,Fatigue,Obesity
+Soy Protein Variant 777,1.94,270.63,Anemia,Hypertension
+Omega-6 Fatty Acids Variant 778,182.31,421.95,Anemia,Toxicity
+Beta-Carotene Variant 779,169.01,234.62,Bone weakness,Nerve damage
+Vitamin B3 (Niacin) Variant 780,12.12,80.14,Vision issues,Obesity
+Phytic Acid Variant 781,12.87,49.43,Bone weakness,Kidney damage
+Pectin Variant 782,107.02,221.7,Vision issues,Obesity
+Pectin Variant 783,141.93,226.32,Poor growth,Hypertension
+Caffeine Variant 784,6.3,264.85,Poor growth,Liver strain
+Sucralose Variant 785,169.27,197.73,Hormonal imbalance,Gastro issues
+Cholesterol Variant 786,186.15,286.25,Fatigue,Hypertension
+Chromium Variant 787,46.51,264.36,Low immunity,Hypertension
+Textured Vegetable Protein Variant 788,107.5,352.86,Poor digestion,Heart disease
+Sodium Sorbate Variant 789,152.99,339.18,Low immunity,Obesity
+Rice Flour Variant 790,154.09,370.06,Poor digestion,Kidney damage
+Iron Variant 791,63.81,186.91,Low immunity,Diabetes
+Carrageenan Variant 792,92.18,238.76,Fatigue,Heart disease
+Lactic Acid Variant 793,3.34,53.61,Poor digestion,Nerve damage
+Saturated Fat Variant 794,83.36,96.25,Bone weakness,Obesity
+Vitamin B6 Variant 795,89.83,371.08,Muscle weakness,Stroke
+Fructose Variant 796,166.88,298.83,Poor digestion,Obesity
+Taurine Variant 797,35.05,65.77,Vision issues,Nerve damage
+Fumaric Acid Variant 798,68.22,134.48,Poor digestion,Kidney damage
+Vitamin E Variant 799,165.46,223.09,Poor digestion,Hypertension
+Paprika Extract Variant 800,50.6,321.3,Bone weakness,Nerve damage
+Beetroot Powder Variant 801,104.8,153.22,Hormonal imbalance,Stroke
+Preservatives (Sodium Benzoate) Variant 802,46.97,96.09,Hormonal imbalance,Nerve damage
+Calcium Propionate Variant 803,16.15,133.25,Bone weakness,Hypertension
+Guar Gum Variant 804,79.63,131.43,Low immunity,Gastro issues
+Gelatin Variant 805,13.27,292.58,Fatigue,Nerve damage
+Sodium Nitrite Variant 806,83.74,172.37,Low immunity,Toxicity
+Spirulina Variant 807,133.47,395.72,Hormonal imbalance,Gastro issues
+Vitamin B2 Variant 808,8.94,148.97,Anemia,Nerve damage
+Whey Protein Variant 809,131.86,355.15,Hormonal imbalance,Toxicity
+Sorbitol Variant 810,97.93,167.91,Poor digestion,Nerve damage
+Whey Protein Variant 811,51.18,122.31,Poor growth,Stroke
+Omega-3 Fatty Acids Variant 812,83.17,229.34,Memory problems,Nerve damage
+Copper Variant 813,2.02,82.03,Vision issues,Diabetes
+BHA (Butylated Hydroxyanisole) Variant 814,128.87,346.75,Low immunity,Gastro issues
+Omega-6 Variant 815,146.73,242.68,Low immunity,Gastro issues
+Chromium Variant 816,186.61,330.06,Vision issues,Stroke
+Phosphorus Variant 817,50.86,164.21,Memory problems,Liver strain
+Palm Oil Variant 818,4.89,233.93,Poor growth,Toxicity
+Artificial Sweeteners Variant 819,25.53,197.29,Hormonal imbalance,Liver strain
+Manganese Variant 820,169.9,399.48,Muscle weakness,Nerve damage
+Magnesium Variant 821,26.33,93.05,Vision issues,Kidney damage
+Fluoride Variant 822,125.55,255.09,Vision issues,Gastro issues
+Guar Gum Variant 823,104.37,259.28,Anemia,Liver strain
+Vitamin B12 Variant 824,6.1,139.47,Vision issues,Gastro issues
+Folic Acid Variant 825,25.49,76.33,Poor growth,Diabetes
+Beetroot Powder Variant 826,55.42,187.7,Bone weakness,Liver strain
+Vitamin K Variant 827,160.5,355.11,Bone weakness,Hypertension
+Selenium Variant 828,136.81,169.48,Low immunity,Nerve damage
+Sodium Sorbate Variant 829,93.12,300.33,Fatigue,Liver strain
+MSG (Monosodium Glutamate) Variant 830,40.19,279.19,Memory problems,Hypertension
+Vanillin Variant 831,192.56,320.2,Low immunity,Kidney damage
+Artificial Chocolate Flavor Variant 832,186.74,418.01,Poor digestion,Heart disease
+Manganese Variant 833,181.63,205.66,Anemia,Nerve damage
+Phytic Acid Variant 834,113.69,187.53,Anemia,Kidney damage
+Canola Oil Variant 835,15.02,51.68,Vision issues,Hypertension
+Iron Variant 836,180.28,399,Bone weakness,Liver strain
+Preservatives (Sodium Benzoate) Variant 837,98.15,204.81,Low immunity,Obesity
+Sodium Sorbate Variant 838,108.45,337.2,Anemia,Nerve damage
+Vitamin D Variant 839,138.04,279.87,Fatigue,Hypertension
+Lactic Acid Variant 840,64.36,299.77,Hormonal imbalance,Hypertension
+Fat (Total) Variant 841,57.16,286.99,Bone weakness,Hypertension
+Guar Gum Variant 842,191.13,242.13,Memory problems,Heart disease
+Potassium Sorbate Variant 843,126.26,337.1,Vision issues,Hypertension
+Gluten Variant 844,166.96,427.39,Vision issues,Stroke
+Iodine Variant 845,85.56,137.46,Muscle weakness,Gastro issues
+Cocoa Powder Variant 846,54.76,100.68,Vision issues,Toxicity
+Almonds Variant 847,85.89,224.96,Vision issues,Gastro issues
+Dextrose Variant 848,187.96,406.64,Poor growth,Diabetes
+Guar Gum Variant 849,19.63,114.67,Muscle weakness,Toxicity
+Vitamin E Variant 850,19.43,196.33,Low immunity,Obesity
+Milk Powder Variant 851,149.01,204.88,Poor digestion,Heart disease
+Artificial Strawberry Flavor Variant 852,50.7,132.71,Low immunity,Heart disease
+Lactic Acid Variant 853,9.72,259.16,Low immunity,Heart disease
+Saturated Fat Variant 854,93.99,338.83,Muscle weakness,Heart disease
+Sorbitol Variant 855,12.66,119.96,Poor growth,Obesity
+Calcium Propionate Variant 856,124.14,311.73,Vision issues,Stroke
+Artificial Sweeteners Variant 857,37.9,317.44,Poor growth,Heart disease
+Mannitol Variant 858,87.8,212.06,Poor growth,Heart disease
+Sucralose Variant 859,118.59,397.65,Bone weakness,Diabetes
+Manganese Variant 860,73.51,251.1,Memory problems,Heart disease
+Zinc Variant 861,183.28,452.54,Fatigue,Kidney damage
+Sorbitol Variant 862,155.07,400.34,Hormonal imbalance,Toxicity
+Vitamin C Variant 863,132.28,364.01,Vision issues,Obesity
+Caramel Color Variant 864,167.96,355.46,Muscle weakness,Obesity
+Zinc Variant 865,24.37,120.14,Memory problems,Kidney damage
+Sodium Nitrate Variant 866,22.88,261.45,Vision issues,Gastro issues
+Sugar Variant 867,166.68,188.39,Fatigue,Liver strain
+Antioxidants Variant 868,35.8,78.7,Poor growth,Nerve damage
+Vitamin B2 Variant 869,39.73,246.56,Bone weakness,Nerve damage
+Probiotics Variant 870,177.41,438.19,Poor digestion,Nerve damage
+Vitamin B12 Variant 871,5.83,285.34,Fatigue,Hypertension
+Almonds Variant 872,98.19,236,Muscle weakness,Gastro issues
+Gelatin Variant 873,172.42,324.14,Poor growth,Diabetes
+Phytic Acid Variant 874,125.34,273.63,Muscle weakness,Diabetes
+Citric Acid Variant 875,83.69,254.21,Muscle weakness,Hypertension
+Vitamin K Variant 876,194.39,419.53,Bone weakness,Gastro issues
+Sodium Nitrite Variant 877,19.67,189.08,Poor digestion,Obesity
+Rice Flour Variant 878,80.83,326.88,Hormonal imbalance,Stroke
+Xanthan Gum Variant 879,40.32,221.7,Poor growth,Hypertension
+Mannitol Variant 880,54.35,211.59,Memory problems,Toxicity
+Caffeine Variant 881,99.43,233.95,Vision issues,Kidney damage
+Vitamin D Variant 882,161.59,288.41,Hormonal imbalance,Kidney damage
+Gluten Variant 883,117.71,378.73,Memory problems,Hypertension
+Coconut Oil Variant 884,137.97,201.85,Poor growth,Stroke
+Calcium Variant 885,4.26,191.38,Anemia,Liver strain
+BHA (Butylated Hydroxyanisole) Variant 886,45.54,72.05,Low immunity,Nerve damage
+Phosphorus Variant 887,106.3,282.54,Hormonal imbalance,Stroke
+Carbohydrates Variant 888,122.48,170.76,Poor growth,Stroke
+Vitamin C Variant 889,57.47,293.65,Bone weakness,Nerve damage
+Omega-6 Variant 890,31.51,195.61,Muscle weakness,Diabetes
+Trans Fat Variant 891,92.9,281.44,Low immunity,Toxicity
+Vitamin A Variant 892,55.23,72.97,Anemia,Toxicity
+Iodine Variant 893,101.12,348.55,Muscle weakness,Nerve damage
+Fat (Total) Variant 894,126.49,414.3,Muscle weakness,Nerve damage
+Aspartame Variant 895,175.25,237.58,Hormonal imbalance,Obesity
+Saturated Fat Variant 896,21.71,181.09,Bone weakness,Obesity
+Malic Acid Variant 897,55.39,319.6,Muscle weakness,Kidney damage
+Vitamin B12 Variant 898,3.1,151.57,Hormonal imbalance,Hypertension
+Probiotics Variant 899,28.77,78.97,Anemia,Liver strain
+Vitamin A Variant 900,85.96,200.16,Poor digestion,Gastro issues
+Corn Syrup Variant 901,178.66,437.61,Hormonal imbalance,Hypertension
+Casein Variant 902,173.6,388.53,Anemia,Toxicity
+Benzoic Acid Variant 903,109.15,248.34,Memory problems,Nerve damage
+Phytic Acid Variant 904,14.71,90.95,Vision issues,Gastro issues
+Vanillin Variant 905,25.37,189.72,Hormonal imbalance,Toxicity
+Corn Syrup Variant 906,81.44,183.35,Poor digestion,Heart disease
+Citric Acid Variant 907,150.31,443.55,Fatigue,Diabetes
+Beetroot Powder Variant 908,21.44,106.05,Hormonal imbalance,Obesity
+Probiotics Variant 909,104.49,215.42,Poor growth,Gastro issues
+Vitamin A Variant 910,123.99,234.21,Low immunity,Stroke
+Chromium Variant 911,149.47,379.55,Poor digestion,Kidney damage
+Potassium Variant 912,75.7,263.11,Bone weakness,Nerve damage
+Almonds Variant 913,121.22,196.53,Poor growth,Heart disease
+High Fructose Corn Syrup Variant 914,37.42,157.02,Bone weakness,Obesity
+Beetroot Powder Variant 915,58.45,181.22,Memory problems,Diabetes
+Citric Acid Variant 916,118.76,377.44,Vision issues,Hypertension
+Magnesium Variant 917,22.33,307.95,Hormonal imbalance,Heart disease
+Calcium Variant 918,163.81,399.66,Bone weakness,Obesity
+Guar Gum Variant 919,9.1,211.31,Memory problems,Nerve damage
+Vitamin E Variant 920,31.23,158.9,Bone weakness,Diabetes
+Magnesium Variant 921,177.31,456.62,Poor growth,Liver strain
+Potassium Variant 922,126.43,207.97,Poor digestion,Nerve damage
+Saturated Fat Variant 923,117.35,158.16,Low immunity,Kidney damage
+Caffeine Variant 924,56.65,154.17,Low immunity,Hypertension
+Tartaric Acid Variant 925,14.22,119.69,Poor digestion,Nerve damage
+Selenium Variant 926,27.4,122.36,Bone weakness,Liver strain
+Olive Oil Variant 927,54.76,196.19,Anemia,Nerve damage
+Spirulina Variant 928,26.85,102.93,Hormonal imbalance,Nerve damage
+Vitamin A Variant 929,12.66,162.36,Muscle weakness,Nerve damage
+Lactic Acid Variant 930,27.85,318.68,Muscle weakness,Gastro issues
+Cholesterol Variant 931,175.82,283.72,Poor digestion,Toxicity
+Sorbitol Variant 932,104.59,175.89,Poor growth,Nerve damage
+High Fructose Corn Syrup Variant 933,134.32,206.83,Hormonal imbalance,Nerve damage
+Selenium Variant 934,126.73,245.54,Poor growth,Obesity
+Calcium Variant 935,65.18,153.8,Hormonal imbalance,Heart disease
+Omega-6 Fatty Acids Variant 936,51.55,167.15,Muscle weakness,Nerve damage
+Potassium Sorbate Variant 937,50.44,186.64,Poor digestion,Stroke
+Vitamin C Variant 938,64.29,107.88,Fatigue,Liver strain
+Fructose Variant 939,190.79,265.47,Bone weakness,Stroke
+Soy Protein Variant 940,47.04,265.19,Hormonal imbalance,Nerve damage
+Pectin Variant 941,94.22,300.54,Vision issues,Nerve damage
+Iodine Variant 942,159.36,241.41,Poor growth,Gastro issues
+BHT (Butylated Hydroxytoluene) Variant 943,106.73,277.05,Muscle weakness,Diabetes
+Sorbitol Variant 944,24.64,313.94,Muscle weakness,Kidney damage
+Caffeine Variant 945,43.81,54.14,Vision issues,Toxicity
+Calcium Propionate Variant 946,157.66,369.74,Low immunity,Gastro issues
+Chlorella Variant 947,83.41,198.08,Bone weakness,Kidney damage
+Antioxidants Variant 948,33.59,166.49,Fatigue,Stroke
+Vitamin K Variant 949,60.81,77.16,Bone weakness,Liver strain
+Dextrose Variant 950,76.45,149.2,Memory problems,Heart disease
+Cholesterol Variant 951,117.43,270.61,Poor digestion,Obesity
+Gluten Variant 952,141.94,199.04,Poor growth,Liver strain
+Manganese Variant 953,37.78,78.31,Low immunity,Diabetes
+Magnesium Variant 954,67.34,217.14,Muscle weakness,Stroke
+Iodine Variant 955,31.91,146.45,Low immunity,Heart disease
+Gluten Variant 956,57.2,352.88,Vision issues,Liver strain
+Dextrose Variant 957,82.9,174.94,Anemia,Kidney damage
+Trans Fat Variant 958,93.14,166.63,Hormonal imbalance,Diabetes
+Peanuts Variant 959,143.65,193.88,Anemia,Heart disease
+Vitamin B12 Variant 960,61.98,196.35,Low immunity,Obesity
+Vitamin A Variant 961,77.64,258.64,Anemia,Toxicity
+Peanuts Variant 962,76.18,245.32,Poor digestion,Kidney damage
+Calcium Variant 963,22.01,283.49,Muscle weakness,Heart disease
+Preservatives (Sodium Benzoate) Variant 964,68.63,122.54,Muscle weakness,Obesity
+Chlorella Variant 965,159.35,350.36,Muscle weakness,Obesity
+Selenium Variant 966,75.38,187.7,Hormonal imbalance,Diabetes
+Zinc Variant 967,175.4,404.44,Bone weakness,Nerve damage
+Xanthan Gum Variant 968,173.94,194.57,Vision issues,Liver strain
+Palm Oil Variant 969,167.56,194.91,Muscle weakness,Toxicity
+Vitamin K Variant 970,26.51,227.09,Fatigue,Liver strain
+Folic Acid Variant 971,39.99,301.56,Hormonal imbalance,Obesity
+Omega-3 Fatty Acids Variant 972,134.67,346.9,Anemia,Kidney damage
+Vitamin E Variant 973,110.14,384.6,Vision issues,Heart disease
+Lactose Variant 974,156.92,449.11,Low immunity,Kidney damage
+Casein Variant 975,129.92,349.38,Poor digestion,Kidney damage
+Caramel Color Variant 976,83.67,147.7,Poor growth,Stroke
+Sorbitol Variant 977,188.59,278.7,Poor digestion,Heart disease
+Cholesterol Variant 978,117.34,384.54,Poor growth,Nerve damage
+Copper Variant 979,46,329.04,Fatigue,Gastro issues
+Vitamin B3 (Niacin) Variant 980,110.44,132.78,Fatigue,Nerve damage
+Beta-Carotene Variant 981,17.31,32.59,Poor growth,Liver strain
+Potassium Variant 982,49.18,123.7,Fatigue,Kidney damage
+Folic Acid Variant 983,111.19,224.27,Hormonal imbalance,Liver strain
+High Fructose Corn Syrup Variant 984,14.45,186.76,Poor growth,Diabetes
+Carrageenan Variant 985,133.32,381.68,Fatigue,Kidney damage
+Trans Fat Variant 986,179.53,265.7,Low immunity,Gastro issues
+Vanillin Variant 987,132.99,212.36,Poor growth,Hypertension
+Fluoride Variant 988,3.65,116.98,Vision issues,Toxicity
+Vitamin B12 Variant 989,61.33,91.47,Low immunity,Kidney damage
+Milk Powder Variant 990,77.44,358.13,Anemia,Nerve damage
+Milk Powder Variant 991,126.38,173.54,Bone weakness,Toxicity
+Vitamin B6 Variant 992,199.87,301.76,Low immunity,Hypertension
+Palm Oil Variant 993,115.86,281.85,Low immunity,Obesity
+Calcium Variant 994,143.01,308.4,Anemia,Kidney damage
+Corn Syrup Variant 995,153.29,320.46,Muscle weakness,Diabetes
+Acetic Acid Variant 996,192.18,374.22,Anemia,Diabetes
+BHT (Butylated Hydroxytoluene) Variant 997,25.3,106.28,Muscle weakness,Toxicity
+BHT (Butylated Hydroxytoluene) Variant 998,47.1,112.35,Muscle weakness,Liver strain
+Textured Vegetable Protein Variant 999,130.38,188.79,Hormonal imbalance,Heart disease
+Iodine Variant 1000,10.16,104.41,Memory problems,Heart disease
