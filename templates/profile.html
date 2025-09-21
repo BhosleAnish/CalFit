@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Cal-FIT | Profile</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}"><link rel="preconnect" href="https://fonts.googleapis.com">
-  
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
+
+  <!-- ======= HEADER ======= -->
   <header>
     <div class="logo">Cal-FIT</div>
     <nav class="main-nav">
@@ -17,143 +22,202 @@
     </nav>
   </header>
 
+  <!-- ======= MAIN CONTAINER ======= -->
   <div class="container">
-    <h2>Today's Nutritional Progress</h2>
-    
-    <!-- Daily Progress Circles -->
-    <div class="nutrient-boxes">
-      <div class="nutrient">
-        <div class="circle" data-percent="{{ percentages['protein'] }}"></div>
-        <h3>Protein</h3>
-        <p>{{ intake['protein_g'] }}g / {{ recommendation['protein_g'] }}g</p>
-      </div>
-      <div class="nutrient">
-        <div class="circle" data-percent="{{ percentages['carbs'] }}"></div>
-        <h3>Carbohydrates</h3>
-        <p>{{ intake['carbs_g'] }}g / {{ recommendation['carbs_g'] }}g</p>
-      </div>
-      <div class="nutrient">
-        <div class="circle" data-percent="{{ percentages['fats'] }}"></div>
-        <h3>Healthy Fats</h3>
-        <p>{{ intake['fats_g'] }}g / {{ recommendation['fats_g'] }}g</p>
-      </div>
-    </div>
+    <h2>Your Nutritional Overview</h2>
 
-    <!-- Scan Statistics Summary -->
-    {% if scan_stats and scan_stats.has_scans %}
-    <div class="stats-summary">
-      <h3 style="color: #10B981; margin-bottom: 15px;">Your Scanning Activity</h3>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-value">{{ scan_stats.total_scans }}</span>
-          <div class="stat-label">Total Scans</div>
+    <!-- ======= TOP SECTION: CHARTS AND CIRCLES ======= -->
+    <div class="top-section">
+
+      <!-- CHARTS CONTAINER - Side by Side -->
+      <div class="charts-container">
+        <div class="chart-controls">
+          <button class="time-btn" onclick="updateCharts('daily', this)">Daily</button>
+          <button class="time-btn active" onclick="updateCharts('weekly', this)">Weekly</button>
+          <button class="time-btn" onclick="updateCharts('monthly', this)">Monthly</button>
         </div>
-        <div class="stat-item">
-          <span class="stat-value">{{ scan_stats.recent_scans }}</span>
-          <div class="stat-label">This Week</div>
+
+        <div class="dual-charts">
+          <!-- Health Score Chart -->
+          <div class="chart-wrapper">
+            <h3>Dietary Health Score Trend</h3>
+            <div class="chart-container">
+              <canvas id="healthScoreChart"></canvas>
+              <div id="health-chart-loader" class="chart-loader" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Analyzing health trends...</p>
+              </div>
+              <p id="health-chart-message" class="chart-message" style="display: none;"></p>
+            </div>
+          </div>
+
+          <!-- Scan Count Chart -->
+          <div class="chart-wrapper">
+            <h3>Scanning Activity</h3>
+            <div class="chart-container">
+              <canvas id="scanCountChart"></canvas>
+              <div id="scan-chart-loader" class="chart-loader" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Loading scan activity...</p>
+              </div>
+              <p id="scan-chart-message" class="chart-message" style="display: none;"></p>
+            </div>
+          </div>
         </div>
-        <div class="stat-item">
-          <span class="stat-value">{{ today_scans|length }}</span>
-          <div class="stat-label">Today</div>
+      </div>
+
+      <!-- NUTRIENT CIRCLES CONTAINER - Side by Side -->
+      <div class="circles-container">
+        <h3 class="circles-title">Today's Nutrition Progress</h3>
+        <div class="nutrient-circles">
+          <div class="nutrient">
+            <div class="circle" data-percent="{{ percentages['protein'] }}"></div>
+            <h4>Protein</h4>
+            <p>{{ intake['protein_g'] }}g / {{ recommendation['protein_g'] }}g</p>
+          </div>
+          <div class="nutrient">
+            <div class="circle" data-percent="{{ percentages['carbs'] }}"></div>
+            <h4>Carbs</h4>
+            <p>{{ intake['carbs_g'] }}g / {{ recommendation['carbs_g'] }}g</p>
+          </div>
+          <div class="nutrient">
+            <div class="circle" data-percent="{{ percentages['fats'] }}"></div>
+            <h4>Fats</h4>
+            <p>{{ intake['fats_g'] }}g / {{ recommendation['fats_g'] }}g</p>
+          </div>
         </div>
-        {% if scan_stats.latest_scan_date %}
-        <div class="stat-item">
-          <span class="stat-value">{{ scan_stats.latest_scan_date.strftime('%m/%d') }}</span>
-          <div class="stat-label">Last Scan</div>
+      </div>
+
+    </div> <!-- END TOP SECTION -->
+
+    <!-- ======= PROFILE GRID: LEFT & RIGHT ======= -->
+    <div class="profile-content-grid">
+
+      <!-- LEFT COLUMN: Scan Stats -->
+      <div class="left-column">
+        {% if scan_stats and scan_stats.has_scans %}
+        <div class="stats-summary">
+          <h3 style="color: #10B981; margin-bottom: 15px;">Your Scanning Activity</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-value">{{ scan_stats.total_scans }}</span>
+              <div class="stat-label">Total Scans</div>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ scan_stats.recent_scans }}</span>
+              <div class="stat-label">This Week</div>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">{{ today_scans|length }}</span>
+              <div class="stat-label">Today</div>
+            </div>
+            {% if scan_stats.latest_scan_date %}
+            <div class="stat-item">
+              <span class="stat-value">{{ scan_stats.latest_scan_date.strftime('%m/%d') }}</span>
+              <div class="stat-label">Last Scan</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <div class="stats-summary">
+          <h3 style="color: #10B981; margin-bottom: 15px;">Your Scanning Activity</h3>
+          <div class="no-scans">
+            <p>No scans recorded yet.</p>
+            <p><a href="{{ url_for('scan_label') }}" style="color: #10B981;">Start scanning!</a></p>
+          </div>
         </div>
         {% endif %}
       </div>
-    </div>
-    {% endif %}
 
-    <!-- Today's Scans Visualization -->
-    <div class="today-scans-section">
-      <h3>Today's Food Scans</h3>
-      {% if today_scans %}
-        <div class="scan-cards">
-          {% for scan in today_scans %}
-          <div class="scan-card">
-            <h4>{{ scan.product_name }}</h4>
-            <div class="scan-time">
-              Scanned at {{ scan.scan_time.strftime('%I:%M %p') }}
-            </div>
-            <div class="nutrient-list">
-              {% for nutrient_name, nutrient_data in scan.nutrients.items() %}
-              <div class="nutrient-item">
-                <span>{{ nutrient_name.title() }}:</span>
-                <span class="nutrient-value status-{{ nutrient_data.status.lower() }}">
-                  {{ "%.1f"|format(nutrient_data.value) }}{{ nutrient_data.unit }}
-                </span>
+      <!-- RIGHT COLUMN: Today's Food Scans -->
+      <div class="right-column">
+        <div class="today-scans-section">
+          <h3>Today's Food Scans</h3>
+          {% if today_scans %}
+          <div class="scan-cards">
+            {% for scan in today_scans %}
+            <div class="scan-card">
+              <h4>{{ scan.product_name }}</h4>
+              <div class="scan-time">Scanned at {{ scan.scan_time.strftime('%I:%M %p') }}</div>
+              <div class="nutrient-list">
+                {% for nutrient_name, nutrient_data in scan.nutrients.items() %}
+                <div class="nutrient-item">
+                  <span>{{ nutrient_name.title() }}:</span>
+                  <span class="nutrient-value status-{{ nutrient_data.status.lower() }}">
+                    {{ "%.1f"|format(nutrient_data.value) }}{{ nutrient_data.unit }}
+                  </span>
+                </div>
+                {% endfor %}
               </div>
-              {% endfor %}
-              {% if scan.nutrients|length == 0 %}
-              <div class="nutrient-item">
-                <span>Total nutrients found:</span>
-                <span class="nutrient-value">{{ scan.total_nutrients }}</span>
-              </div>
-              {% endif %}
             </div>
+            {% endfor %}
           </div>
-          {% endfor %}
+          {% else %}
+          <div class="no-scans">
+            <p>No scans recorded for today yet.</p>
+            <form action="{{ url_for('scan_label') }}">
+              <button type="submit" class="scan-btn">Start Scanning</button>
+            </form>
+          </div>
+          {% endif %}
         </div>
-      {% else %}
-        <div class="no-scans">
-          <p>No scans recorded for today yet.</p>
-          <p><a href="{{ url_for('scan_label') }}" style="color: #10B981;">Start scanning some food items!</a></p>
-        </div>
-      {% endif %}
-    </div>
+      </div>
 
-    <!-- AI Analysis Section -->
+    </div> <!-- END PROFILE GRID -->
+
+    <!-- ======= AI ANALYSIS ======= -->
     <div class="ai-analysis-section">
       <button id="getAnalysisBtn" class="get-analysis-btn" onclick="getAIAnalysis()">
         <span id="btnText">Get Comprehensive AI Health Analysis</span>
-        <div id="loadingSpinner" class="loading-spinner"></div>
+        <div id="loadingSpinner" class="loading-spinner" style="display: none;"></div>
       </button>
-      
-      <div id="aiAnalysisContent" class="ai-content">
-        <!-- AI analysis will be loaded here -->
-      </div>
-
-      {% if scan_stats and scan_stats.total_scans < 10 %}
-      <p style="text-align: center; color: #9CA3AF; font-size: 14px; margin-top: 10px;">
-        Scan at least 10 food items to get a comprehensive analysis ({{ scan_stats.total_scans }}/10)
-      </p>
-      {% endif %}
+      <div id="aiAnalysisContent" class="ai-content"></div>
+      {% if scan_stats and scan_stats.total_scans < 10 %} <p
+        style="text-align: center; color: #9CA3AF; font-size: 14px; margin-top: 10px;">
+        Scan at least 10 food items for analysis ({{ scan_stats.total_scans }}/10)
+        </p>
+        {% else %}
+        <p style="text-align: center; color: #10B981; font-size: 14px; margin-top: 10px;">
+          Analysis available ({{ scan_stats.total_scans }}/10) ✓
+        </p>
+        {% endif %}
     </div>
 
+    <!-- ======= ACTION BUTTONS ======= -->
     <div class="actions">
       <a href="{{ url_for('download_report') }}">Download Report</a>
       <a href="{{ url_for('edit_profile') }}">Edit Profile</a>
       <a href="{{ url_for('my_scans') }}">View All Scans</a>
       <a href="{{ url_for('logout') }}">Logout</a>
     </div>
-  </div>
 
+  </div> <!-- END CONTAINER -->
+
+  <!-- ======= SCRIPTS ======= -->
   <script>
-    // Initialize progress circles
+    // ======= NUTRIENT CIRCLES =======
     document.querySelectorAll('.circle').forEach(circle => {
       const percent = parseInt(circle.getAttribute('data-percent'));
-      const value = Math.min(percent, 100); // Cap percentage at 100 for display
-      circle.style.background = `conic-gradient(#10B981 ${value}%, #4A5568 ${value}%)`;
+      const value = Math.min(percent, 100);
+      circle.style.background = `conic-gradient(#10B981 ${value * 3.6}deg, rgba(255, 255, 255, 0.2) ${value * 3.6}deg)`;
       circle.innerHTML = percent + '%';
+      circle.style.color = 'white';
     });
 
-    // AI Analysis Function
+    // ======= AI ANALYSIS FUNCTION =======
     async function getAIAnalysis() {
       const btn = document.getElementById('getAnalysisBtn');
       const btnText = document.getElementById('btnText');
       const spinner = document.getElementById('loadingSpinner');
       const content = document.getElementById('aiAnalysisContent');
 
-      // Check if analysis is already loaded
       if (content.style.display === 'block') {
         content.style.display = 'none';
         btnText.textContent = 'Get Comprehensive AI Health Analysis';
         return;
       }
 
-      // Show loading state
       btn.disabled = true;
       btnText.style.display = 'none';
       spinner.style.display = 'block';
@@ -161,20 +225,13 @@
       try {
         const response = await fetch('{{ url_for("get_ai_analysis") }}', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token() }}'
-          }
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' }
         });
-
         const data = await response.json();
-
         if (data.success) {
           content.innerHTML = data.analysis;
           content.style.display = 'block';
           btnText.textContent = 'Hide Analysis';
-          
-          // Scroll to analysis
           content.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
           alert('Error: ' + (data.error || 'Failed to generate analysis'));
@@ -183,19 +240,217 @@
         console.error('Error:', error);
         alert('Failed to get analysis. Please try again.');
       } finally {
-        // Reset button state
         btn.disabled = false;
         btnText.style.display = 'inline';
         spinner.style.display = 'none';
       }
     }
 
-    // Auto-refresh scan data every 5 minutes
-    setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        location.reload();
+    // ======= DUAL CHART LOGIC =======
+    let healthChart = null;
+    let scanCountChart = null;
+
+    const healthChartCanvas = document.getElementById('healthScoreChart');
+    const scanCountChartCanvas = document.getElementById('scanCountChart');
+
+    const healthChartLoader = document.getElementById('health-chart-loader');
+    const scanChartLoader = document.getElementById('scan-chart-loader');
+
+    const healthChartMessage = document.getElementById('health-chart-message');
+    const scanChartMessage = document.getElementById('scan-chart-message');
+
+    async function fetchChartData(period, type) {
+      const loader = type === 'health' ? healthChartLoader : scanChartLoader;
+      const canvas = type === 'health' ? healthChartCanvas : scanCountChartCanvas;
+      const message = type === 'health' ? healthChartMessage : scanChartMessage;
+      const endpoint = type === 'health' ? `/get-health-score-data/${period}` : `/get-scan-count-data/${period}`;
+
+      loader.style.display = 'flex';
+      canvas.style.display = 'none';
+      message.style.display = 'none';
+
+      try {
+        const response = await fetch(endpoint);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error(`Failed to fetch ${type} chart data:`, error);
+        const errorMsg = type === 'health'
+          ? `Could not load health analysis: ${error.message}. Please ensure your profile is complete.`
+          : `Could not load scan activity: ${error.message}.`;
+        message.textContent = errorMsg;
+        message.style.display = 'block';
+        return null;
+      } finally {
+        loader.style.display = 'none';
       }
-    }, 300000); // 5 minutes
+    }
+
+    function renderHealthChart(data) {
+      if (!data || data.labels.length === 0) {
+        healthChartMessage.textContent = "Not enough scan data for this period to generate a health trend. Keep scanning!";
+        healthChartMessage.style.display = 'block';
+        healthChartCanvas.style.display = 'none';
+        return;
+      }
+
+      healthChartCanvas.style.display = 'block';
+      const ctx = healthChartCanvas.getContext('2d');
+
+      if (healthChart) {
+        healthChart.destroy();
+      }
+
+      healthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Your Diet Score',
+              data: data.actual_scores,
+              borderColor: '#10B981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              fill: true,
+              tension: 0.3,
+              borderWidth: 2
+            },
+            {
+              label: 'Goal Score',
+              data: data.goal_scores,
+              borderColor: '#F59E0B',
+              borderDash: [5, 5],
+              fill: false,
+              borderWidth: 2,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { color: '#9CA3AF' },
+              grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            },
+            x: {
+              ticks: { color: '#9CA3AF' },
+              grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#E5E7EB' }
+            },
+            tooltip: {
+              backgroundColor: '#1F2937',
+              titleColor: '#E5E7EB',
+              bodyColor: '#D1D5DB'
+            }
+          }
+        }
+      });
+    }
+
+    function renderScanCountChart(data) {
+      if (!data || data.labels.length === 0) {
+        scanChartMessage.textContent = "No scan activity data available for this period.";
+        scanChartMessage.style.display = 'block';
+        scanCountChartCanvas.style.display = 'none';
+        return;
+      }
+
+      scanCountChartCanvas.style.display = 'block';
+      const ctx = scanCountChartCanvas.getContext('2d');
+
+      if (scanCountChart) {
+        scanCountChart.destroy();
+      }
+
+      scanCountChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: 'Scans',
+              data: data.scan_counts,
+              backgroundColor: 'rgba(59, 130, 246, 0.7)',
+              borderColor: '#3B82F6',
+              borderWidth: 1,
+              borderRadius: 4,
+              borderSkipped: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: '#9CA3AF',
+                stepSize: 1
+              },
+              grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            },
+            x: {
+              ticks: {
+                color: '#9CA3AF',
+                maxRotation: 45
+              },
+              grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#E5E7EB' }
+            },
+            tooltip: {
+              backgroundColor: '#1F2937',
+              titleColor: '#E5E7EB',
+              bodyColor: '#D1D5DB',
+              callbacks: {
+                label: function (context) {
+                  const count = context.parsed.y;
+                  return `Scans: ${count}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    async function updateCharts(period, clickedButton) {
+      document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+      clickedButton.classList.add('active');
+
+      // Fetch and render both charts concurrently
+      const [healthData, scanData] = await Promise.all([
+        fetchChartData(period, 'health'),
+        fetchChartData(period, 'scan')
+      ]);
+
+      if (healthChart) healthChart.destroy();
+      if (scanCountChart) scanCountChart.destroy();
+
+      renderHealthChart(healthData);
+      renderScanCountChart(scanData);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateCharts('weekly', document.querySelector('.time-btn.active'));
+    });
   </script>
+
 </body>
+
 </html>

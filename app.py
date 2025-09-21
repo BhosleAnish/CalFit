@@ -748,6 +748,113 @@ def get_comprehensive_ai_analysis():
         return "<h2>Analysis Error</h2><p>Could not generate AI analysis. Please try again later.</p>"
 
 
+def calculate_health_score(aggregated_nutrients, daily_recommendations):
+    """Calculates a health score from 0-100 based on nutrient intake."""
+    score = 100
+    
+    # Nutrient mapping for flexibility
+    nutrient_map = {
+        'protein': ['protein'],
+        'carbs': ['carbohydrates', 'carbs', 'total carbohydrates'],
+        'fats': ['fat', 'fats', 'total fat'],
+        'sodium': ['sodium'],
+        'sugar': ['sugar', 'sugars', 'added sugar']
+    }
+
+    def get_nutrient_value(nutrient_key):
+        for alias in nutrient_map[nutrient_key]:
+            if alias in aggregated_nutrients:
+                return aggregated_nutrients[alias]
+        return 0
+
+    # 1. Macronutrient Balance (60 points)
+    macro_goals = {
+        'protein': daily_recommendations.get('protein_g', 1),
+        'carbs': daily_recommendations.get('carbs_g', 1),
+        'fats': daily_recommendations.get('fats_g', 1)
+    }
+
+    for macro, goal in macro_goals.items():
+        actual = get_nutrient_value(macro)
+        if goal > 0:
+            deviation = abs(actual - goal) / goal
+            penalty = min(deviation * 40, 20)  # Max 20 points penalty per macro
+            score -= penalty
+
+    # 2. Adversarial Nutrients (40 points)
+    # Sodium (max 2300mg)
+    sodium_actual = get_nutrient_value('sodium')
+    if sodium_actual > 2300:
+        excess_ratio = (sodium_actual - 2300) / 2300
+        penalty = min(excess_ratio * 40, 20) # A 50% excess maxes out penalty
+        score -= penalty
+        
+    # Sugar (max 50g)
+    sugar_actual = get_nutrient_value('sugar')
+    if sugar_actual > 50:
+        excess_ratio = (sugar_actual - 50) / 50
+        penalty = min(excess_ratio * 40, 20) # A 50% excess maxes out penalty
+        score -= penalty
+        
+    return max(0, round(score))
+
+
+def get_historical_health_scores(username, period, recommendations):
+    """Aggregates scan data over a period and calculates health scores."""
+    if scan_storage.collection is None:
+        return {"labels": [], "scores": []}
+
+    end_date = datetime.utcnow()
+    if period == 'daily':
+        start_date = end_date - timedelta(days=30)
+        date_format = "%Y-%m-%d"
+        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
+    elif period == 'weekly':
+        start_date = end_date - timedelta(weeks=12)
+        date_format = "%Y-%U"
+        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
+    else: # monthly
+        start_date = end_date - timedelta(days=365)
+        date_format = "%Y-%m"
+        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
+    
+    pipeline = [
+        {"$match": {"username": username, "scan_date": {"$gte": start_date}}},
+        {"$unwind": "$nutrition_analysis.structured_nutrients"},
+        {"$group": {
+            "_id": {
+                "period": group_id,
+                "nutrient": {"$toLower": "$nutrition_analysis.structured_nutrients.nutrient"}
+            },
+            "total_value": {"$sum": "$nutrition_analysis.structured_nutrients.value"}
+        }},
+        {"$group": {
+            "_id": "$_id.period",
+            "nutrients": {"$push": {"k": "$_id.nutrient", "v": "$total_value"}}
+        }},
+        {"$addFields": {"nutrients": {"$arrayToObject": "$nutrients"}}},
+        {"$sort": {"_id": 1}}
+    ]
+
+    results = list(scan_storage.collection.aggregate(pipeline))
+    
+    scores = []
+    labels = []
+    for result in results:
+        period_label = result['_id']
+        aggregated_nutrients = result['nutrients']
+        
+        # Adjust for per-day averages if weekly/monthly
+        if period == 'weekly':
+             for k, v in aggregated_nutrients.items(): aggregated_nutrients[k] = v / 7
+        elif period == 'monthly':
+             for k, v in aggregated_nutrients.items(): aggregated_nutrients[k] = v / 30
+
+        score = calculate_health_score(aggregated_nutrients, recommendations)
+        scores.append(score)
+        labels.append(period_label)
+
+    return {"labels": labels, "scores": scores}
 # ---------------- ROUTES ---------------- #
 
 @app.route('/')
@@ -1139,21 +1246,56 @@ def get_ai_analysis():
         return jsonify({"error": "Failed to generate analysis"}), 500
 
 
-# Update the existing profile route
+# --- NEW API ENDPOINT FOR CHART DATA ---
+@app.route('/get-health-score-data/<period>')
+def get_health_score_data(period='weekly'):
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    username = session['username']
+    profile = load_user_health_profile(username)
+    if not profile:
+        return jsonify({"error": "Profile not found"}), 404
+        
+    if not all(k in profile and profile[k] for k in ['weight_kg', 'activity_level']):
+        return jsonify({"error": "Profile incomplete"}), 400
+
+    valid_periods = ['daily', 'weekly', 'monthly']
+    if period not in valid_periods:
+        return jsonify({"error": "Invalid period"}), 400
+
+    recommendations = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
+    data = get_historical_health_scores(username, period, recommendations)
+    
+    # The goal score is a constant target for good health
+    goal_score = 85 
+    
+    return jsonify({
+        "labels": data["labels"],
+        "actual_scores": data["scores"],
+        "goal_scores": [goal_score] * len(data["labels"]) # Create a flat line for the goal
+    })
+
+
+# --- UPDATED PROFILE ROUTE ---
 @app.route('/profile')
 def profile():
     if 'username' not in session:
         return redirect(url_for('landing'))
 
     username = session['username']
-    profile = load_user_health_profile(username)
-    if not profile:
-        flash("Your Profile Doesn't exist, Create a profile")
+    profile_data = load_user_health_profile(username)
+    if not profile_data:
+        flash("Your Profile Doesn't exist, Create a profile", "warning")
         return redirect(url_for('profile_form'))
 
     # Calculate daily recommendations
-    recommendation = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
-    
+    try:
+        recommendation = calculate_daily_needs(profile_data['weight_kg'], profile_data['activity_level'])
+    except (ValueError, KeyError):
+        flash("Your profile is incomplete. Please update your weight and activity level.", "warning")
+        return redirect(url_for('edit_profile'))
+
     # Get today's scan data for visualization
     today_scans_data = get_today_scan_visualization()
     
@@ -1168,7 +1310,7 @@ def profile():
             elif nutrient_name in ["fat", "fats"]:
                 today_totals["fats"] += nutrient_data["value"]
 
-    # Calculate percentages
+    # Calculate percentages for progress circles
     percent = lambda val, ref: round((val / ref) * 100) if ref else 0
     percentages = {
         'protein': percent(today_totals['protein'], recommendation['protein_g']),
@@ -1176,12 +1318,11 @@ def profile():
         'fats': percent(today_totals['fats'], recommendation['fats_g'])
     }
 
-    # Get scan statistics
     scan_stats = scan_storage.get_user_scan_stats(username)
 
     return render_template(
         'profile.html', 
-        profile=profile, 
+        profile=profile_data, 
         intake={
             'protein_g': round(today_totals['protein'], 1),
             'carbs_g': round(today_totals['carbs'], 1),
@@ -1192,6 +1333,97 @@ def profile():
         today_scans=today_scans_data,
         scan_stats=scan_stats
     )
+# Add this new route to your Flask app (app.py)
+# Add this new route to your Flask app (app.py)
+
+@app.route('/get-scan-count-data/<period>')
+def get_scan_count_data(period='weekly'):
+    """Get scan count data for bar chart visualization"""
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    username = session['username']
+    
+    if scan_storage.collection is None:
+        return jsonify({"error": "Database not available"}), 503
+
+    valid_periods = ['daily', 'weekly', 'monthly']
+    if period not in valid_periods:
+        return jsonify({"error": "Invalid period"}), 400
+
+    end_date = datetime.utcnow()
+    
+    # Define date ranges and grouping based on period
+    if period == 'daily':
+        start_date = end_date - timedelta(days=30)
+        date_format = "%Y-%m-%d"
+        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
+    elif period == 'weekly':
+        start_date = end_date - timedelta(weeks=12)
+        date_format = "%Y-W%U"  # Year-Week format
+        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
+    else:  # monthly
+        start_date = end_date - timedelta(days=365)
+        date_format = "%Y-%m"
+        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
+
+    try:
+        # MongoDB aggregation pipeline to count scans by period
+        pipeline = [
+            {
+                "$match": {
+                    "username": username,
+                    "scan_date": {"$gte": start_date}
+                }
+            },
+            {
+                "$group": {
+                    "_id": group_id,
+                    "scan_count": {"$sum": 1}
+                }
+            },
+            {
+                "$sort": {"_id": 1}
+            }
+        ]
+
+        results = list(scan_storage.collection.aggregate(pipeline))
+        
+        # Extract labels and counts
+        labels = [result['_id'] for result in results]
+        scan_counts = [result['scan_count'] for result in results]
+
+        # Format labels for better display
+        formatted_labels = []
+        for label in labels:
+            if period == 'weekly':
+                # Convert "2024-W12" to "Week 12, 2024"
+                try:
+                    year, week = label.split('-W')
+                    formatted_labels.append(f"Week {week}, {year}")
+                except:
+                    formatted_labels.append(label)
+            elif period == 'monthly':
+                # Convert "2024-03" to "Mar 2024"
+                try:
+                    year, month = label.split('-')
+                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    formatted_labels.append(f"{month_names[int(month)-1]} {year}")
+                except:
+                    formatted_labels.append(label)
+            else:  # daily
+                formatted_labels.append(label)
+
+        return jsonify({
+            "labels": formatted_labels,
+            "scan_counts": scan_counts,
+            "total_scans": sum(scan_counts)
+        })
+
+    except Exception as e:
+        print(f"❌ Error fetching scan count data: {e}")
+        return jsonify({"error": "Failed to fetch scan data"}), 500
 @app.route('/logout')
 def logout():
     session.clear()
