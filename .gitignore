@@ -1,1 +1,27 @@
 .env
+node_modules
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Uploads / generated files
+uploads/
+static/uploads/
+static/images/
+*.xlsx
+*.pdf
+*.jpg
+*.png
+
+# IDE / system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

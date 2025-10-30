@@ -1,104 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Cal-FIT | Scan Results</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/scan_label.css') }}">
-  <style>
-    /* --- Results Styles (styles are fine, no changes needed here) --- */
-    .results { margin-top: 30px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; z-index: 10; }
-    .results h2 { color: #333; margin-bottom: 20px; text-align: center; font-size: 1.8em; }
-    .product-info { display: flex; align-items: center; gap: 20px; background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 25px; border-left: 5px solid #667eea; }
-    .product-image { max-width: 100px; height: 100px; object-fit: cover; border-radius: 8px; }
-    .product-name { font-size: 1.5em; font-weight: 600; color: #333; margin: 0; }
-    .scan-type-badge { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 5px 15px; border-radius: 15px; font-size: 0.8em; font-weight: 500; text-transform: uppercase; margin-top: 5px; }
-    .nutrient-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 30px; }
-    .nutrient-card { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; transition: all 0.3s ease; }
-    .nutrient-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-    .nutrient-name { font-weight: 600; color: #333; font-size: 1.1em; margin-bottom: 8px; text-transform: capitalize; }
-    .nutrient-value { font-size: 1.3em; font-weight: 700; color: #667eea; margin-bottom: 5px; }
-    .nutrient-status { display: inline-block; padding: 4px 12px; border-radius: 15px; font-size: 0.8em; font-weight: 500; text-transform: uppercase; }
-    .status-normal { background: #d4edda; color: #155724; }
-    .status-high { background: #f8d7da; color: #721c24; }
-    .status-low { background: #fff3cd; color: #856404; }
-    .status-unknown { background: #e2e3e5; color: #495057; }
-    .no-results { text-align: center; color: #666; padding: 40px; font-size: 1.1em; }
-    .actions { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }
-    .btn { display: inline-block; padding: 12px 25px; margin: 0 10px; text-decoration: none; border-radius: 25px; font-weight: 500; transition: all 0.3s ease; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; cursor: pointer; }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-    .flash-messages { margin: 20px 0; }
-    .flash { padding: 15px; border-radius: 8px; margin-bottom: 10px; font-weight: 500; }
-    .flash.success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
-    .flash.warning { background: #fff3cd; color: #856404; border-left: 4px solid #ffc107; }
-    .flash.error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
-    .flash.info { background: #cce7ff; color: #004085; border-left: 4px solid #007bff; }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
+
 <body>
-<header>
-  <div class="logo">Cal-FIT</div>
-  <nav class="main-nav">
-    <a href="{{ url_for('dashboard') }}">Home</a>
-    <a href="#explore">Explore</a>
-    <a href="#about">About Us</a>
-    <a href="{{ url_for('profile') }}">Profile</a>
-  </nav>
-</header>
+  <header>
+    <div class="logo">Cal-FIT</div>
+    <nav class="main-nav">
+      <a href="{{ url_for('dashboard') }}">Home</a>
+      <a href="#explore">Explore</a>
+      <a href="#about">About Us</a>
+      <a href="{{ url_for('profile') }}">Profile</a>
+    </nav>
+  </header>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
-    <div class="flash-messages">
-      {% for category, message in messages %}
-        <div class="flash {{ category }}">{{ message }}</div>
-      {% endfor %}
-    </div>
+  <div class="flash-messages">
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
   {% endif %}
-{% endwith %}
+  {% endwith %}
 
-{% if barcode_processed and scan_data and scan_data.structured_nutrients %}
+  {% if barcode_processed and scan_data and scan_data.structured_nutrients %}
   <div class="results">
     <h2>Barcode Scan Results</h2>
-    
-    <div class="product-info">
-      {% if scan_data.product_image_url %}
-        <img src="{{ scan_data.product_image_url }}" alt="{{ scan_data.product_name }}" class="product-image">
-      {% endif %}
-      <div>
-        <div class="product-name">{{ scan_data.product_name }}</div>
-        <span class="scan-type-badge">Barcode Scan</span>
+
+    <!-- DESCRIPTION SECTION -->
+    <div class="description-section">
+      <h3 class="section-title">Description</h3>
+      <div class="description-content">
+        <div class="product-info-desc">
+          {% if scan_data.product_image_url %}
+          <img src="{{ scan_data.product_image_url }}" alt="{{ scan_data.product_name }}" class="product-image-desc">
+          {% endif %}
+          <div class="product-details">
+            <div class="product-name-desc">{{ scan_data.product_name }}</div>
+
+            <!-- Community Warnings Section -->
+            {% set cw = community_warnings or {} %}
+            {% if cw.get('total_reports', 0) > 0 %}
+            <div class="community-warnings warning-level-{{ cw.get('warning_level', 'none') }}">
+              <div class="warning-header">
+                <span class="warning-icon"></span>
+                <span class="warning-title">Community Insights</span>
+                <span class="report-count">(Based on {{ cw.get('total_reports', 0) }} report{% if cw.get('total_reports', 0) != 1 %}s{% endif %})</span>
+              </div>
+
+              {% if cw.get('summary_message') %}
+              <div class="warning-summary">{{ cw.get('summary_message') }}</div>
+              {% endif %}
+
+              {% if cw.get('insights') %}
+              <div class="insights-list">
+                {% for insight in cw.get('insights', [])[:3] %}
+                <div class="insight-item severity-{{ insight.severity }}">
+                  <span class="insight-icon"></span>
+                  <div class="insight-content">
+                    <p class="insight-text">{{ insight.text }}</p>
+                    <span class="insight-category">{{ insight.category }}</span>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              {% if cw.get('positive_reports', 0) > 0 %}
+              <div class="positive-note">
+                <span class="positive-icon"></span>
+                <span>{{ cw.get('positive_reports', 0) }} user{% if cw.get('positive_reports', 0) != 1 %}s{% endif %} reported positive experiences</span>
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="no-warnings">
+              <span class="check-icon"></span>
+              <span>No community reports available for this product</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- NUTRIENTS SECTION -->
+    <h3 class="section-title">Nutritional Information</h3>
     <div class="nutrient-grid">
       {% for nutrient in scan_data.structured_nutrients %}
-        <div class="nutrient-card">
-          <div class="nutrient-name">
-            {{ nutrient.nutrient }}
+      <div class="nutrient-card" onclick="toggleCard(this)">
+        <div class="nutrient-name">{{ nutrient.nutrient }}</div>
+        <div class="nutrient-value">{{ nutrient.value }} {{ nutrient.unit }}</div>
+        <span class="nutrient-status status-{{ nutrient.status|lower }}">{{ nutrient.status }}</span>
+
+        <!-- Hidden AI Analysis Section -->
+        <div class="ai-analysis-section" style="display: none;">
+          <div class="ai-divider"></div>
+          {% if nutrient.ai_analysis %}
+          <div class="ai-analysis-content">
+            <p class="ai-label">Personalized for You:</p>
+            <p class="ai-text">{{ nutrient.ai_analysis }}</p>
           </div>
-          <div class="nutrient-value">
-            {{ nutrient.value }} {{ nutrient.unit }}
+          {% endif %}
+          {% if nutrient.message %}
+          <div class="general-message">
+            <p class="general-label">General Info:</p>
+            <p class="general-text">{{ nutrient.message }}</p>
           </div>
-          <span class="nutrient-status status-{{ nutrient.status|lower }}">
-            {{ nutrient.status }}
-          </span>
+          {% endif %}
         </div>
+      </div>
       {% endfor %}
     </div>
 
     <div class="actions">
-      <form action="{{ url_for('add_to_diet') }}" method="POST" style="display:inline;">
+      <form id="add-to-diet-form" action="{{ url_for('add_to_diet') }}" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn">Add to Diet</button>
       </form>
       <a href="{{ url_for('scan_label') }}" class="btn">Scan Another Item</a>
       <a href="{{ url_for('dashboard') }}" class="btn">Back to Dashboard</a>
     </div>
+
+    <div id="flash-messages"></div>
   </div>
 
-{% else %}
+  {% else %}
+  <!-- Default Upload Page -->
   <div style="position: relative; z-index: 1; text-align: center; margin-top: 60px;">
-    <p style="max-width: 700px; margin: 0 auto 30px auto; font-size: 18px; color: #ddd;">
-      Cal-FIT provides comprehensive analysis of your food labels, offering valuable insights into nutritional content and potential health risks.
+    <p style="max-width: 700px; margin: 0 auto 30px auto; font-size: 18px; color: #252601;">
+      Cal-FIT provides comprehensive analysis of your food labels, offering valuable insights into nutritional content
+      and potential health risks.
     </p>
   </div>
 
@@ -133,7 +170,7 @@
     <div class="step2">
       <p>2</p>
       <h1>Read</h1>
-      <p>Get results that highlight the good and bad in your food, backed by real nutritional science. </p>
+      <p>Get results that highlight the good and bad in your food, backed by real nutritional science.</p>
     </div>
     <div class="step3">
       <p>3</p>
@@ -141,7 +178,49 @@
       <p>Eat based on personalized suggestions tailored to your diet plan.</p>
     </div>
   </div>
-{% endif %}
+  {% endif %}
+
+  <script>
+    function toggleCard(card) {
+      const aiSection = card.querySelector('.ai-analysis-section');
+      const allCards = document.querySelectorAll('.nutrient-card');
+
+      if (card.classList.contains('expanded')) {
+        card.classList.remove('expanded');
+        aiSection.style.display = 'none';
+      } else {
+        allCards.forEach(c => {
+          c.classList.remove('expanded');
+          const section = c.querySelector('.ai-analysis-section');
+          if (section) section.style.display = 'none';
+        });
+
+        card.classList.add('expanded');
+        aiSection.style.display = 'block';
+      }
+    }
+
+    document.getElementById("add-to-diet-form")?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const flashBox = document.getElementById("flash-messages");
+
+      try {
+        const response = await fetch(this.action, { method: "POST", body: formData });
+        const result = await response.json();
+
+        flashBox.innerHTML = `<div class="flash ${result.status}"><p>${result.message}</p></div>`;
+        setTimeout(() => flashBox.innerHTML = '', 3000);
+
+        if (result.status === 'success') this.style.display = 'none';
+      } catch (error) {
+        console.error('Error:', error);
+        flashBox.innerHTML = `<div class="flash error"><p>Network error occurred</p></div>`;
+        setTimeout(() => flashBox.innerHTML = '', 3000);
+      }
+    });
+  </script>
 
 </body>
 </html>

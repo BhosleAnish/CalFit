@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Cal-FIT | All-in-One</title>
@@ -24,8 +25,10 @@
     body::before {
       content: "";
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: rgba(0, 0, 0, 0.3);
       backdrop-filter: blur(15px);
       z-index: 0;
@@ -140,47 +143,47 @@
     .form-box button:hover {
       background-color: #059669;
     }
+
     /* Dropdown styling */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
 
-.dropbtn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
+    .dropbtn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
 
-.dropdown-content {
-  display: none;
-  position: absolute;
-  right: 0;
-  background-color: rgba(16, 185, 129, 0.95);
-  min-width: 180px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  z-index: 2;
-  border-radius: 5px;
-  overflow: hidden;
-}
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background-color: rgba(16, 185, 129, 0.95);
+      min-width: 180px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 2;
+      border-radius: 5px;
+      overflow: hidden;
+    }
 
-.dropdown-content a {
-  color: white;
-  padding: 10px 15px;
-  text-decoration: none;
-  display: block;
-}
+    .dropdown-content a {
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      display: block;
+    }
 
-.dropdown-content a:hover {
-  background-color: #059669;
-}
+    .dropdown-content a:hover {
+      background-color: #059669;
+    }
 
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
   </style>
 
   <script>
@@ -218,36 +221,36 @@
 
   <!-- Navbar -->
   <header>
-  <div class="logo">Cal-FIT</div>
-  <nav class="main-nav">
-    <a href="{{ url_for('dashboard') }}">Home</a>
-    <a href="#explore">Explore</a>
-    <a href="#about">About Us</a>
-    <a href="{{ url_for('profile') }}">Profile</a>
+    <div class="logo">Cal-FIT</div>
+    <nav class="main-nav">
+      <a href="{{ url_for('dashboard') }}">Home</a>
+      <a href="#explore">Explore</a>
+      <a href="#about">About Us</a>
+      <a href="{{ url_for('profile') }}">Profile</a>
 
-  </nav>
-</header>
+    </nav>
+  </header>
 
 
   <!--  Hero Section -->
   <section class="hero">
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div style="margin-bottom: 20px;">
-          {% for category, message in messages %}
-            <div style="
+    {% if messages %}
+    <div style="margin-bottom: 20px;">
+      {% for category, message in messages %}
+      <div style="
               padding: 10px;
               border-radius: 5px;
               margin-bottom: 10px;
               color: white;
               background-color: {% if category == 'error' %}#EF4444{% else %}#10B981{% endif %};
             ">
-              {{ message }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
     {% endwith %}
 
     <h1>Scan Smarter. Eat Healthier.</h1>
@@ -265,7 +268,7 @@
         <input type="text" name="username" placeholder="Username" autocomplete="off" required>
         <input type="password" name="password" placeholder="Password" autocomplete="off" required>
         <button type="submit">Login</button>
-        
+
 
       </form>
 
@@ -280,4 +283,5 @@
   </section>
 
 </body>
+
 </html>

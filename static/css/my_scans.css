@@ -1,0 +1,491 @@
+.scans-container {
+    position: relative;
+    z-index: 1;
+    padding: 40px 20px;
+    min-height: calc(100vh - 80px);
+}
+
+.scans-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 50px;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.page-header h1 {
+    font-size: 56px;
+    color: #252601;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(132, 191, 4, 0.2);
+}
+
+.page-header p {
+    font-size: 20px;
+    color: #252601;
+    font-weight: 500;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+}
+
+.stat-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 35px rgba(132, 191, 4, 0.3);
+    border-color: #84BF04;
+}
+
+.stat-card h3 {
+    font-size: 48px;
+    color: #84BF04;
+    margin-bottom: 10px;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(132, 191, 4, 0.2);
+}
+
+.stat-card p {
+    color: #252601;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.filters-section {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filters-section input,
+.filters-section select {
+    padding: 12px 20px;
+    border: 2px solid #84BF04;
+    border-radius: 50px;
+    font-size: 15px;
+    font-family: 'Montserrat', sans-serif;
+    flex: 1;
+    min-width: 200px;
+    background: white;
+    color: #252601;
+    transition: all 0.3s ease;
+}
+
+.filters-section input:focus,
+.filters-section select:focus {
+    outline: none;
+    border-color: #252601;
+    box-shadow: 0 0 0 3px rgba(132, 191, 4, 0.2);
+}
+
+.filter-btn {
+    padding: 12px 28px;
+    background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+    color: #252601;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(132, 191, 4, 0.3);
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(132, 191, 4, 0.5);
+}
+
+.filter-btn.secondary {
+    background: #252601;
+    color: #84BF04;
+}
+
+.scans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.scan-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(217, 214, 208, 0.98) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+}
+
+.scan-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(132, 191, 4, 0.3);
+    border-color: #84BF04;
+}
+
+.scan-header {
+    background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+    color: #252601;
+    padding: 25px;
+    border-bottom: 3px solid #252601;
+}
+
+.scan-header h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.scan-date {
+    font-size: 14px;
+    opacity: 0.9;
+    font-weight: 600;
+}
+
+.scan-body {
+    padding: 25px;
+}
+
+.nutrient-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.nutrient-item {
+    background: linear-gradient(135deg, rgba(132, 191, 4, 0.1) 0%, rgba(157, 211, 5, 0.1) 100%);
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid rgba(132, 191, 4, 0.3);
+    transition: all 0.3s ease;
+}
+
+.nutrient-item:hover {
+    background: linear-gradient(135deg, rgba(132, 191, 4, 0.2) 0%, rgba(157, 211, 5, 0.2) 100%);
+    transform: scale(1.05);
+}
+
+.nutrient-item strong {
+    display: block;
+    color: #252601;
+    font-size: 22px;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.nutrient-item span {
+    font-size: 13px;
+    color: #252601;
+    font-weight: 600;
+}
+
+.status-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.badge {
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.badge.high {
+    background: linear-gradient(135deg, #ff6b6b, #ff5252);
+    color: white;
+}
+
+.badge.normal {
+    background: linear-gradient(135deg, #51cf66, #37b24d);
+    color: white;
+}
+
+.badge.low {
+    background: linear-gradient(135deg, #ffd43b, #fab005);
+    color: #252601;
+}
+
+.scan-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.action-btn.view {
+    background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+    color: #252601;
+}
+
+.action-btn.view:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(132, 191, 4, 0.5);
+}
+
+.action-btn.delete {
+    background: linear-gradient(135deg, #ff6b6b, #ff5252);
+    color: white;
+}
+
+.action-btn.delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 82, 82, 0.5);
+}
+
+.empty-state {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
+    backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 80px 40px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.empty-state h2 {
+    font-size: 42px;
+    color: #252601;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(132, 191, 4, 0.2);
+}
+
+.empty-state p {
+    font-size: 18px;
+    color: #252601;
+    margin-bottom: 30px;
+}
+
+.empty-state .hero-btn {
+    display: inline-block;
+    padding: 14px 35px;
+    background: linear-gradient(135deg, #84BF04 0%, #9dd305 50%, #84BF04 100%);
+    background-size: 200% 100%;
+    background-position: right;
+    color: #252601;
+    font-weight: 700;
+    font-size: 18px;
+    text-decoration: none;
+    border-radius: 50px;
+    box-shadow: 0 6px 25px rgba(132, 191, 4, 0.4);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.empty-state .hero-btn:hover {
+    background-position: left;
+    box-shadow: 0 10px 35px rgba(132, 191, 4, 0.6);
+    transform: translateY(-3px) scale(1.05);
+}
+
+.loading {
+    text-align: center;
+    padding: 80px;
+    font-size: 24px;
+    color: #252601;
+    font-weight: 600;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 30px;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
+    color: #252601;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 700;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 2px solid #84BF04;
+}
+
+.back-link:hover {
+    background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+    transform: translateX(-5px);
+    box-shadow: 0 8px 25px rgba(132, 191, 4, 0.5);
+}
+
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 36px;
+    }
+
+    .scans-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-section {
+        flex-direction: column;
+    }
+
+    .filters-section input,
+    .filters-section select,
+    .filter-btn {
+        width: 100%;
+    }
+}
+
+.modal {
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    /* Stay in place */
+    z-index: 1000;
+    /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.6);
+    /* Black w/ opacity */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    /* 10% from the top and centered */
+    padding: 30px;
+    border: 1px solid #888;
+    width: 80%;
+    /* Could be more or less, depending on screen size */
+    max-width: 500px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: black;
+    text-decoration: none;
+}
+
+/* Form Styles */
+#reportForm .form-group {
+    margin-bottom: 20px;
+}
+
+#reportForm label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+#reportForm textarea,
+#reportForm input[type="text"]
+
+/* Add if you include text inputs */
+    {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    /* Important */
+}
+
+#reportForm textarea {
+    resize: vertical;
+    /* Allow vertical resize */
+}
+
+#reportForm .radio-group label {
+    display: inline-block;
+    margin-right: 15px;
+    font-weight: normal;
+}
+
+#reportForm .submit-btn {
+    background-color: #4CAF50;
+    /* Green */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+#reportForm .submit-btn:hover {
+    background-color: #45a049;
+}
+
+#reportStatus {
+    font-weight: bold;
+}
+
+#reportStatus.success {
+    color: green;
+}
+
+#reportStatus.error {
+    color: red;
+}
+
+/* Style for the new report button */
+.scan-actions .report {
+    background-color: #ffc107;
+    /* Amber color */
+    color: #333;
+}
+
+.scan-actions .report:hover {
+    background-color: #e0a800;
+}

@@ -5,7 +5,7 @@ from flask_wtf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-import csv, os, re
+import  os, re
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from ocr_utils import process_label_image,extract_nutrients
@@ -15,19 +15,21 @@ from io import BytesIO
 import sqlite3
 import pymongo
 from bson import ObjectId
+from bson.errors import InvalidId
 from process_label import process_nutrition_label
-import google.generativeai as genai
 from datetime import datetime, timedelta
 import openai
 import json
+from flask_cors import CORS
+from flask import jsonify, request # Make sure jsonify and request are imported
+from nlp_analyzer import analyze_report_text # <-- ADD THIS
 load_dotenv()
 
+
 # --- CONFIGURE THE AI MODEL ---
-# This loads the key from your .env file
 try:
     api_key = os.getenv("OPENAI_API_KEY")
     if api_key:
-        # Instantiate the client
         client = openai.OpenAI(api_key=api_key)
         print("✅ OpenAI client configured successfully.")
     else:
@@ -39,44 +41,33 @@ except Exception as e:
 
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key'
-
+CORS(app, 
+     origins=["http://localhost:5173"], 
+     supports_credentials=True # This is crucial for session cookies
+)
 csrf = CSRFProtect(app)
-limiter = Limiter(key_func=get_remote_address)
-limiter.init_app(app)
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    storage_uri="redis://localhost:6379"
+)
 
 @app.context_processor
 def inject_csrf_token():
     return dict(csrf_token=generate_csrf)
 
 # File paths
-USER_CSV = 'users.csv'
-PROFILE_CSV = 'user_profiles.csv'
-SCAN_CSV = 'user_scans.csv'
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Initialize CSVs if not exist
-for file, headers in {
-    USER_CSV: ['username', 'password'],
-    PROFILE_CSV: ['username', 'full_name', 'age', 'gender', 'height_cm', 'weight_kg', 'activity_level', 'medical_conditions', 'allergies'],
-    SCAN_CSV: ['username', 'item', 'quantity', 'protein', 'carbs', 'fats', 'date']
-}.items():
-    if not os.path.exists(file):
-        with open(file, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(headers)
-
 # MongoDB Configuration
 class MongoConfig:
     def __init__(self):
-        # MongoDB connection string - replace with your actual connection details
         self.MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017/')
         self.DATABASE_NAME = os.getenv('MONGO_DB_NAME', 'nutrition_app')
-        self.COLLECTION_NAME = 'user_scans'
         
         try:
-            # Connect to MongoDB Atlas with additional options
             self.client = pymongo.MongoClient(
                 self.MONGO_URI,
                 retryWrites=True,
@@ -87,52 +78,228 @@ class MongoConfig:
             )
             
             self.db = self.client[self.DATABASE_NAME]
-            self.collection = self.db[self.COLLECTION_NAME]
             
             # Test connection
             self.client.admin.command('ping')
             print("✅ MongoDB connection successful")
             print(f"✅ Connected to database: {self.DATABASE_NAME}")
             
-            # Create indexes for better performance and automatic cleanup
-            self.setup_indexes()
-            
         except pymongo.errors.ServerSelectionTimeoutError as e:
             print(f"❌ MongoDB connection timeout: {e}")
             self.client = None
             self.db = None
-            self.collection = None
         except Exception as e:
             print(f"❌ MongoDB connection failed: {e}")
             self.client = None
             self.db = None
+
+# ==================== USER CREDENTIALS STORAGE CLASS ====================
+class UserCredentialsStorage:
+    def __init__(self):
+        self.mongo_config = MongoConfig()
+        try:
+            self.collection = self.mongo_config.db['user_credentials']
+            self.setup_indexes()
+            print("✅ User credentials collection initialized")
+        except Exception as e:
+            print(f"❌ Failed to initialize user credentials collection: {e}")
+            self.collection = None
+    
+    def setup_indexes(self):
+        """Create indexes for better performance"""
+        try:
+            self.collection.create_index("username", unique=True)
+            print("✅ User credentials indexes created successfully")
+        except Exception as e:
+            print(f"⚠️ Could not create credentials indexes: {e}")
+    
+    def add_user(self, username, password):
+        """Add new user credentials to MongoDB"""
+        if self.collection is None:
+            print("❌ MongoDB not available, cannot add user")
+            return False
+        
+        try:
+            user_document = {
+                "username": username,
+                "password": generate_password_hash(password),
+                "created_at": datetime.utcnow()
+            }
+            
+            self.collection.insert_one(user_document)
+            print(f"✅ User created: {username}")
+            return True
+            
+        except pymongo.errors.DuplicateKeyError:
+            print(f"⚠️ User already exists: {username}")
+            return False
+        except Exception as e:
+            print(f"❌ Failed to add user: {e}")
+            return False
+    
+    def get_user(self, username):
+        """Get user credentials from MongoDB"""
+        if self.collection is None:
+            return None
+        
+        try:
+            user = self.collection.find_one({"username": username})
+            return user
+        except Exception as e:
+            print(f"❌ Failed to retrieve user: {e}")
+            return None
+    
+    def user_exists(self, username):
+        """Check if user exists"""
+        if self.collection is None:
+            return False
+        
+        try:
+            return self.collection.count_documents({"username": username}) > 0
+        except Exception as e:
+            print(f"❌ Failed to check user existence: {e}")
+            return False
+    
+    def get_all_users(self):
+        """Get all usernames (admin function)"""
+        if self.collection is None:
+            return {}
+        
+        try:
+            users = {}
+            for user in self.collection.find({}, {'username': 1, 'password': 1, '_id': 0}):
+                users[user['username']] = user['password']
+            return users
+        except Exception as e:
+            print(f"❌ Failed to retrieve all users: {e}")
+            return {}
+
+# ==================== USER PROFILE STORAGE CLASS ====================
+class UserProfileStorage:
+    def __init__(self):
+        self.mongo_config = MongoConfig()
+        try:
+            self.collection = self.mongo_config.db['user_profiles']
+            self.setup_indexes()
+            print("✅ User profiles collection initialized")
+        except Exception as e:
+            print(f"❌ Failed to initialize user profiles collection: {e}")
+            self.collection = None
+    
+    def setup_indexes(self):
+        """Create indexes for better performance"""
+        try:
+            self.collection.create_index("username", unique=True)
+            self.collection.create_index("created_at")
+            print("✅ User profile indexes created successfully")
+        except Exception as e:
+            print(f"⚠️ Could not create profile indexes: {e}")
+    
+    def save_profile(self, profile_data):
+        """Save or update user profile in MongoDB"""
+        if self.collection is None:
+            print("❌ MongoDB not available, cannot save profile")
+            return False
+        
+        try:
+            username = profile_data.get('username')
+            if not username:
+                print("❌ Username is required to save profile")
+                return False
+            
+            profile_document = {
+                "username": username,
+                "full_name": profile_data.get('full_name', ''),
+                "age": int(profile_data.get('age', 0)) if profile_data.get('age') else None,
+                "gender": profile_data.get('gender', ''),
+                "height_cm": float(profile_data.get('height_cm', 0)) if profile_data.get('height_cm') else None,
+                "weight_kg": float(profile_data.get('weight_kg', 0)) if profile_data.get('weight_kg') else None,
+                "activity_level": profile_data.get('activity_level', ''),
+                "medical_conditions": profile_data.get('medical_conditions', ''),
+                "allergies": profile_data.get('allergies', ''),
+                "updated_at": datetime.utcnow()
+            }
+            
+            existing_profile = self.collection.find_one({"username": username})
+            
+            if existing_profile:
+                profile_document['created_at'] = existing_profile.get('created_at', datetime.utcnow())
+                result = self.collection.update_one(
+                    {"username": username},
+                    {"$set": profile_document}
+                )
+                print(f"✅ Profile updated for user: {username}")
+                return result.modified_count > 0 or result.matched_count > 0
+            else:
+                profile_document['created_at'] = datetime.utcnow()
+                result = self.collection.insert_one(profile_document)
+                print(f"✅ Profile created for user: {username}")
+                return result.inserted_id is not None
+                
+        except Exception as e:
+            print(f"❌ Failed to save profile: {e}")
+            return False
+    
+    def get_profile(self, username):
+        """Retrieve user profile from MongoDB"""
+        if self.collection is None:
+            return None
+        
+        try:
+            profile = self.collection.find_one({"username": username})
+            if profile:
+                profile.pop('_id', None)
+                return profile
+            return None
+        except Exception as e:
+            print(f"❌ Failed to retrieve profile: {e}")
+            return None
+    
+    def delete_profile(self, username):
+        """Delete user profile"""
+        if self.collection is None:
+            return False
+        
+        try:
+            result = self.collection.delete_one({"username": username})
+            return result.deleted_count > 0
+        except Exception as e:
+            print(f"❌ Failed to delete profile: {e}")
+            return False
+    
+    def profile_exists(self, username):
+        """Check if profile exists"""
+        if self.collection is None:
+            return False
+        
+        try:
+            return self.collection.count_documents({"username": username}) > 0
+        except Exception as e:
+            print(f"❌ Failed to check profile existence: {e}")
+            return False
+
+# ==================== SCAN STORAGE CLASS ====================
+class ScanStorage:
+    def __init__(self):
+        self.mongo_config = MongoConfig()
+        try:
+            self.collection = self.mongo_config.db['user_scans']
+            self.setup_indexes()
+            print("✅ User scans collection initialized")
+        except Exception as e:
+            print(f"❌ Failed to initialize user scans collection: {e}")
             self.collection = None
     
     def setup_indexes(self):
         """Create indexes for better performance and automatic cleanup"""
         try:
-            # Index for faster user queries
             self.collection.create_index("username")
-            
-            # Index for date-based queries
             self.collection.create_index("scan_date")
-            
-            # Compound index for user + date queries
             self.collection.create_index([("username", 1), ("scan_date", -1)])
-            
-            # TTL (Time To Live) index for automatic cleanup after 30 days
             self.collection.create_index("expires_at", expireAfterSeconds=0)
-            
-            print("✅ Database indexes created successfully")
-            
+            print("✅ Scan indexes created successfully")
         except Exception as e:
-            print(f"⚠️ Could not create indexes: {e}")
-
-# MongoDB utility functions
-class ScanStorage:
-    def __init__(self):
-        self.mongo_config = MongoConfig()
-        self.collection = self.mongo_config.collection
+            print(f"⚠️ Could not create scan indexes: {e}")
     
     def save_scan_data(self, username, raw_text, cleaned_text, structured_nutrients, image_filename=None, product_name=None, product_image_url=None):
         """Save scan data to MongoDB"""
@@ -141,7 +308,6 @@ class ScanStorage:
             return None
         
         try:
-            # Create nutrition summary
             summary = self._create_nutrition_summary(structured_nutrients)
             
             scan_document = {
@@ -180,7 +346,7 @@ class ScanStorage:
             return None
     
     def _create_nutrition_summary(self, structured_nutrients):
-        """Create a summary of nutrition data for easier viewing in Atlas"""
+        """Create a summary of nutrition data"""
         if not structured_nutrients:
             return {}
         
@@ -193,7 +359,6 @@ class ScanStorage:
             "categories": {}
         }
         
-        # Group by categories
         for nutrient in structured_nutrients:
             category = nutrient.get('category', 'unknown')
             if category not in summary["categories"]:
@@ -210,10 +375,9 @@ class ScanStorage:
         try:
             scans = list(self.collection.find(
                 {"username": username},
-                sort=[("scan_date", -1)]  # Most recent first
+                sort=[("scan_date", -1)]
             ).limit(limit))
             
-            # Convert ObjectId to string for JSON serialization
             for scan in scans:
                 scan['_id'] = str(scan['_id'])
             
@@ -239,7 +403,7 @@ class ScanStorage:
             return None
     
     def delete_scan(self, scan_id, username):
-        """Delete a specific scan (with username verification for security)"""
+        """Delete a specific scan"""
         if self.collection is None:
             return False
         
@@ -265,17 +429,14 @@ class ScanStorage:
             }
         
         try:
-            # Total scans
             total_scans = self.collection.count_documents({"username": username})
             
-            # Scans in last 7 days
             week_ago = datetime.utcnow() - timedelta(days=7)
             recent_scans = self.collection.count_documents({
                 "username": username,
                 "scan_date": {"$gte": week_ago}
             })
             
-            # Most recent scan date
             latest_scan = self.collection.find_one(
                 {"username": username},
                 sort=[("scan_date", -1)]
@@ -300,7 +461,7 @@ class ScanStorage:
             }
     
     def cleanup_expired_scans(self):
-        """Remove expired scans (older than 30 days)"""
+        """Remove expired scans"""
         if self.collection is None:
             return 0
         
@@ -316,42 +477,31 @@ class ScanStorage:
             print(f"❌ Failed to cleanup expired scans: {e}")
             return 0
 
-# Initialize scan storage
+# Initialize storage systems
+credentials_storage = UserCredentialsStorage()
+profile_storage = UserProfileStorage()
 scan_storage = ScanStorage()
 
-# Utility functions
+# ==================== UTILITY FUNCTIONS ====================
+
 def load_users():
-    users = {}
-    with open(USER_CSV, 'r') as f:
-        for row in csv.DictReader(f):
-            users[row['username']] = row['password']
-    return users
+    """Load users from MongoDB"""
+    return credentials_storage.get_all_users()
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg'}
 
 def add_user(username, password):
-    hashed_password = generate_password_hash(password)
-    with open(USER_CSV, 'a', newline='') as f:
-        csv.writer(f).writerow([username, hashed_password])
+    """Add user to MongoDB"""
+    return credentials_storage.add_user(username, password)
 
 def save_user_profile(data):
-    fieldnames = ['username', 'full_name', 'height_cm', 'weight_kg', 'age', 'gender', 'activity_level', 'medical_conditions', 'allergies']
-    profiles = []
-    with open(PROFILE_CSV, 'r') as f:
-        profiles = [row for row in csv.DictReader(f) if row['username'] != data['username']]
-    profiles.append(data)
-    with open(PROFILE_CSV, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(profiles)
+    """Save user profile to MongoDB"""
+    return profile_storage.save_profile(data)
 
 def load_user_health_profile(username):
-    with open(PROFILE_CSV, 'r') as f:
-        for row in csv.DictReader(f):
-            if row['username'] == username:
-                return row
-    return None
+    """Load user profile from MongoDB"""
+    return profile_storage.get_profile(username)
 
 def calculate_daily_needs(weight_kg, activity_level):
     weight_kg = float(weight_kg)
@@ -364,56 +514,11 @@ def calculate_daily_needs(weight_kg, activity_level):
         "carbs_g": round((0.50 * calories) / 4)
     }
 
-def load_user_scans(username):
-    if not os.path.exists(SCAN_CSV):
-        return []
-    with open(SCAN_CSV, 'r') as f:
-        return [row for row in csv.DictReader(f) if row['username'] == username]
-
-def get_weekly_summary(scans):
-    now = datetime.now()
-    week_ago = now - timedelta(days=7)
-    weekly = [s for s in scans if datetime.strptime(s['date'], '%Y-%m-%d') >= week_ago]
-    total = lambda key: sum(float(s.get(key, 0)) for s in weekly)
-    count = len(weekly)
-    return {
-        'avg_protein': round(total('protein') / count, 1) if count else 0,
-        'avg_carbs': round(total('carbs') / count, 1) if count else 0,
-        'avg_fats': round(total('fats') / count, 1) if count else 0
-    }
-
-def evaluate_nutrient_status(nutrient_name, value):
-    conn = sqlite3.connect('food_thresholds.db')
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
-        FROM ingredient_thresholds 
-        WHERE LOWER(name) = LOWER(?)
-    """, (nutrient_name,))
-    
-    result = cursor.fetchone()
-    conn.close()
-
-    if not result:
-        return {"status": "Unknown", "message": "No data available."}
-
-    max_threshold, min_threshold, high_msg, low_msg = result
-
-    if max_threshold is not None and value > max_threshold:
-        return {"status": "High", "message": high_msg}
-    elif min_threshold is not None and value < min_threshold:
-        return {"status": "Low", "message": low_msg}
-    else:
-        return {"status": "Normal", "message": "This level is within the healthy range."}
-
-# Enhanced evaluate_nutrient_status function
 def evaluate_nutrient_status_enhanced(nutrient_name, value):
     """Enhanced function to evaluate nutrient status with better name matching"""
     conn = sqlite3.connect('food_thresholds.db')
     cursor = conn.cursor()
 
-    # First, try exact match (case insensitive)
     cursor.execute("""
         SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
         FROM ingredient_thresholds 
@@ -422,9 +527,7 @@ def evaluate_nutrient_status_enhanced(nutrient_name, value):
     
     result = cursor.fetchone()
     
-    # If no exact match, try partial matching for common variations
     if not result:
-        # Common nutrient name mappings
         name_mappings = {
             'sugar': ['sugar', 'added sugar', 'total sugar', 'total sugars'],
             'fat': ['fat', 'total fat', 'fats'],
@@ -443,7 +546,6 @@ def evaluate_nutrient_status_enhanced(nutrient_name, value):
             'potassium': ['potassium']
         }
         
-        # Try to find a match using mappings
         for db_name, variations in name_mappings.items():
             if nutrient_name.lower() in [v.lower() for v in variations]:
                 cursor.execute("""
@@ -455,7 +557,6 @@ def evaluate_nutrient_status_enhanced(nutrient_name, value):
                 if result:
                     break
     
-    # If still no match, try LIKE search
     if not result:
         cursor.execute("""
             SELECT max_threshold, min_threshold, high_risk_message, low_risk_message 
@@ -471,7 +572,6 @@ def evaluate_nutrient_status_enhanced(nutrient_name, value):
 
     max_threshold, min_threshold, high_msg, low_msg = result
 
-    # Evaluate status based on thresholds
     if max_threshold is not None and value > max_threshold:
         return {"status": "High", "message": high_msg}
     elif min_threshold is not None and value < min_threshold:
@@ -479,69 +579,16 @@ def evaluate_nutrient_status_enhanced(nutrient_name, value):
     else:
         return {"status": "Normal", "message": "This level is within the healthy range."}
 
-
-def get_user_habit_summary(username, days=30):
-    """
-    Aggregates a user's scan history from MongoDB to create a 30-day habit summary.
-    """
-    end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=days)
-    
-    pipeline = [
-        {"$match": {"username": username, "scan_date": {"$gte": start_date}}},
-        {"$unwind": "$nutrition_analysis.structured_nutrients"},
-        {
-            "$group": {
-                "_id": "$nutrition_analysis.structured_nutrients.nutrient",
-                "total_value": {"$sum": "$nutrition_analysis.structured_nutrients.value"},
-                "count": {"$sum": 1},
-                "high_risk_count": {
-                    "$sum": {
-                        "$cond": [
-                            {"$eq": ["$nutrition_analysis.structured_nutrients.status", "High"]},
-                            1, 0
-                        ]
-                    }
-                },
-                "avg_value": {"$avg": "$nutrition_analysis.structured_nutrients.value"},
-                "unit": {"$first": "$nutrition_analysis.structured_nutrients.unit"},
-                "category": {"$first": "$nutrition_analysis.structured_nutrients.category"}
-            }
-        },
-        {"$sort": {"high_risk_count": -1, "total_value": -1}},
-        {"$limit": 10}
-    ]
-    
-    try:
-        summary = list(scan_storage.collection.aggregate(pipeline))
-        total_scans = scan_storage.collection.count_documents(
-            {"username": username, "scan_date": {"$gte": start_date}}
-        )
-        
-        # Reformat results
-        for item in summary:
-            item['nutrient'] = item.pop('_id')
-            item['avg_value_per_scan'] = round(item['avg_value'], 2)
-            item['total_value'] = round(item['total_value'], 2)
-
-        return {"total_scans": total_scans, "nutrient_summary": summary}
-    except Exception as e:
-        print(f"❌ Error during habit aggregation: {e}")
-        return None
 def get_today_scan_visualization():
-    """
-    Get today's scans for visualization on profile page
-    """
+    """Get today's scans for visualization on profile page"""
     username = session.get("username")
-    if not username or scan_storage.collection is None:  # Fixed: use 'is None' instead of 'not'
+    if not username or scan_storage.collection is None:
         return []
 
     try:
-        # Get today's date range
         today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
         today_end = today_start + timedelta(days=1)
 
-        # Fetch today's scans
         today_scans = list(scan_storage.collection.find({
             "username": username,
             "scan_date": {
@@ -550,13 +597,11 @@ def get_today_scan_visualization():
             }
         }).sort("scan_date", -1))
 
-        # Process scans for visualization
         visualization_data = []
         for scan in today_scans:
             product_name = scan.get("product_info", {}).get("name", "Unknown Product")
             nutrients = scan.get("nutrition_analysis", {}).get("structured_nutrients", [])
             
-            # Extract key nutrients for visualization
             key_nutrients = {}
             for nutrient in nutrients:
                 nutrient_name = nutrient.get("nutrient", "").lower()
@@ -580,67 +625,49 @@ def get_today_scan_visualization():
         print(f"❌ Error fetching today's scans: {e}")
         return []
 
-
 def get_comprehensive_ai_analysis():
-    """
-    Generates a personalized, doctor-style analysis of eating habits 
-    using all scans saved by the logged-in user and their profile data.
-    """
+    """Generates a personalized, doctor-style analysis (refined version)"""
     username = session.get("username")
     if not username:
         return "<h2>Error</h2><p>No user logged in.</p>"
 
-    if scan_storage.collection is None:  # Fixed: use 'is None' instead of 'not'
+    if scan_storage.collection is None:
         return "<h2>AI Analysis Unavailable</h2><p>Database not connected.</p>"
 
     try:
-        # Fetch all scans for this user
         user_scans = list(scan_storage.collection.find({"username": username}))
-        
-        # Get user profile
         user_profile = load_user_health_profile(username)
         
         if not user_profile:
-            return "<h2>Profile Required</h2><p>Please complete your profile to get personalized analysis.</p>"
+            return "<h2>Profile Required</h2><p>Please complete your profile for analysis.</p>"
             
     except Exception as e:
         print(f"❌ Could not fetch data: {e}")
         return "<h2>Error</h2><p>Could not fetch user data.</p>"
 
     if not user_scans:
-        return "<h2>No Data</h2><p>No scans found for your profile. Start scanning some food items!</p>"
+        return "<h2>No Data</h2><p>No scans found. Please scan items to get an analysis.</p>"
 
-    # Aggregate nutritional data
     total_nutrients = {}
     risk_counts = {"High": 0, "Low": 0, "Normal": 0, "Unknown": 0}
-    product_names = []
     scan_count = len(user_scans)
     
     for scan in user_scans:
-        # Collect product names
-        product_name = scan.get("product_info", {}).get("name", "Unknown")
-        if product_name != "Unknown":
-            product_names.append(product_name)
-        
-        # Process nutrients
         structured_nutrients = scan.get("nutrition_analysis", {}).get("structured_nutrients", [])
         for nutrient in structured_nutrients:
             nutrient_name = nutrient.get("nutrient", "").lower()
             value = nutrient.get("value", 0)
             status = nutrient.get("status", "Unknown")
             
-            # Aggregate nutrient values
             if nutrient_name:
                 if nutrient_name not in total_nutrients:
                     total_nutrients[nutrient_name] = {"total": 0, "count": 0, "unit": nutrient.get("unit", "")}
                 total_nutrients[nutrient_name]["total"] += value
                 total_nutrients[nutrient_name]["count"] += 1
             
-            # Count risk statuses
             if status in risk_counts:
                 risk_counts[status] += 1
-
-    # Calculate averages
+    
     avg_nutrients = {}
     for nutrient, data in total_nutrients.items():
         if data["count"] > 0:
@@ -650,83 +677,57 @@ def get_comprehensive_ai_analysis():
                 "total": round(data["total"], 2)
             }
 
-    # Prepare data for AI prompt
     analysis_data = {
         "user_profile": {
             "name": user_profile.get("full_name", "User"),
-            "age": user_profile.get("age", "Not specified"),
-            "gender": user_profile.get("gender", "Not specified"),
-            "height_cm": user_profile.get("height_cm", "Not specified"),
-            "weight_kg": user_profile.get("weight_kg", "Not specified"),
-            "activity_level": user_profile.get("activity_level", "Not specified"),
-            "medical_conditions": user_profile.get("medical_conditions", "None specified"),
-            "allergies": user_profile.get("allergies", "None specified")
+            "age": user_profile.get("age"),
+            "gender": user_profile.get("gender"),
+            "activity_level": user_profile.get("activity_level")
         },
-        "scan_summary": {
-            "total_scans": scan_count,
-            "products_scanned": list(set(product_names)),
-            "risk_distribution": risk_counts,
-            "average_nutrients": avg_nutrients
-        }
+        "risk_distribution": risk_counts,
+        "average_nutrients": avg_nutrients  # kept for AI to interpret, not shown directly
     }
 
-    # Calculate daily nutritional needs based on profile
     if user_profile.get("weight_kg") and user_profile.get("activity_level"):
         try:
-            daily_needs = calculate_daily_needs(user_profile["weight_kg"], user_profile["activity_level"])
-            analysis_data["daily_recommendations"] = daily_needs
+            analysis_data["daily_recommendations"] = calculate_daily_needs(
+                user_profile["weight_kg"],
+                user_profile["activity_level"]
+            )
         except Exception as e:
             print(f"Warning: Could not calculate daily needs: {e}")
 
     data_json = json.dumps(analysis_data, indent=2)
 
-    # Doctor-style AI prompt
+    # ✅ New Prompt with merged and simplified sections
     prompt = f"""
-    You are a qualified nutritionist and dietitian providing a comprehensive health assessment. 
-    Analyze the following complete dietary data for your patient:
+    You are an expert nutritionist providing a personalized health analysis. Analyze the following data:
 
     ```json
     {data_json}
     ```
 
-    Provide a thorough, personalized analysis in HTML format with these sections:
+    Generate your full response in **HTML format** with exactly these 5 sections:
+    1. <h3>User Profile Overview</h3> — summarize user's basic info and context.
+    2. <h3>Health Risk Distribution</h3> — explain what the High, Normal, Low, and Unknown counts mean. 
+       For each category, give one explanatory sentence (e.g., "Normal risk (84 cases) means that most nutrients are within ideal levels.").
+    3. <h3>Nutrient & Daily Recommendation Insights</h3> — merge both analyses here.
+       Present key nutrients as bullet points, each being a **1-sentence observation** comparing user's average intake vs daily needs, written like a doctor's remark.
+       ⚠️ For every nutrient mentioned, explicitly include:
+       - The **average intake** (e.g., "average protein intake is 45g")
+       - The **recommended intake** (e.g., "recommended is 60g")
+       - And a **brief interpretation** ("which indicates a mild deficiency")
+       Example format:
+       <li>Average <strong>Calories</strong> intake is 478 kcal, compared to the recommended 1300 kcal — indicating a lower energy intake than ideal.</li>
+    4. <h3>Overall Health Summary</h3> — give a short summary (2–3 sentences) of the user's overall diet quality.
+    5. <h3>Next Steps & Suggestions</h3> — provide 3–4 bullet points with actionable guidance.
 
-    <h3>Patient Overview</h3>
-    - Summarize key demographic and health information
-    - Note any medical conditions or allergies that affect dietary recommendations
-
-    <h3>Dietary Pattern Analysis</h3>
-    - Analyze the types of products frequently consumed
-    - Identify eating patterns and food choices
-    - Comment on diet diversity and balance
-
-    <h3>Nutritional Assessment</h3>
-    - Evaluate key nutrients (protein, carbs, fats, sodium, sugar, fiber)
-    - Compare intake patterns to recommended daily values for this individual
-    - Highlight both deficiencies and excesses
-
-    <h3>Health Risks Identified</h3>
-    - List specific health risks based on the nutritional data
-    - Connect risks to the patient's profile (age, activity level, medical conditions)
-    - Prioritize risks by severity
-
-    <h3>Positive Aspects</h3>
-    - Acknowledge any healthy choices or balanced nutrients
-    - Recognize good dietary habits observed
-
-    <h3>Personalized Recommendations</h3>
-    - Provide specific, actionable dietary changes
-    - Suggest foods to increase or decrease
-    - Consider the patient's lifestyle and preferences
-    - Include portion size guidance where relevant
-
-    <h3>Action Plan</h3>
-    - Create a prioritized list of 3-5 key changes to implement
-    - Suggest a timeline for implementing changes
-    - Recommend follow-up monitoring
-
-    Keep the tone professional but compassionate. Be direct about health risks while providing constructive guidance. Focus on sustainable, realistic changes.
+    Formatting rules:
+    - Each section MUST be wrapped in <div class="analysis-section">.
+    - Use <p> for normal text, <ul>/<li> for bullet points, and <strong> for key terms.
+    - DO NOT include <html>, <body>, or markdown fences.
     """
+
 
     try:
         if not client:
@@ -735,24 +736,38 @@ def get_comprehensive_ai_analysis():
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a qualified nutritionist and dietitian providing comprehensive health assessments based on dietary data."},
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a qualified nutritionist who writes professional, structured HTML reports. "
+                        "Provide context, avoid numbers alone, and make insights sound like doctor explanations."
+                    )
+                },
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3,
-            max_tokens=1500
+            temperature=0.35,
+            max_tokens=2000
         )
-        return response.choices[0].message.content
+        
+        raw_html = response.choices[0].message.content
+
+        cleaned_html = raw_html.strip()
+        if cleaned_html.startswith("```html"):
+            cleaned_html = cleaned_html[7:]
+        if cleaned_html.endswith("```"):
+            cleaned_html = cleaned_html[:-3]
+        
+        return cleaned_html.strip()
 
     except Exception as e:
         print(f"❌ AI analysis failed: {e}")
-        return "<h2>Analysis Error</h2><p>Could not generate AI analysis. Please try again later.</p>"
+        return "<h2>Analysis Error</h2><p>Could not generate AI analysis. Please try again.</p>"
 
 
 def calculate_health_score(aggregated_nutrients, daily_recommendations):
-    """Calculates a health score from 0-100 based on nutrient intake."""
+    """Calculates a health score from 0-100"""
     score = 100
     
-    # Nutrient mapping for flexibility
     nutrient_map = {
         'protein': ['protein'],
         'carbs': ['carbohydrates', 'carbs', 'total carbohydrates'],
@@ -767,7 +782,6 @@ def calculate_health_score(aggregated_nutrients, daily_recommendations):
                 return aggregated_nutrients[alias]
         return 0
 
-    # 1. Macronutrient Balance (60 points)
     macro_goals = {
         'protein': daily_recommendations.get('protein_g', 1),
         'carbs': daily_recommendations.get('carbs_g', 1),
@@ -778,29 +792,25 @@ def calculate_health_score(aggregated_nutrients, daily_recommendations):
         actual = get_nutrient_value(macro)
         if goal > 0:
             deviation = abs(actual - goal) / goal
-            penalty = min(deviation * 40, 20)  # Max 20 points penalty per macro
+            penalty = min(deviation * 40, 20)
             score -= penalty
 
-    # 2. Adversarial Nutrients (40 points)
-    # Sodium (max 2300mg)
     sodium_actual = get_nutrient_value('sodium')
     if sodium_actual > 2300:
         excess_ratio = (sodium_actual - 2300) / 2300
-        penalty = min(excess_ratio * 40, 20) # A 50% excess maxes out penalty
+        penalty = min(excess_ratio * 40, 20)
         score -= penalty
         
-    # Sugar (max 50g)
     sugar_actual = get_nutrient_value('sugar')
     if sugar_actual > 50:
         excess_ratio = (sugar_actual - 50) / 50
-        penalty = min(excess_ratio * 40, 20) # A 50% excess maxes out penalty
+        penalty = min(excess_ratio * 40, 20)
         score -= penalty
         
     return max(0, round(score))
 
-
 def get_historical_health_scores(username, period, recommendations):
-    """Aggregates scan data over a period and calculates health scores."""
+    """Aggregates scan data over a period and calculates health scores"""
     if scan_storage.collection is None:
         return {"labels": [], "scores": []}
 
@@ -813,7 +823,7 @@ def get_historical_health_scores(username, period, recommendations):
         start_date = end_date - timedelta(weeks=12)
         date_format = "%Y-%U"
         group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
-    else: # monthly
+    else:
         start_date = end_date - timedelta(days=365)
         date_format = "%Y-%m"
         group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
@@ -844,18 +854,266 @@ def get_historical_health_scores(username, period, recommendations):
         period_label = result['_id']
         aggregated_nutrients = result['nutrients']
         
-        # Adjust for per-day averages if weekly/monthly
         if period == 'weekly':
-             for k, v in aggregated_nutrients.items(): aggregated_nutrients[k] = v / 7
+            for k, v in aggregated_nutrients.items():
+                aggregated_nutrients[k] = v / 7
         elif period == 'monthly':
-             for k, v in aggregated_nutrients.items(): aggregated_nutrients[k] = v / 30
+            for k, v in aggregated_nutrients.items():
+                aggregated_nutrients[k] = v / 30
 
         score = calculate_health_score(aggregated_nutrients, recommendations)
         scores.append(score)
         labels.append(period_label)
 
     return {"labels": labels, "scores": scores}
-# ---------------- ROUTES ---------------- #
+
+def get_personalized_nutrient_analysis(nutrient_name, nutrient_value, nutrient_unit, nutrient_status, user_profile):
+    """Generate personalized AI analysis for a specific nutrient"""
+    if not client:
+        return "AI analysis unavailable. Please configure OpenAI API key."
+    
+    user_context = {
+        "age": user_profile.get('age', 'N/A'),
+        "gender": user_profile.get('gender', 'N/A'),
+        "weight_kg": user_profile.get('weight_kg', 'N/A'),
+        "height_cm": user_profile.get('height_cm', 'N/A'),
+        "activity_level": user_profile.get('activity_level', 'N/A'),
+        "medical_conditions": user_profile.get('medical_conditions', 'None'),
+        "allergies": user_profile.get('allergies', 'None')
+    }
+    
+    prompt = f"""
+You are a nutritionist providing personalized health advice.
+
+USER PROFILE:
+- Age: {user_context['age']}
+- Gender: {user_context['gender']}
+- Weight: {user_context['weight_kg']} kg
+- Height: {user_context['height_cm']} cm
+- Activity Level: {user_context['activity_level']}
+- Medical Conditions: {user_context['medical_conditions']}
+- Allergies: {user_context['allergies']}
+
+NUTRIENT INFORMATION:
+- Nutrient: {nutrient_name}
+- Amount: {nutrient_value} {nutrient_unit}
+- Status: {nutrient_status}
+
+Provide a brief, personalized 1-2 sentence analysis of how this nutrient level affects THIS SPECIFIC USER, considering their profile. Be direct and actionable.
+
+Format: Return ONLY the analysis text, no headers or extra formatting.
+"""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a concise nutritionist providing personalized health insights in 1-2 sentences."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4,
+            max_tokens=150
+        )
+        
+        return response.choices[0].message.content.strip()
+        
+    except Exception as e:
+        print(f"❌ AI analysis failed for {nutrient_name}: {e}")
+        return "Unable to generate personalized analysis at this time."
+# REPLACE your old 'get_community_warnings' function with this
+# In app.py, replace your get_community_warnings with this:
+
+def get_community_warnings(product_name):
+    """
+    Analyzes all user feedback for a specific product.
+    Returns aggregated warnings, insights, and overall sentiment.
+    
+    ROBUSTNESS: This function counts *unique users* per topic to
+    prevent a single user from skewing the results.
+    """
+
+    print(f"DEBUG: Looking for reports for product: '{product_name}'")
+
+    # 1. Basic validation
+    if not product_name or product_name == "Scanned from Label (OCR)":
+        return {
+            "total_reports": 0,
+            "insights": [],
+            "product_name": product_name,
+            "warning_level": "none",
+            "positive_reports": 0,
+            "summary_message": "No community data available yet."
+        }
+
+    if scan_storage.collection is None:
+        print("ERROR: No database connection.")
+        return {
+            "total_reports": 0,
+            "insights": [],
+            "product_name": product_name,
+            "warning_level": "none",
+            "positive_reports": 0,
+            "summary_message": "Unable to retrieve community data."
+        }
+
+    try:
+        # 2. Fetch reports (with username)
+        pipeline = [
+            {"$match": {
+                "product_info.name": product_name,
+                "user_feedback.issue_report.description": {"$exists": True, "$ne": ""}
+            }},
+            {"$project": {
+                "username": 1,
+                "description": "$user_feedback.issue_report.description",
+                "product_name": "$product_info.name"
+            }}
+        ]
+
+        all_reports = list(scan_storage.collection.aggregate(pipeline))
+        total_reports_count = len(all_reports)
+        print(f"DEBUG: Found {total_reports_count} total reports for '{product_name}'")
+
+        if total_reports_count == 0:
+            return {
+                "total_reports": 0,
+                "insights": [],
+                "product_name": product_name,
+                "warning_level": "none",
+                "positive_reports": 0,
+                "summary_message": "No community reports found for this product."
+            }
+
+        # 3. Categorize reports with NLP (by unique user)
+        topic_users = {}  # e.g., {"Sickness...": {"user_A", "user_B"}}
+        
+        for report in all_reports:
+            desc = report.get("description", "").strip()
+            username = report.get("username")
+            
+            if not desc or not username:
+                continue
+                
+            topic = analyze_report_text(desc)
+            
+            # Add the user to a set for that topic
+            if topic not in topic_users:
+                topic_users[topic] = set()
+            topic_users[topic].add(username)  # A set automatically handles duplicates
+
+        # Now, create counts based on the *number of unique users*
+        topic_counts = {topic: len(users) for topic, users in topic_users.items()}
+
+        print(f"DEBUG: Unique user topic counts: {topic_counts}")
+
+        # 4. Define known issue types (removed emojis - icons handled by CSS)
+        NEGATIVE_TOPICS = {
+            "Sickness / Nausea / Vomiting": {"desc": "nausea, vomiting, or stomach discomfort"},
+            "Allergic Reaction / Rash / Itching": {"desc": "allergic reactions like rashes or itching"},
+            "Bad Taste / Foul Smell": {"desc": "bad taste or foul smell"},
+            "Packaging Defect / Foreign Object": {"desc": "packaging issues or foreign objects"},
+            "Headache / Dizziness": {"desc": "headaches, dizziness, or fatigue"}
+        }
+
+        positive_count = topic_counts.get("Positive Feedback / No Issue", 0)
+
+        # 5. Collect negative reports
+        negative_reports = {k: v for k, v in topic_counts.items() if k in NEGATIVE_TOPICS}
+        total_negative_users = sum(negative_reports.values())
+        
+        # Get total unique users who submitted any report
+        all_reporting_users = set()
+        for users in topic_users.values():
+            all_reporting_users.update(users)
+        total_unique_reporters = len(all_reporting_users)
+
+        negative_user_pct = (total_negative_users / total_unique_reporters * 100) if total_unique_reporters else 0
+
+        # 6. Determine warning level (based on unique users)
+        if total_negative_users >= 5 and negative_user_pct >= 70:
+            warning_level = "high"
+        elif total_negative_users >= 3 and negative_user_pct >= 40:
+            warning_level = "medium"
+        elif total_negative_users >= 1:
+            warning_level = "low"
+        else:
+            warning_level = "none"
+
+        print(f"WARNING LEVEL: {warning_level} ({total_negative_users}/{total_unique_reporters} unique users, {negative_user_pct:.1f}%)")
+
+        # 7. Generate human-readable insights (no emojis)
+        insights = []
+        
+        for topic, count in sorted(negative_reports.items(), key=lambda x: x[1], reverse=True):
+            topic_info = NEGATIVE_TOPICS[topic]
+
+            # Determine severity based on unique user count
+            if count >= 10:
+                prefix = "Many users have reported"
+                suffix = "This issue seems widespread."
+                severity = "widespread"
+            elif count >= 5:
+                prefix = "Several users mentioned"
+                suffix = "It could be a recurring issue."
+                severity = "common"
+            elif count >= 2:
+                prefix = "A few users noticed"
+                suffix = "May not affect everyone."
+                severity = "some"
+            else:  # count == 1
+                prefix = "One user reported"
+                suffix = "This may be an isolated incident."
+                severity = "few"
+
+            insights.append({
+                "text": f"{prefix} {topic_info['desc']}. {suffix}",
+                "severity": severity,
+                "category": topic
+            })
+
+        # 8. Summary message (no emojis)
+        if warning_level == "high":
+            summary = f"HIGH RISK: {total_negative_users} of {total_unique_reporters} unique users reported major issues."
+        elif warning_level == "medium":
+            summary = f"Moderate Risk: Some users reported recurring issues. Review before consumption."
+        elif warning_level == "low":
+            summary = f"Low Risk: A few isolated reports exist, but overall community sentiment is neutral."
+        elif positive_count > 0:
+            if positive_count >= total_unique_reporters * 0.7:
+                summary = f"Mostly Positive: Majority of users reported a good experience."
+            else:
+                summary = f"Mixed Reviews: Some users were satisfied, others had minor complaints."
+        else:
+            summary = f"No significant feedback trends detected."
+
+        # 9. Final structured result
+        result = {
+            "total_reports": total_reports_count,
+            "total_unique_reporters": total_unique_reporters,
+            "negative_reports": total_negative_users,
+            "positive_reports": positive_count,
+            "insights": insights,
+            "product_name": product_name,
+            "warning_level": warning_level,
+            "summary_message": summary
+        }
+
+        print(f"DEBUG: Final result for {product_name}: {result}")
+        return result
+
+    except Exception as e:
+        import traceback
+        print(f"ERROR in get_community_warnings: {e}")
+        traceback.print_exc()
+        return {
+            "total_reports": 0,
+            "insights": [],
+            "product_name": product_name,
+            "warning_level": "none",
+            "positive_reports": 0,
+            "summary_message": "Error retrieving community warnings."
+        }
+# ==================== ROUTES ====================
 
 @app.route('/')
 def landing():
@@ -878,14 +1136,14 @@ def login():
 
     username = request.form['username']
     password = request.form['password']
-    users = load_users()
 
-    # Check if username exists
-    if username not in users:
+    user = credentials_storage.get_user(username)
+
+    if not user:
         flash("Account does not exist. Please sign up first.", "error")
         return redirect(url_for('landing'))
 
-    hashed = users.get(username)
+    hashed = user.get('password')
 
     if check_password_hash(hashed, password):
         session['username'] = username
@@ -897,14 +1155,20 @@ def login():
 
 @app.route('/signup', methods=['POST'])
 def signup():
-    username, password = request.form['username'], request.form['password']
-    if username in load_users():
+    username = request.form['username']
+    password = request.form['password']
+    
+    if credentials_storage.user_exists(username):
         flash("Username already exists.", "error")
         return redirect(url_for('landing'))
 
-    add_user(username, password)
-    session['username'] = username
-    return redirect(url_for('profile_form'))
+    if add_user(username, password):
+        session['username'] = username
+        flash("Account created successfully!", "success")
+        return redirect(url_for('profile_form'))
+    else:
+        flash("Failed to create account. Please try again.", "error")
+        return redirect(url_for('landing'))
 
 @app.route('/dashboard')
 def dashboard():
@@ -912,8 +1176,6 @@ def dashboard():
         return redirect(url_for('landing'))
     
     username = session['username']
-    
-    # Get scan statistics for dashboard
     scan_stats = scan_storage.get_user_scan_stats(username)
     
     return render_template('dashboard.html', 
@@ -923,11 +1185,9 @@ def dashboard():
 @app.route('/scan-label', methods=['GET', 'POST'])
 def scan_label():
     if request.method == 'POST':
-        # --- Case 1: Food Label OCR ---
         if 'label_image' in request.files and request.files['label_image'].filename != '':
             file = request.files['label_image']
             scan_type = "label"
-        # --- Case 2: Barcode Image ---
         elif 'barcode_image' in request.files and request.files['barcode_image'].filename != '':
             file = request.files['barcode_image']
             scan_type = "barcode"
@@ -944,7 +1204,6 @@ def scan_label():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename).replace("\\", "/")
 
         try:
-            # Save the uploaded image
             image_stream = BytesIO(file.read())
             img = Image.open(image_stream)
 
@@ -956,9 +1215,7 @@ def scan_label():
             img = Image.open(image_stream).convert("RGB")
             img.save(filepath)
 
-            # --- Decide which form was used and redirect accordingly ---
             if scan_type == "label":
-                # OCR flow - redirect to scan_result
                 cleaned_text, structured_nutrients = process_label_image(filepath)
 
                 session['scan_type'] = "label"
@@ -969,7 +1226,6 @@ def scan_label():
                 return redirect(url_for('scan_result'))
 
             elif scan_type == "barcode":
-                # Barcode flow - redirect to index
                 processed_data = process_nutrition_label(filepath)
 
                 session['scan_type'] = "barcode"
@@ -977,7 +1233,7 @@ def scan_label():
                 session['scan_data'] = processed_data
                 session['scan_image_filename'] = unique_filename
 
-                return redirect(url_for('index'))  # Redirect to index.html instead
+                return redirect(url_for('index'))
 
         except Exception as e:
             print(f"❌ Error while handling image: {e}")
@@ -985,13 +1241,10 @@ def scan_label():
 
     return render_template('scan_label.html')
 
-
 @app.route('/scan-result')
 def scan_result():
-    # This route now only handles label scans
     scan_type = session.get('scan_type')
     
-    # Ensure this is a label scan, not barcode
     if scan_type != "label":
         flash("No label scan data found.", "error")
         return redirect(url_for('scan_label'))
@@ -1007,10 +1260,10 @@ def scan_result():
         flash("Please log in to save scan results.", "error")
         return redirect(url_for('landing'))
 
-    # Evaluate each nutrient's status and risk message properly
+    user_profile = load_user_health_profile(username)
+    
     for nutrient in structured_nutrients:
         try:
-            # Clean the value - remove any non-numeric characters except decimal points
             value_str = str(nutrient['value'])
             value = float(re.sub(r'[^\d.]', '', value_str))
         except (ValueError, TypeError):
@@ -1019,25 +1272,33 @@ def scan_result():
 
         nutrient_name = nutrient.get('nutrient', '').strip()
         
-        # Get status evaluation from database using enhanced function
         status_info = evaluate_nutrient_status_enhanced(nutrient_name, value)
         
-        # Update nutrient info
-        nutrient['value'] = value  # Clean numeric value
+        nutrient['value'] = value
         nutrient['status'] = status_info['status']
         nutrient['message'] = status_info['message']
         
-        # Debug output
+        if user_profile:
+            ai_analysis = get_personalized_nutrient_analysis(
+                nutrient_name,
+                value,
+                nutrient.get('unit', 'g'),
+                status_info['status'],
+                user_profile
+            )
+            nutrient['ai_analysis'] = ai_analysis
+        else:
+            nutrient['ai_analysis'] = "Complete your profile to get personalized insights."
+        
         print(f"🔍 Nutrient: {nutrient_name}, Value: {value}, Status: {status_info['status']}")
 
-    # Save scan data to MongoDB
     try:
         image_filename = session.get('scan_image_filename')
         
         scan_id = scan_storage.save_scan_data(
             username=username,
             raw_text=raw_text,
-            cleaned_text=raw_text,  # Using raw_text as cleaned_text since cleaned_text isn't set
+            cleaned_text=raw_text,
             structured_nutrients=structured_nutrients,
             image_filename=image_filename,
             product_name="Scanned from Label (OCR)",
@@ -1060,28 +1321,54 @@ def scan_result():
 def index():
     barcode_processed = session.get('barcode_processed', False)
     scan_data = session.get('scan_data', {})
+    username = session.get('username')
+    
+    # Initialize community_warnings
+    community_warnings = {"total_reports": 0, "top_reports": [], "product_name": None}
+    
+    if barcode_processed and scan_data.get('structured_nutrients') and username:
+        user_profile = load_user_health_profile(username)
+        
+        # Get community warnings for the product
+        product_name = scan_data.get('product_name')
+        if product_name:
+            community_warnings = get_community_warnings(product_name)
+            print(f"🔍 Community warnings for {product_name}: {community_warnings}")
+        
+        if user_profile:
+            for nutrient in scan_data['structured_nutrients']:
+                if 'ai_analysis' not in nutrient:
+                    ai_analysis = get_personalized_nutrient_analysis(
+                        nutrient.get('nutrient', ''),
+                        nutrient.get('value', 0),
+                        nutrient.get('unit', 'g'),
+                        nutrient.get('status', 'Unknown'),
+                        user_profile
+                    )
+                    nutrient['ai_analysis'] = ai_analysis
 
     return render_template(
         'index.html',
         barcode_processed=barcode_processed,
-        scan_data=scan_data
+        scan_data=scan_data,
+        community_warnings=community_warnings  # ← ADD THIS LINE
     )
-
 @app.route('/add_to_diet', methods=['POST'])
 def add_to_diet():
     username = session.get('username')
     scan_data = session.get('scan_data', {})
     image_filename = session.get('scan_image_filename')
-
+    
     if not username:
-        flash("Please log in to save items to your diet.", "error")
-        return redirect(url_for('index'))
-
-    # Extract data from the standardized dictionary
+        return jsonify({
+            "status": "error",
+            "message": "Please log in to save items to your diet."
+        })
+    
     product_name = scan_data.get('product_name')
     product_image_url = scan_data.get('product_image_url')
     structured_nutrients = scan_data.get('structured_nutrients', [])
-
+    
     try:
         scan_id = scan_storage.save_scan_data(
             username=username,
@@ -1092,23 +1379,29 @@ def add_to_diet():
             product_name=product_name,
             product_image_url=product_image_url
         )
+        
         if scan_id:
-            flash("Item added to your diet successfully!", "success")
+            session.pop('scan_data', None)
+            session.pop('barcode_processed', None)
+            return jsonify({
+                "status": "success",
+                "message": "Item added to your diet successfully!"
+            })
         else:
-            flash("Could not add item to your diet.", "warning")
+            return jsonify({
+                "status": "warning",
+                "message": "Could not add item to your diet."
+            })
+            
     except Exception as e:
         print(f"❌ Error saving barcode scan to MongoDB: {e}")
-        flash("Error saving item to your diet.", "error")
-
-    # Clear session data after saving
-    session.pop('scan_data', None)
-    session.pop('barcode_processed', None)
-
-    return redirect(url_for('index'))
+        return jsonify({
+            "status": "error",
+            "message": "Error saving item to your diet."
+        })
 
 @app.route('/my-scans')
 def my_scans():
-    """View all user's saved scans"""
     if 'username' not in session:
         flash("Please log in to view your scans.", "error")
         return redirect(url_for('landing'))
@@ -1121,7 +1414,6 @@ def my_scans():
 
 @app.route('/view-scan/<scan_id>')
 def view_scan(scan_id):
-    """View a specific scan by ID"""
     if 'username' not in session:
         flash("Please log in to view scans.", "error")
         return redirect(url_for('landing'))
@@ -1136,7 +1428,6 @@ def view_scan(scan_id):
 
 @app.route('/delete-scan/<scan_id>', methods=['POST'])
 def delete_scan(scan_id):
-    """Delete a specific scan"""
     if 'username' not in session:
         flash("Please log in.", "error")
         return redirect(url_for('landing'))
@@ -1152,62 +1443,69 @@ def delete_scan(scan_id):
 
 @app.route('/admin/cleanup-scans')
 def cleanup_scans():
-    """Admin route to manually trigger scan cleanup"""
     deleted_count = scan_storage.cleanup_expired_scans()
     return jsonify({"message": f"Cleaned up {deleted_count} expired scans"})
 
-@app.route('/debug/mongodb-info')
-def mongodb_info():
-    """Debug route to check MongoDB connection and stats"""
+@app.route('/debug/mongodb-collections')
+def mongodb_collections():
     if 'username' not in session:
         return redirect(url_for('landing'))
     
-    if scan_storage.collection is None:
-        return "<h2>MongoDB Status: Not Connected</h2><p>Check your MONGO_URI in .env file</p>"
-    
     try:
-        # Get connection stats
-        server_info = scan_storage.mongo_config.client.server_info()
-        db_stats = scan_storage.mongo_config.db.command("dbstats")
+        db = credentials_storage.mongo_config.db
         
-        total_scans = scan_storage.collection.count_documents({})
-        user_scans = scan_storage.collection.count_documents({"username": session['username']})
+        users_count = credentials_storage.collection.count_documents({}) if credentials_storage.collection else 0
+        profiles_count = profile_storage.collection.count_documents({}) if profile_storage.collection else 0
+        scans_count = scan_storage.collection.count_documents({}) if scan_storage.collection else 0
         
         html = f"""
-        <h2>MongoDB Atlas Connection Info</h2>
+        <h2>MongoDB Collections Status</h2>
         <div style="font-family: monospace; background: #f5f5f5; padding: 20px; border-radius: 5px;">
-            <p><strong>Status:</strong> ✅ Connected</p>
-            <p><strong>Database:</strong> {scan_storage.mongo_config.DATABASE_NAME}</p>
-            <p><strong>Collection:</strong> {scan_storage.mongo_config.COLLECTION_NAME}</p>
-            <p><strong>Server Version:</strong> {server_info.get('version', 'N/A')}</p>
-            <p><strong>Total Scans:</strong> {total_scans}</p>
-            <p><strong>Your Scans:</strong> {user_scans}</p>
-            <p><strong>Database Size:</strong> {db_stats.get('dataSize', 0)} bytes</p>
+            <h3>Database: {db.name}</h3>
+            <p><strong>User Credentials:</strong> {users_count} users</p>
+            <p><strong>User Profiles:</strong> {profiles_count} profiles</p>
+            <p><strong>Scan Data:</strong> {scans_count} scans</p>
+            <hr>
+            <p><strong>Collections in DB:</strong></p>
+            <ul>
+                {''.join([f'<li>{col}</li>' for col in db.list_collection_names()])}
+            </ul>
         </div>
         <p><a href="{url_for('dashboard')}">← Back to Dashboard</a></p>
         """
-        
         return html
         
     except Exception as e:
         return f"<h2>MongoDB Error</h2><p>Error: {e}</p>"
 
-@app.route('/debug-thresholds')
-def debug_thresholds():
-    """Debug route to see what's in your thresholds database"""
+@app.route('/debug/my-profile-info')
+def my_profile_info():
     if 'username' not in session:
         return redirect(url_for('landing'))
     
-    conn = sqlite3.connect('food_thresholds.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT name, max_threshold, min_threshold FROM ingredient_thresholds ORDER BY name")
-    results = cursor.fetchall()
-    conn.close()
+    username = session['username']
+    profile = load_user_health_profile(username)
     
-    html = "<h2>Database Thresholds</h2><table border='1'><tr><th>Name</th><th>Max</th><th>Min</th></tr>"
-    for row in results:
-        html += f"<tr><td>{row[0]}</td><td>{row[1]}</td><td>{row[2]}</td></tr>"
-    html += "</table>"
+    if not profile:
+        return "<h2>No Profile Found</h2><p>Please create your profile first.</p>"
+    
+    html = f"""
+    <h2>Your Profile Information</h2>
+    <div style="font-family: monospace; background: #f5f5f5; padding: 20px; border-radius: 5px;">
+        <p><strong>Username:</strong> {profile.get('username', 'N/A')}</p>
+        <p><strong>Full Name:</strong> {profile.get('full_name', 'N/A')}</p>
+        <p><strong>Age:</strong> {profile.get('age', 'N/A')}</p>
+        <p><strong>Gender:</strong> {profile.get('gender', 'N/A')}</p>
+        <p><strong>Height:</strong> {profile.get('height_cm', 'N/A')} cm</p>
+        <p><strong>Weight:</strong> {profile.get('weight_kg', 'N/A')} kg</p>
+        <p><strong>Activity Level:</strong> {profile.get('activity_level', 'N/A')}</p>
+        <p><strong>Medical Conditions:</strong> {profile.get('medical_conditions', 'None')}</p>
+        <p><strong>Allergies:</strong> {profile.get('allergies', 'None')}</p>
+        <p><strong>Created:</strong> {profile.get('created_at', 'N/A')}</p>
+        <p><strong>Updated:</strong> {profile.get('updated_at', 'N/A')}</p>
+    </div>
+    <p><a href="{url_for('profile')}">← Back to Profile</a></p>
+    """
     return html
 
 @app.route('/profile-form', methods=['GET', 'POST'])
@@ -1216,25 +1514,28 @@ def profile_form():
         return redirect(url_for('landing'))
 
     if request.method == 'POST':
-        save_user_profile({
+        profile_data = {
             'username': session['username'],
-            'full_name': request.form['full_name'],
-            'height_cm': request.form['height_cm'],
-            'weight_kg': request.form['weight_kg'],
-            'age': request.form['age'],
-            'gender': request.form['gender'],
-            'activity_level': request.form['activity_level'],
-            'medical_conditions': request.form['medical_conditions'],
-            'allergies': request.form['allergies'],
-        })
-        return redirect(url_for('profile'))
+            'full_name': request.form.get('full_name', ''),
+            'height_cm': request.form.get('height_cm', ''),
+            'weight_kg': request.form.get('weight_kg', ''),
+            'age': request.form.get('age', ''),
+            'gender': request.form.get('gender', ''),
+            'activity_level': request.form.get('activity_level', ''),
+            'medical_conditions': request.form.get('medical_conditions', ''),
+            'allergies': request.form.get('allergies', ''),
+        }
+        
+        if save_user_profile(profile_data):
+            flash("Profile saved successfully!", "success")
+            return redirect(url_for('profile'))
+        else:
+            flash("Failed to save profile. Please try again.", "error")
 
     return render_template('profile_form.html')
 
-# Add new route for AI analysis
 @app.route('/get-ai-analysis', methods=['POST'])
 def get_ai_analysis():
-    """Route to generate and return AI analysis"""
     if 'username' not in session:
         return jsonify({"error": "Please log in to get analysis"}), 401
     
@@ -1244,192 +1545,6 @@ def get_ai_analysis():
     except Exception as e:
         print(f"❌ Error generating AI analysis: {e}")
         return jsonify({"error": "Failed to generate analysis"}), 500
-
-
-# --- NEW API ENDPOINT FOR CHART DATA ---
-@app.route('/get-health-score-data/<period>')
-def get_health_score_data(period='weekly'):
-    if 'username' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    username = session['username']
-    profile = load_user_health_profile(username)
-    if not profile:
-        return jsonify({"error": "Profile not found"}), 404
-        
-    if not all(k in profile and profile[k] for k in ['weight_kg', 'activity_level']):
-        return jsonify({"error": "Profile incomplete"}), 400
-
-    valid_periods = ['daily', 'weekly', 'monthly']
-    if period not in valid_periods:
-        return jsonify({"error": "Invalid period"}), 400
-
-    recommendations = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
-    data = get_historical_health_scores(username, period, recommendations)
-    
-    # The goal score is a constant target for good health
-    goal_score = 85 
-    
-    return jsonify({
-        "labels": data["labels"],
-        "actual_scores": data["scores"],
-        "goal_scores": [goal_score] * len(data["labels"]) # Create a flat line for the goal
-    })
-
-
-# --- UPDATED PROFILE ROUTE ---
-@app.route('/profile')
-def profile():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-
-    username = session['username']
-    profile_data = load_user_health_profile(username)
-    if not profile_data:
-        flash("Your Profile Doesn't exist, Create a profile", "warning")
-        return redirect(url_for('profile_form'))
-
-    # Calculate daily recommendations
-    try:
-        recommendation = calculate_daily_needs(profile_data['weight_kg'], profile_data['activity_level'])
-    except (ValueError, KeyError):
-        flash("Your profile is incomplete. Please update your weight and activity level.", "warning")
-        return redirect(url_for('edit_profile'))
-
-    # Get today's scan data for visualization
-    today_scans_data = get_today_scan_visualization()
-    
-    # Calculate today's totals from scans
-    today_totals = {"protein": 0, "carbs": 0, "fats": 0}
-    for scan in today_scans_data:
-        for nutrient_name, nutrient_data in scan["nutrients"].items():
-            if nutrient_name in ["protein"]:
-                today_totals["protein"] += nutrient_data["value"]
-            elif nutrient_name in ["carbohydrates", "carbs"]:
-                today_totals["carbs"] += nutrient_data["value"]
-            elif nutrient_name in ["fat", "fats"]:
-                today_totals["fats"] += nutrient_data["value"]
-
-    # Calculate percentages for progress circles
-    percent = lambda val, ref: round((val / ref) * 100) if ref else 0
-    percentages = {
-        'protein': percent(today_totals['protein'], recommendation['protein_g']),
-        'carbs': percent(today_totals['carbs'], recommendation['carbs_g']),
-        'fats': percent(today_totals['fats'], recommendation['fats_g'])
-    }
-
-    scan_stats = scan_storage.get_user_scan_stats(username)
-
-    return render_template(
-        'profile.html', 
-        profile=profile_data, 
-        intake={
-            'protein_g': round(today_totals['protein'], 1),
-            'carbs_g': round(today_totals['carbs'], 1),
-            'fats_g': round(today_totals['fats'], 1)
-        }, 
-        recommendation=recommendation, 
-        percentages=percentages,
-        today_scans=today_scans_data,
-        scan_stats=scan_stats
-    )
-# Add this new route to your Flask app (app.py)
-# Add this new route to your Flask app (app.py)
-
-@app.route('/get-scan-count-data/<period>')
-def get_scan_count_data(period='weekly'):
-    """Get scan count data for bar chart visualization"""
-    if 'username' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    username = session['username']
-    
-    if scan_storage.collection is None:
-        return jsonify({"error": "Database not available"}), 503
-
-    valid_periods = ['daily', 'weekly', 'monthly']
-    if period not in valid_periods:
-        return jsonify({"error": "Invalid period"}), 400
-
-    end_date = datetime.utcnow()
-    
-    # Define date ranges and grouping based on period
-    if period == 'daily':
-        start_date = end_date - timedelta(days=30)
-        date_format = "%Y-%m-%d"
-        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
-    elif period == 'weekly':
-        start_date = end_date - timedelta(weeks=12)
-        date_format = "%Y-W%U"  # Year-Week format
-        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
-    else:  # monthly
-        start_date = end_date - timedelta(days=365)
-        date_format = "%Y-%m"
-        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
-
-    try:
-        # MongoDB aggregation pipeline to count scans by period
-        pipeline = [
-            {
-                "$match": {
-                    "username": username,
-                    "scan_date": {"$gte": start_date}
-                }
-            },
-            {
-                "$group": {
-                    "_id": group_id,
-                    "scan_count": {"$sum": 1}
-                }
-            },
-            {
-                "$sort": {"_id": 1}
-            }
-        ]
-
-        results = list(scan_storage.collection.aggregate(pipeline))
-        
-        # Extract labels and counts
-        labels = [result['_id'] for result in results]
-        scan_counts = [result['scan_count'] for result in results]
-
-        # Format labels for better display
-        formatted_labels = []
-        for label in labels:
-            if period == 'weekly':
-                # Convert "2024-W12" to "Week 12, 2024"
-                try:
-                    year, week = label.split('-W')
-                    formatted_labels.append(f"Week {week}, {year}")
-                except:
-                    formatted_labels.append(label)
-            elif period == 'monthly':
-                # Convert "2024-03" to "Mar 2024"
-                try:
-                    year, month = label.split('-')
-                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                    formatted_labels.append(f"{month_names[int(month)-1]} {year}")
-                except:
-                    formatted_labels.append(label)
-            else:  # daily
-                formatted_labels.append(label)
-
-        return jsonify({
-            "labels": formatted_labels,
-            "scan_counts": scan_counts,
-            "total_scans": sum(scan_counts)
-        })
-
-    except Exception as e:
-        print(f"❌ Error fetching scan count data: {e}")
-        return jsonify({"error": "Failed to fetch scan data"}), 500
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash("Logged out.", "info")
-    return redirect(url_for('landing'))
-
 @app.route('/food-tracker', methods=['GET', 'POST'])
 def food_tracker():
     if 'username' not in session:
@@ -1492,47 +1607,417 @@ def food_tracker():
 
     return render_template('food_tracker.html', food_items=session['food_items'], total=total)
 
+@app.route('/get-health-score-data/<period>')
+def get_health_score_data(period='weekly'):
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    username = session['username']
+    profile = load_user_health_profile(username)
+    if not profile:
+        return jsonify({"error": "Profile not found"}), 404
+        
+    if not all(k in profile and profile[k] for k in ['weight_kg', 'activity_level']):
+        return jsonify({"error": "Profile incomplete"}), 400
+
+    valid_periods = ['daily', 'weekly', 'monthly']
+    if period not in valid_periods:
+        return jsonify({"error": "Invalid period"}), 400
+
+    recommendations = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
+    data = get_historical_health_scores(username, period, recommendations)
+    
+    goal_score = 85 
+    
+    return jsonify({
+        "labels": data["labels"],
+        "actual_scores": data["scores"],
+        "goal_scores": [goal_score] * len(data["labels"])
+    })
+
+@app.route('/profile')
+def profile():
+    if 'username' not in session:
+        return redirect(url_for('landing'))
+
+    username = session['username']
+    profile_data = load_user_health_profile(username)
+    if not profile_data:
+        flash("Your Profile Doesn't exist, Create a profile", "warning")
+        return redirect(url_for('profile_form'))
+
+    try:
+        recommendation = calculate_daily_needs(profile_data['weight_kg'], profile_data['activity_level'])
+    except (ValueError, KeyError):
+        flash("Your profile is incomplete. Please update your weight and activity level.", "warning")
+        return redirect(url_for('edit_profile'))
+
+    today_scans_data = get_today_scan_visualization()
+    
+    today_totals = {"protein": 0, "carbs": 0, "fats": 0}
+    for scan in today_scans_data:
+        for nutrient_name, nutrient_data in scan["nutrients"].items():
+            if nutrient_name in ["protein"]:
+                today_totals["protein"] += nutrient_data["value"]
+            elif nutrient_name in ["carbohydrates", "carbs"]:
+                today_totals["carbs"] += nutrient_data["value"]
+            elif nutrient_name in ["fat", "fats"]:
+                today_totals["fats"] += nutrient_data["value"]
+
+    percent = lambda val, ref: round((val / ref) * 100) if ref else 0
+    percentages = {
+        'protein': percent(today_totals['protein'], recommendation['protein_g']),
+        'carbs': percent(today_totals['carbs'], recommendation['carbs_g']),
+        'fats': percent(today_totals['fats'], recommendation['fats_g'])
+    }
+
+    scan_stats = scan_storage.get_user_scan_stats(username)
+
+    return render_template(
+        'profile.html', 
+        profile=profile_data, 
+        intake={
+            'protein_g': round(today_totals['protein'], 1),
+            'carbs_g': round(today_totals['carbs'], 1),
+            'fats_g': round(today_totals['fats'], 1)
+        }, 
+        recommendation=recommendation, 
+        percentages=percentages,
+        today_scans=today_scans_data,
+        scan_stats=scan_stats
+    )
+
+@app.route('/get-scan-count-data/<period>')
+def get_scan_count_data(period='weekly'):
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    username = session['username']
+    
+    if scan_storage.collection is None:
+        return jsonify({"error": "Database not available"}), 503
+
+    valid_periods = ['daily', 'weekly', 'monthly']
+    if period not in valid_periods:
+        return jsonify({"error": "Invalid period"}), 400
+
+    end_date = datetime.utcnow()
+    
+    if period == 'daily':
+        start_date = end_date - timedelta(days=30)
+        date_format = "%Y-%m-%d"
+        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
+    elif period == 'weekly':
+        start_date = end_date - timedelta(weeks=12)
+        date_format = "%Y-W%U"
+        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
+    else:
+        start_date = end_date - timedelta(days=365)
+        date_format = "%Y-%m"
+        group_id = {"$dateToString": {"format": date_format, "date": "$scan_date"}}
+
+    try:
+        pipeline = [
+            {
+                "$match": {
+                    "username": username,
+                    "scan_date": {"$gte": start_date}
+                }
+            },
+            {
+                "$group": {
+                    "_id": group_id,
+                    "scan_count": {"$sum": 1}
+                }
+            },
+            {
+                "$sort": {"_id": 1}
+            }
+        ]
+
+        results = list(scan_storage.collection.aggregate(pipeline))
+        
+        labels = [result['_id'] for result in results]
+        scan_counts = [result['scan_count'] for result in results]
+
+        formatted_labels = []
+        for label in labels:
+            if period == 'weekly':
+                try:
+                    year, week = label.split('-W')
+                    formatted_labels.append(f"Week {week}, {year}")
+                except:
+                    formatted_labels.append(label)
+            elif period == 'monthly':
+                try:
+                    year, month = label.split('-')
+                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    formatted_labels.append(f"{month_names[int(month)-1]} {year}")
+                except:
+                    formatted_labels.append(label)
+            else:
+                formatted_labels.append(label)
+
+        return jsonify({
+            "labels": formatted_labels,
+            "scan_counts": scan_counts,
+            "total_scans": sum(scan_counts)
+        })
+
+    except Exception as e:
+        print(f"❌ Error fetching scan count data: {e}")
+        return jsonify({"error": "Failed to fetch scan data"}), 500
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("Logged out.", "info")
+    return redirect(url_for('landing'))
+
 @app.route('/download-report')
 def download_report():
-    # Example dummy response
     return "Download functionality not implemented yet."
 
-@app.route('/edit-profile')
+@app.route('/edit-profile', methods=['GET', 'POST'])
 def edit_profile():
     if 'username' not in session:
         return redirect(url_for('landing'))
 
-    profile = load_user_health_profile(session['username'])
+    username = session['username']
+    
+    if request.method == 'POST':
+        profile_data = {
+            'username': username,
+            'full_name': request.form.get('full_name', ''),
+            'height_cm': request.form.get('height_cm', ''),
+            'weight_kg': request.form.get('weight_kg', ''),
+            'age': request.form.get('age', ''),
+            'gender': request.form.get('gender', ''),
+            'activity_level': request.form.get('activity_level', ''),
+            'medical_conditions': request.form.get('medical_conditions', ''),
+            'allergies': request.form.get('allergies', ''),
+        }
+        
+        if save_user_profile(profile_data):
+            flash("Profile updated successfully!", "success")
+            return redirect(url_for('profile'))
+        else:
+            flash("Failed to update profile. Please try again.", "error")
+
+    profile = load_user_health_profile(username)
     if not profile:
-        flash("No profile found. Please create one.")
+        flash("No profile found. Please create one.", "warning")
         return redirect(url_for('profile_form'))
 
     return render_template('edit_profile.html', profile=profile)
-# --- NEW AI ANALYSIS ROUTE ---
-@app.route('/comprehensive_analysis')
-def comprehensive_analysis():
+
+@app.route('/delete-account', methods=['POST'])
+def delete_account():
     if 'username' not in session:
-        return redirect(url_for('landing'))
+        return jsonify({"error": "Unauthorized"}), 401
     
     username = session['username']
     
-    profile = load_user_health_profile(username)
-    if not profile:
-        flash("Please create a profile to get a comprehensive analysis.", "warning")
-        return redirect(url_for('profile_form'))
+    try:
+        credentials_storage.collection.delete_one({"username": username})
+        profile_storage.delete_profile(username)
+        scan_storage.collection.delete_many({"username": username})
+        session.clear()
         
-    habit_summary = get_user_habit_summary(username)
-    if not habit_summary or habit_summary['total_scans'] < 10:
-        flash("Track at least 10 items over time to generate a comprehensive analysis.", "info")
-        return redirect(url_for('profile'))
-        
-    ai_analysis_html = get_comprehensive_ai_analysis(profile, habit_summary)
+        return jsonify({
+            "success": True,
+            "message": "Account deleted successfully"
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+# Add these routes to your app.py file
+# Add these routes to your app.py file
+
+@app.route('/view-all-scans')
+def view_all_scans():
+    """Display the view scans page"""
+    if 'username' not in session:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            # If it's an AJAX request, return JSON instead of redirect
+            return jsonify({"error": "Unauthorized"}), 401
+        flash("Please log in to view your scans.", "error")
+        return redirect(url_for('landing'))
     
-    return render_template(
-        'comprehensive_analysis.html', 
-        ai_analysis_html=ai_analysis_html,
-        user_name=profile.get('full_name', username)
-    )
-# Final app launch
+    return render_template('view_all_scans.html')
+
+
+@app.route('/api/get-all-scans')
+def api_get_all_scans():
+    """API endpoint to fetch all scans for the logged-in user"""
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    username = session['username']
+
+    if scan_storage.collection is None:
+        return jsonify({"error": "Database not available"}), 503
+
+    try:
+        # Fetch all scans for the user
+        scans = list(scan_storage.collection.find(
+            {"username": username}
+        ).sort("scan_date", -1))
+
+        # Convert ObjectId and datetime
+        for scan in scans:
+            scan['_id'] = str(scan['_id'])
+            if isinstance(scan.get('scan_date'), datetime):
+                scan['scan_date'] = scan['scan_date'].isoformat()
+
+        # Calculate statistics
+        total_scans = len(scans)
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_scans = len([
+            s for s in scans
+            if 'scan_date' in s and datetime.fromisoformat(s['scan_date']) >= week_ago
+        ])
+
+        # Count high risk items
+        high_risk_count = 0
+        for scan in scans:
+            summary = scan.get('nutrition_analysis', {}).get('summary', {})
+            high_risk_count += summary.get('high_risk_count', 0)
+
+        stats = {
+            "total_scans": total_scans,
+            "recent_scans": recent_scans,
+            "high_risk_count": high_risk_count
+        }
+
+        return jsonify({
+            "success": True,
+            "scans": scans,
+            "stats": stats
+        })
+
+    except Exception as e:
+        print(f"❌ Error fetching scans: {e}")
+        import traceback; traceback.print_exc()
+        return jsonify({"success": False, "error": "Failed to fetch scans"}), 500
+
+
+@app.route('/api/delete-scan/<scan_id>', methods=['DELETE'])
+def api_delete_scan(scan_id):
+    """API endpoint to delete a specific scan"""
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    username = session['username']
+
+    if scan_storage.collection is None:
+        return jsonify({"error": "Database not available"}), 503
+
+    try:
+        # Validate ObjectId
+        try:
+            obj_id = ObjectId(scan_id)
+        except (InvalidId, TypeError):
+            print(f"❌ Invalid scan ID format: {scan_id}")
+            return jsonify({
+                "success": False,
+                "error": "Invalid scan ID format"
+            }), 400
+
+        # Perform deletion
+        result = scan_storage.collection.delete_one({
+            "_id": obj_id,
+            "username": username
+        })
+
+        if result.deleted_count > 0:
+            print(f"✅ Scan deleted: {scan_id} by {username}")
+            return jsonify({
+                "success": True,
+                "message": "Scan deleted successfully"
+            })
+        else:
+            print(f"⚠️ Unauthorized or missing scan: {scan_id}")
+            return jsonify({
+                "success": False,
+                "error": "Scan not found or you don't have permission to delete it"
+            }), 404
+
+    except Exception as e:
+        print(f"❌ Error deleting scan: {e}")
+        import traceback; traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": f"Server error: {str(e)}"
+        }), 500
+# Place this near your other API routes like api_delete_scan
+
+@app.route('/api/submit-report/<scan_id>', methods=['POST'])
+def api_submit_report(scan_id):
+    """API endpoint to submit an issue report for a scan"""
+    if 'username' not in session:
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+    username = session['username']
+
+    if scan_storage.collection is None:
+        return jsonify({"success": False, "error": "Database not available"}), 503
+
+    try:
+        # Validate ObjectId
+        try:
+            obj_id = ObjectId(scan_id)
+        except (InvalidId, TypeError):
+            print(f"❌ Invalid scan ID format for report: {scan_id}")
+            return jsonify({"success": False, "error": "Invalid scan ID format"}), 400
+
+        # Get report data from JSON body
+        report_data = request.get_json()
+        if not report_data or 'description' not in report_data or not report_data['description']:
+            return jsonify({"success": False, "error": "Report description is required"}), 400
+
+        description = report_data['description'].strip()
+        severity = report_data.get('severity') # Optional
+        contact_consent = report_data.get('contact_consent', False) # Optional, defaults to False
+
+        # Prepare the update document
+        report_payload = {
+            "reported_at": datetime.utcnow(),
+            "description": description,
+            "severity": severity,
+            "contact_consent": contact_consent,
+            "status": "submitted" # You can add status tracking later
+        }
+
+        # Update the specific scan document
+        # We use $set to add or update the 'user_feedback.issue_report' field
+        result = scan_storage.collection.update_one(
+            {"_id": obj_id, "username": username}, # Ensure user owns the scan
+            {"$set": {"user_feedback.issue_report": report_payload}} 
+            # Note: This overwrites previous reports in this structure.
+            # To store multiple reports, use '$push' with an array field instead:
+            # {"$push": {"user_feedback.issue_reports": report_payload}}
+        )
+
+        if result.matched_count > 0:
+            if result.modified_count > 0:
+                 print(f"✅ Issue report added/updated for scan: {scan_id} by {username}")
+                 return jsonify({"success": True, "message": "Report submitted successfully"})
+            else:
+                 # Matched but nothing changed (e.g., submitted identical report twice)
+                 print(f"ℹ️ Issue report submitted but no changes detected for scan: {scan_id}")
+                 return jsonify({"success": True, "message": "Report received (no changes detected)"})
+        else:
+            print(f"⚠️ Report submission failed: Scan not found or unauthorized for ID {scan_id}")
+            return jsonify({"success": False, "error": "Scan not found or access denied"}), 404
+
+    except Exception as e:
+        print(f"❌ Error submitting report for scan {scan_id}: {e}")
+        import traceback; traceback.print_exc()
+        return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
 if __name__ == '__main__':
-    app.run(debug=False, use_reloader=False)
+    app.run(debug=True, use_reloader=False)
+

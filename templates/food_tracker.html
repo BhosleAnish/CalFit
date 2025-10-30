@@ -3,99 +3,655 @@
 <head>
   <meta charset="UTF-8">
   <title>Food Tracker | Cal-FIT</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/food_tracker.css') }}">
-
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Kaisei+Tokumin:wght@400;500;700;800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: "Montserrat", sans-serif;
+      min-height: 100vh;
+      background: url('https://i.pinimg.com/1200x/72/60/95/7260950c90c74e81d0206b3476a0a6c7.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      z-index: 0;
+    }
+    
+    header {
+      position: relative;
+      z-index: 1;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+    }
+    
+    .main-nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .main-nav a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 8px;
+      transition: color 0.3s ease;
+    }
+    
+    .main-nav a:hover {
+      color: #10B981;
+    }
+    
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 60px auto;
+      background-color: rgba(0, 0, 0, 0.75);
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
+    }
+    
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #10B981;
+    }
+    
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .input-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 250px;
+    }
+    
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      color: #333;
+    }
+    
+    input[type="number"] {
+      flex: 0 0 150px;
+    }
+    
+    #suggestions {
+      position: absolute;
+      top: 42px;
+      left: 0;
+      right: 0;
+      background: white;
+      color: black;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      max-height: 250px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: none;
+    }
+    
+    #suggestions:not(:empty) {
+      display: block;
+    }
+    
+    #suggestions li {
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      background: white;
+    }
+    
+    #suggestions li:first-child {
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+    }
+    
+    #suggestions li:last-child {
+      border-bottom: none;
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
+    }
+    
+    #suggestions li:hover {
+      background-color: #e0f2fe;
+    }
+    
+    .suggestion-content {
+      width: 100%;
+    }
+    
+    .suggestion-name {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .suggestion-brand {
+      font-size: 12px;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .loading {
+      padding: 12px;
+      text-align: center;
+      color: #64748b;
+      font-style: italic;
+      background: white;
+    }
+    
+    button {
+      background-color: #10B981;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover {
+      background-color: #059669;
+    }
+    
+    button:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+    }
+    
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      background-color: rgba(255, 255, 255, 0.95);
+      color: #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    th, td {
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    
+    th {
+      background-color: #10B981;
+      color: white;
+    }
+    
+    tbody tr:hover {
+      background-color: #f0f9ff;
+    }
+    
+    .delete-btn {
+      background-color: #ef4444;
+      padding: 6px 12px;
+      font-size: 14px;
+    }
+    
+    .delete-btn:hover {
+      background-color: #dc2626;
+    }
+    
+    .summary {
+      margin-top: 30px;
+      text-align: right;
+      font-size: 18px;
+      color: #10B981;
+      font-weight: 600;
+    }
+    
+    .summary p {
+      margin: 8px 0;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+      font-style: italic;
+    }
+  </style>
 </head>
 <body>
-      <header>
-  <div class="logo">Cal-FIT </div>
-  <nav class="main-nav">
-    <a href="{{ url_for('dashboard') }}">Home</a>
-    <a href="#explore">Explore</a>
-    <a href="{{ url_for('about') }}">About Us</a>
-    <a href="{{ url_for('profile') }}">Profile</a>
-
-  </nav>
-</header>
+  <header>
+    <div class="logo">Cal-FIT</div>
+    <nav class="main-nav">
+      <a href="#home">Home</a>
+      <a href="#explore">Explore</a>
+      <a href="#about">About Us</a>
+      <a href="#profile">Profile</a>
+    </nav>
+  </header>
+  
   <div class="container">
     <h2>Manual Food Tracker</h2>
-    <form id="foodForm" method="POST" action="{{ url_for('food_tracker') }}" enctype="multipart/form-data">
+    
+    <form id="foodForm">
       <div class="input-wrapper">
-        <input type="text" id="item" name="item" placeholder="Food Item" autocomplete="off" onkeyup="fetchSuggestions()" required>
+        <input 
+          type="text" 
+          id="item" 
+          name="item" 
+          placeholder="Search for food items..." 
+          autocomplete="off" 
+          required
+        >
         <ul id="suggestions"></ul>
       </div>
-      <input type="number" name="quantity" placeholder="Quantity (g/ml)" required>
-      <button type="submit">Add</button>
+      <input 
+        type="number" 
+        id="quantity" 
+        name="quantity" 
+        placeholder="Quantity (g)" 
+        value="100"
+        min="1"
+        required
+      >
+      <button type="submit" id="addBtn">Add</button>
       <button type="button" onclick="triggerScan()">Scan</button>
-      <input type="file" id="scanFile" name="label_image" accept="image/*" style="display: none;" onchange="submitScanForm()">
-      <input type="hidden" name="action" id="scanAction" value="">
+      <input 
+        type="file" 
+        id="scanFile" 
+        name="label_image" 
+        accept="image/*" 
+        style="display: none;"
+      >
     </form>
-
-    <table>
+    
+    <table id="foodTable">
       <thead>
         <tr>
           <th>Item</th>
-          <th>Quantity</th>
+          <th>Quantity (g)</th>
           <th>Protein (g)</th>
           <th>Carbs (g)</th>
           <th>Fats (g)</th>
+          <th>Calories</th>
           <th>Action</th>
         </tr>
       </thead>
-      <tbody>
-        {% for entry in food_items %}
-        <tr>
-          <td>{{ entry.item }}</td>
-          <td>{{ entry.quantity }}</td>
-          <td>{{ entry.protein }}</td>
-          <td>{{ entry.carbs }}</td>
-          <td>{{ entry.fats }}</td>
-          <td>
-            <form method="POST"  action="{{ url_for('delete_food', index=loop.index0) }}">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit">Delete</button>
-            </form>
-          </td>
+      <tbody id="foodTableBody">
+        <tr class="empty-state">
+          <td colspan="7">No items added yet. Start by searching for food!</td>
         </tr>
-        {% endfor %}
       </tbody>
     </table>
-
+    
     <div class="summary">
-      <p>Total Protein: {{ total.protein }}g</p>
-      <p>Total Carbs: {{ total.carbs }}g</p>
-      <p>Total Fats: {{ total.fats }}g</p>
+      <p>Total Protein: <span id="totalProtein">0</span>g</p>
+      <p>Total Carbs: <span id="totalCarbs">0</span>g</p>
+      <p>Total Fats: <span id="totalFats">0</span>g</p>
+      <p>Total Calories: <span id="totalCalories">0</span> kcal</p>
     </div>
   </div>
-
+  
   <script>
-    function fetchSuggestions() {
-      const query = document.getElementById("item").value;
-      fetch('/suggest?q=${query}')
-        .then(res => res.json())
-        .then(data => {
-          const suggestions = document.getElementById("suggestions");
-          suggestions.innerHTML = "";
-          data.forEach(food => {
-            const li = document.createElement("li");
-            li.textContent = food;
-            li.onclick = () => {
-              document.getElementById("item").value = food;
-              suggestions.innerHTML = "";
-            };
-            suggestions.appendChild(li);
+    let foodItems = [];
+    let searchTimeout;
+    let selectedProduct = null;
+    
+    const itemInput = document.getElementById('item');
+    const suggestionsBox = document.getElementById('suggestions');
+    const foodForm = document.getElementById('foodForm');
+    const quantityInput = document.getElementById('quantity');
+    
+    // Debounced search function
+    itemInput.addEventListener('input', function() {
+      const query = this.value.trim();
+      
+      clearTimeout(searchTimeout);
+      
+      if (query.length < 2) {
+        suggestionsBox.innerHTML = '';
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+      
+      suggestionsBox.innerHTML = '<div class="loading">Searching...</div>';
+      suggestionsBox.style.display = 'block';
+      
+      searchTimeout = setTimeout(() => {
+        searchOpenFoodFacts(query);
+      }, 300);
+    });
+    
+    // Search using multiple APIs for better coverage
+    async function searchOpenFoodFacts(query) {
+      try {
+        // Search both USDA and OpenFoodFacts for better coverage
+        const [usdaData, offData] = await Promise.all([
+          // USDA API
+          fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?api_key=DEMO_KEY&query=${encodeURIComponent(query)}&pageSize=5&dataType=Foundation,SR Legacy`)
+            .then(res => res.json())
+            .catch(() => ({ foods: [] })),
+          
+          // OpenFoodFacts API (better for Indian and packaged foods)
+          fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=5`)
+            .then(res => res.json())
+            .catch(() => ({ products: [] }))
+        ]);
+        
+        const combinedResults = [];
+        
+        // Add USDA results (convert to standard format)
+        if (usdaData.foods && usdaData.foods.length > 0) {
+          usdaData.foods.forEach(food => {
+            combinedResults.push({
+              name: food.description,
+              brand: food.brandOwner || food.dataType || 'USDA',
+              source: 'usda',
+              data: food
+            });
           });
-        });
+        }
+        
+        // Add OpenFoodFacts results (convert to standard format)
+        if (offData.products && offData.products.length > 0) {
+          offData.products.forEach(product => {
+            combinedResults.push({
+              name: product.product_name || product.generic_name,
+              brand: product.brands || 'Generic',
+              source: 'openfoodfacts',
+              data: product
+            });
+          });
+        }
+        
+        // Add common Indian foods if query matches
+        const indianFoods = getIndianFoodSuggestions(query);
+        if (indianFoods.length > 0) {
+          indianFoods.forEach(food => {
+            combinedResults.push({
+              name: food.name,
+              brand: 'Indian Cuisine',
+              source: 'local',
+              data: food
+            });
+          });
+        }
+        
+        if (combinedResults.length > 0) {
+          displaySuggestions(combinedResults);
+        } else {
+          suggestionsBox.innerHTML = '<div class="loading">No results found</div>';
+          suggestionsBox.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error fetching food data:', error);
+        suggestionsBox.innerHTML = '<div class="loading">Error loading results</div>';
+        suggestionsBox.style.display = 'block';
+      }
     }
-
+    
+    // Local database of common Indian foods with nutritional values (per 100g)
+    function getIndianFoodSuggestions(query) {
+      const indianFoods = [
+        { name: 'Chapati (Roti)', protein: 3.5, carbs: 43, fat: 3.7, calories: 220 },
+        { name: 'Naan', protein: 9, carbs: 45, fat: 8, calories: 310 },
+        { name: 'Rice (cooked)', protein: 2.7, carbs: 28, fat: 0.3, calories: 130 },
+        { name: 'Basmati Rice (cooked)', protein: 3, carbs: 25, fat: 0.4, calories: 120 },
+        { name: 'Dal (cooked)', protein: 9, carbs: 20, fat: 0.8, calories: 116 },
+        { name: 'Rajma (cooked)', protein: 8.7, carbs: 22.8, fat: 0.5, calories: 127 },
+        { name: 'Chole (Chickpeas)', protein: 8.9, carbs: 27.4, fat: 2.6, calories: 164 },
+        { name: 'Paneer', protein: 18, carbs: 1.2, fat: 20, calories: 265 },
+        { name: 'Idli', protein: 2, carbs: 8, fat: 0.1, calories: 39 },
+        { name: 'Dosa', protein: 2, carbs: 28, fat: 4, calories: 168 },
+        { name: 'Paratha', protein: 6, carbs: 30, fat: 15, calories: 280 },
+        { name: 'Poha', protein: 2.5, carbs: 23, fat: 0.5, calories: 110 },
+        { name: 'Upma', protein: 3, carbs: 20, fat: 2, calories: 115 },
+        { name: 'Samosa', protein: 4, carbs: 23, fat: 17, calories: 262 },
+        { name: 'Biryani', protein: 6, carbs: 45, fat: 8, calories: 290 },
+        { name: 'Butter Chicken', protein: 15, carbs: 8, fat: 18, calories: 260 },
+        { name: 'Milk (full fat)', protein: 3.2, carbs: 4.8, fat: 3.3, calories: 61 },
+        { name: 'Milk (toned)', protein: 3, carbs: 4.5, fat: 1.5, calories: 45 },
+        { name: 'Curd (yogurt)', protein: 3.5, carbs: 4.7, fat: 4.1, calories: 60 },
+        { name: 'Ghee', protein: 0, carbs: 0, fat: 99.8, calories: 900 },
+        { name: 'Aloo Sabzi', protein: 2, carbs: 17, fat: 3, calories: 103 },
+        { name: 'Raita', protein: 3, carbs: 4, fat: 2, calories: 50 },
+        { name: 'Khichdi', protein: 4, carbs: 25, fat: 2, calories: 135 },
+        { name: 'Puri', protein: 6, carbs: 40, fat: 20, calories: 360 }
+      ];
+      
+      const lowerQuery = query.toLowerCase();
+      return indianFoods.filter(food => 
+        food.name.toLowerCase().includes(lowerQuery)
+      );
+    }
+    
+    // Display suggestions
+    function displaySuggestions(foods) {
+      // Clear previous suggestions completely
+      suggestionsBox.innerHTML = '';
+      suggestionsBox.style.display = 'block';
+      
+      foods.forEach(food => {
+        const li = document.createElement('li');
+        li.style.listStyle = 'none';
+        
+        const content = document.createElement('div');
+        content.className = 'suggestion-content';
+        
+        const name = document.createElement('div');
+        name.className = 'suggestion-name';
+        name.textContent = food.name || 'Unknown Food';
+        
+        const brand = document.createElement('div');
+        brand.className = 'suggestion-brand';
+        brand.textContent = food.brand || 'Generic';
+        
+        content.appendChild(name);
+        content.appendChild(brand);
+        
+        li.appendChild(content);
+        
+        li.onclick = () => selectProduct(food);
+        
+        suggestionsBox.appendChild(li);
+      });
+    }
+    
+    // Select product from suggestions
+    function selectProduct(food) {
+      selectedProduct = food;
+      itemInput.value = food.name || 'Unknown Food';
+      suggestionsBox.innerHTML = '';
+      suggestionsBox.style.display = 'none';
+    }
+    
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!itemInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+        suggestionsBox.innerHTML = '';
+        suggestionsBox.style.display = 'none';
+      }
+    });
+    
+    // Handle form submission
+    foodForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      if (!selectedProduct) {
+        alert('Please select a product from the suggestions');
+        return;
+      }
+      
+      const quantity = parseFloat(quantityInput.value) || 100;
+      const multiplier = quantity / 100;
+      
+      let nutrients = { protein: 0, carbs: 0, fat: 0, calories: 0 };
+      
+      // Handle different data sources
+      if (selectedProduct.source === 'local') {
+        // Local Indian food database
+        nutrients = {
+          protein: selectedProduct.data.protein || 0,
+          carbs: selectedProduct.data.carbs || 0,
+          fat: selectedProduct.data.fat || 0,
+          calories: selectedProduct.data.calories || 0
+        };
+      } else if (selectedProduct.source === 'usda') {
+        // USDA format
+        if (selectedProduct.data.foodNutrients) {
+          selectedProduct.data.foodNutrients.forEach(nutrient => {
+            const name = nutrient.nutrientName.toLowerCase();
+            const value = nutrient.value || 0;
+            
+            if (name.includes('protein')) {
+              nutrients.protein = value;
+            } else if (name.includes('carbohydrate')) {
+              nutrients.carbs = value;
+            } else if (name.includes('total lipid') || name.includes('fat')) {
+              nutrients.fat = value;
+            } else if (name.includes('energy') && nutrient.unitName === 'KCAL') {
+              nutrients.calories = value;
+            }
+          });
+        }
+      } else if (selectedProduct.source === 'openfoodfacts') {
+        // OpenFoodFacts format
+        const n = selectedProduct.data.nutriments || {};
+        nutrients = {
+          protein: n.proteins_100g || n.proteins || 0,
+          carbs: n.carbohydrates_100g || n.carbohydrates || 0,
+          fat: n.fat_100g || n.fat || 0,
+          calories: n['energy-kcal_100g'] || n['energy-kcal'] || 0
+        };
+      }
+      
+      const foodItem = {
+        name: selectedProduct.name || 'Unknown Food',
+        brand: selectedProduct.brand || 'Generic',
+        quantity: quantity,
+        protein: parseFloat(nutrients.protein * multiplier).toFixed(1),
+        carbs: parseFloat(nutrients.carbs * multiplier).toFixed(1),
+        fats: parseFloat(nutrients.fat * multiplier).toFixed(1),
+        calories: parseFloat(nutrients.calories * multiplier).toFixed(0)
+      };
+      
+      foodItems.push(foodItem);
+      updateTable();
+      updateSummary();
+      
+      // Reset form
+      foodForm.reset();
+      selectedProduct = null;
+      quantityInput.value = 100;
+    });
+    
+    // Update table
+    function updateTable() {
+      const tbody = document.getElementById('foodTableBody');
+      
+      if (foodItems.length === 0) {
+        tbody.innerHTML = `
+          <tr class="empty-state">
+            <td colspan="7">No items added yet. Start by searching for food!</td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = '';
+      
+      foodItems.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.name}<br><small style="color: #666;">${item.brand}</small></td>
+          <td>${item.quantity}</td>
+          <td>${item.protein}</td>
+          <td>${item.carbs}</td>
+          <td>${item.fats}</td>
+          <td>${item.calories}</td>
+          <td>
+            <button class="delete-btn" onclick="deleteItem(${index})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // Update summary
+    function updateSummary() {
+      const totals = foodItems.reduce((acc, item) => {
+        acc.protein += parseFloat(item.protein);
+        acc.carbs += parseFloat(item.carbs);
+        acc.fats += parseFloat(item.fats);
+        acc.calories += parseFloat(item.calories);
+        return acc;
+      }, { protein: 0, carbs: 0, fats: 0, calories: 0 });
+      
+      document.getElementById('totalProtein').textContent = totals.protein.toFixed(1);
+      document.getElementById('totalCarbs').textContent = totals.carbs.toFixed(1);
+      document.getElementById('totalFats').textContent = totals.fats.toFixed(1);
+      document.getElementById('totalCalories').textContent = totals.calories.toFixed(0);
+    }
+    
+    // Delete item
+    function deleteItem(index) {
+      foodItems.splice(index, 1);
+      updateTable();
+      updateSummary();
+    }
+    
+    // Trigger scan (placeholder)
     function triggerScan() {
-      document.getElementById("scanFile").click();
+      document.getElementById('scanFile').click();
     }
-
-    function submitScanForm() {
-      document.getElementById("scanAction").value = "scan";
-      document.getElementById("foodForm").submit();
-    }
+    
+    // Handle scan file selection
+    document.getElementById('scanFile').addEventListener('change', function(e) {
+      if (e.target.files.length > 0) {
+        alert('Scan functionality would be implemented here');
+      }
+    });
   </script>
 </body>
 </html>

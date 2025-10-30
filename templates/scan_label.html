@@ -4,9 +4,113 @@
   <meta charset="UTF-8">
   <title>Cal-FIT | Scan Label</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/scan_label.css') }}">
+  <style>
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .loading-content {
+      text-align: center;
+      animation: fadeInScale 0.5s ease-out;
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .loading-text {
+      color: #10B981;
+      font-size: 24px;
+      font-weight: 600;
+      margin-top: 20px;
+      animation: pulse-text 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-text {
+      0%, 100% {
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .loading-subtext {
+      color: #9CA3AF;
+      font-size: 14px;
+      margin-top: 10px;
+      animation: fadeInOut 2s ease-in-out infinite;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% {
+        opacity: 0.4;
+      }
+      50% {
+        opacity: 0.8;
+      }
+    }
+
+    /* Progress bar */
+    .progress-container {
+      width: 300px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      margin: 20px auto;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #10B981, #06B6D4);
+      border-radius: 2px;
+      animation: progressMove 2s ease-in-out infinite;
+    }
+
+    @keyframes progressMove {
+      0% {
+        width: 0%;
+        margin-left: 0%;
+      }
+      50% {
+        width: 50%;
+        margin-left: 25%;
+      }
+      100% {
+        width: 0%;
+        margin-left: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-
 <header>
   <div class="logo">Cal-FIT</div>
   <nav class="main-nav">
@@ -14,32 +118,32 @@
     <a href="#explore">Explore</a>
     <a href="#about">About Us</a>
     <a href="{{ url_for('profile') }}">Profile</a>
-
   </nav>
 </header>
+
 <div style="position: relative; z-index: 1; text-align: center; margin-top: 60px;">
   <p style="max-width: 700px; margin: 0 auto 30px auto; font-size: 18px; color: #ddd;">
     Cal-FIT provides comprehensive analysis of your food labels, offering valuable insights into nutritional content and potential health risks.
   </p>
 </div>
-</div>
+
 <div class="parent">
   <!-- Card 1 -->
   <div class="container">
     <h2>Upload a Food Label</h2>
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" id="labelForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="file" name="label_image">
+      <input type="file" name="label_image" id="labelImage" accept="image/*">
       <button type="submit">Scan</button>
     </form>
   </div>
-
+  
   <!-- Card 2 -->
   <div class="container">
     <h2>Scan a Barcode</h2>
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" id="barcodeForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="file" name="barcode_image">
+      <input type="file" name="barcode_image" id="barcodeImage" accept="image/*">
       <button type="submit">Scan Barcode</button>
     </form>
   </div>
@@ -48,6 +152,7 @@
 <div class="text">
   <h1>How To Use Cal-FIT</h1>
 </div>
+
 <div class="tutorial">
   <div class="step1">
     <p>1</p>
@@ -57,7 +162,7 @@
   <div class="step2">
     <p>2</p>
     <h1>Read</h1>
-    <p>Get results that highlight the good and bad in your food, backed by real nutritional science. </p>
+    <p>Get results that highlight the good and bad in your food, backed by real nutritional science.</p>
   </div>
   <div class="step3">
     <p>3</p>
@@ -65,5 +170,206 @@
     <p>Eat based on personalized suggestions tailored to your diet plan.</p>
   </div>
 </div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-content">
+    <!-- Scanning Animation SVG -->
+    <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="scanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#10B981;stop-opacity:0" />
+          <stop offset="50%" style="stop-color:#10B981;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#10B981;stop-opacity:0" />
+        </linearGradient>
+        
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      
+      <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(16, 185, 129, 0.1)" stroke-width="2">
+        <animate attributeName="r" values="85;95;85" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.3;0.6;0.3" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      
+      <g transform="translate(60, 40)">
+        <rect x="0" y="0" width="80" height="100" rx="4" fill="rgba(255, 255, 255, 0.1)" 
+              stroke="#10B981" stroke-width="2" filter="url(#glow)">
+          <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
+        </rect>
+        
+        <path d="M 60 0 L 80 0 L 80 20 Z" fill="rgba(16, 185, 129, 0.3)" stroke="#10B981" stroke-width="1"/>
+        <path d="M 60 0 L 60 20 L 80 20" fill="none" stroke="#10B981" stroke-width="1" stroke-dasharray="2,2"/>
+        
+        <rect x="10" y="25" width="50" height="3" rx="1.5" fill="rgba(16, 185, 129, 0.4)">
+          <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1s" begin="0s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="10" y="35" width="60" height="3" rx="1.5" fill="rgba(16, 185, 129, 0.4)">
+          <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1s" begin="0.2s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="10" y="45" width="45" height="3" rx="1.5" fill="rgba(16, 185, 129, 0.4)">
+          <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1s" begin="0.4s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="10" y="55" width="55" height="3" rx="1.5" fill="rgba(16, 185, 129, 0.4)">
+          <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1s" begin="0.6s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="10" y="65" width="40" height="3" rx="1.5" fill="rgba(16, 185, 129, 0.4)">
+          <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1s" begin="0.8s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="10" y="75" width="50" height="3" rx="1.5" fill="rgba(16, 185, 129, 0.4)">
+          <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1s" begin="1s" repeatCount="indefinite"/>
+        </rect>
+      </g>
+      
+      <rect x="60" y="40" width="80" height="4" fill="url(#scanGradient)" opacity="0.8" filter="url(#glow)">
+        <animate attributeName="y" values="40;140;40" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      
+      <g opacity="0.6">
+        <circle cx="70" cy="60" r="2" fill="#10B981">
+          <animate attributeName="cy" values="60;130;60" dur="2.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;0" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="90" cy="70" r="2" fill="#06B6D4">
+          <animate attributeName="cy" values="70;140;70" dur="2.8s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;0" dur="2.8s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="110" cy="65" r="2" fill="#10B981">
+          <animate attributeName="cy" values="65;135;65" dur="2.3s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;0" dur="2.3s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="130" cy="75" r="2" fill="#06B6D4">
+          <animate attributeName="cy" values="75;145;75" dur="2.6s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;1;0" dur="2.6s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+      
+      <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(16, 185, 129, 0.2)" stroke-width="1" 
+              stroke-dasharray="10 5" transform-origin="100 100">
+        <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" 
+                          dur="8s" repeatCount="indefinite"/>
+      </circle>
+      
+      <g opacity="0.4">
+        <text x="75" y="150" font-family="monospace" font-size="10" fill="#10B981">01</text>
+        <animateTransform attributeName="transform" type="translate" values="0,0; 0,-120" 
+                          dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.6;0" dur="3s" repeatCount="indefinite"/>
+      </g>
+      <g opacity="0.4">
+        <text x="115" y="155" font-family="monospace" font-size="10" fill="#06B6D4">10</text>
+        <animateTransform attributeName="transform" type="translate" values="0,0; 0,-130" 
+                          dur="3.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.6;0" dur="3.5s" repeatCount="indefinite"/>
+      </g>
+      
+      <g transform="translate(100, 100)" opacity="0.6">
+        <circle r="8" fill="none" stroke="#10B981" stroke-width="2">
+          <animate attributeName="r" values="6;10;6" dur="1s" repeatCount="indefinite"/>
+        </circle>
+        <circle r="3" fill="#10B981">
+          <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+    </svg>
+
+    <div class="loading-text" id="loadingText">Analyzing your food label...</div>
+    <div class="loading-subtext">This may take a few moments</div>
+    
+    <div class="progress-container">
+      <div class="progress-bar"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Handle Label Form Submission
+  document.getElementById('labelForm').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('labelImage');
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+      e.preventDefault();
+      alert('Please select an image file first');
+      return;
+    }
+    
+    // Prevent default form submission
+    e.preventDefault();
+    
+    // Show loading overlay immediately
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    loadingText.textContent = 'Analyzing your food label...';
+    overlay.style.display = 'flex';
+    
+    // Force reflow to ensure display takes effect
+    overlay.offsetHeight;
+    
+    // Add active class for animation
+    overlay.classList.add('active');
+    
+    // Submit form after a small delay to ensure overlay is visible
+    setTimeout(() => {
+      e.target.submit();
+    }, 100);
+  });
+
+  // Handle Barcode Form Submission
+  document.getElementById('barcodeForm').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('barcodeImage');
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+      e.preventDefault();
+      alert('Please select an image file first');
+      return;
+    }
+    
+    // Prevent default form submission
+    e.preventDefault();
+    
+    // Show loading overlay immediately
+    const overlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    loadingText.textContent = 'Scanning barcode...';
+    overlay.style.display = 'flex';
+    
+    // Force reflow to ensure display takes effect
+    overlay.offsetHeight;
+    
+    // Add active class for animation
+    overlay.classList.add('active');
+    
+    // Submit form after a small delay to ensure overlay is visible
+    setTimeout(() => {
+      e.target.submit();
+    }, 100);
+  });
+
+  // Hide overlay if page loads with an error (optional)
+  window.addEventListener('load', function() {
+    // If there's an error message on the page, hide the overlay
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('error')) {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.remove('active');
+      overlay.style.display = 'none';
+    }
+  });
+
+  // Prevent back button from showing the overlay
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+      const overlay = document.getElementById('loadingOverlay');
+      overlay.classList.remove('active');
+      overlay.style.display = 'none';
+    }
+  });
+</script>
+
 </body>
 </html>

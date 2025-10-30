@@ -183,4 +183,203 @@ print(wc.count_words())'''
 text = "my mail is "
 result = re.search(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",text)
 print(result)'''
+'''
+
+class Node:
+    def __init__(self,data):
+        self.data = data
+        self.next = None
+class LinkedList:
+    def __init__(self):
+        self.head = None
+    def appendnode(self,data):
+        new_node = Node(data)
+        if not self.head:
+            self.head = new_node
+            return
+        curr = self.head
+        while curr.next:
+            curr=curr.next
+        curr.next = new_node
+    
+    def first_repeating(head):
+        seen = set()
+        while head:
+            if head.data in seen:
+                return head.data  # first repeating value
+            seen.add(head.data)
+            head = head.next
+        return None 
+   
+
+l1 = LinkedList()
+
+l1.appendnode(1)
+l1.appendnode(1)
+l1.appendnode(3)
+l1.appendnode(4)
+l1.appendnode(5)
+
+l1.first_repeating()'''
+'''
+class Node:
+    def __init__(self,data):
+        self.data = data
+        self.next= None
+class LinkedList:
+    def __init__(self):
+        self.head = None
+    def appendnode(self,data):
+        new_node = Node(data)
+        if not self.head:
+            self.head = new_node
+            return
+        curr = self.head
+        while curr.next:
+            curr = curr.next
+        curr.next= new_node
+    def showList(self):
+        curr = self.head
+        while curr:
+            print(curr.data)
+            curr=curr.next
+        print("None")
+    def checkReverse(self):
+        seen = set()
+        curr = self.head
+        while curr:
+            if curr.data in seen:
+                return curr.data
+            seen.add(curr.data)
+            curr = curr.next
+    def checkSequence(self):
+        seen = set()
+        repeats = set()
+        curr = self.head
+        while curr:
+            if curr.data in seen:
+                repeats.add(curr.data)
+            else:
+                seen.add(curr.data)
+            curr = curr.next
+        return list(repeats)
+    def reverseList(self):
+       prev = None
+       curr = self.head
+       while curr:
+           next_node = curr.next
+           curr.next = prev
+           prev = curr
+           curr = next_node
+       self.head = prev
+       return self.head
+        
+
+        
+
+
+l1 = LinkedList()
+
+l1.appendnode(1)
+l1.appendnode(1)
+l1.appendnode(3)
+l1.appendnode(4)
+l1.appendnode(5)
+l1.showList()
+l1.checkReverse()
+print(l1.checkReverse())
+print(l1.checkSequence()) 
+print(l1.reverseList())
+l1.showList()'''
+'''s = "hello"
+t = "heelo"
+if sorted(s) == sorted(t):
+    print("anagram")
+else:
+    print("not anagram")'''
+'''s = "{[]}"
+class Solution:
+    def isValid(self, s: str) -> bool:
+        stack = []
+        mapping = {")":"(", "}":"{", "]":"["}
+        for char in s:
+            if char in mapping:
+                top_element = stack.pop() if stack else '#'
+                if mapping[char] != top_element:
+                    return False
+            else:
+                stack.append(char)
+        return not stack
+print(Solution().isValid(s))'''
+
+'''s = -121
+x = -1 if s < 0 else 1   # x = -1 for negative, 1 for positive
+rev_s = int(str(abs(s))[::-1]) * x  # reverse the digits and restore sign
+if rev_s ==s:
+    print(f"{s} is palindrome")
+else:
+    print(f"{s} is not palindrome")'''
+
+'''arr = [5,9,3,7,8]
+for i in range(len(arr)//2):
+    for j in range(len(arr)-1):
+        if arr[i] < arr[j]:
+            temp = arr[i]
+            arr[i]= arr[j]
+            arr[j] = temp
+print(arr)
+'''
+'''class Node():
+    def __init__(self,data):
+        self.data = data
+        self.next = None
+class LinkedList():
+    def __init__(self):
+        self.head = None
+    def appendnode(self,data):
+        new_node = Node(data)
+        if not self.head:
+            self.head = new_node
+            return
+        curr = self.head
+        while curr.next:
+            curr = curr.next
+        curr.next = new_node
+    def showList(self):
+        curr = self.head
+        while curr:
+            print(curr.data)
+            curr = curr.next
+        print("None")
+    def checkDuplicate(self):
+        seen = set()
+        repeats = set()
+        curr = self.head
+        while curr:
+            if curr in seen:
+                repeats.add(curr.data)
+            else:
+                seen.add(curr.data)
+            curr= curr.next
+
+
+l1 = LinkedList()
+
+l1.appendnode(1)
+l1.appendnode(1)
+l1.appendnode(3)
+l1.appendnode(4)
+l1.appendnode(5)
+l1.showList()'''
+s = "abbcc"
+arr = list(s)
+seen = set()
+twins = set()
+for ch in arr:
+    if ch in seen:
+        twins.add(ch)
+    else:
+        seen.add(ch)
+print(seen)
+print(twins)
 
