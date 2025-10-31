@@ -3,214 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <title>Cal-FIT | About Us</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <style>
+    /* Only minimal styling — inherits dashboard.css theme */
 
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: url('https://i.pinimg.com/736x/20/3a/9d/203a9d098f06541a1fd7e26b2eb71e29.jpg') no-repeat center center fixed;
-    background-size: cover;
-    color: #222;
-  }
-
-  header {
-  position: relative;
-  z-index: 1;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 20px 40px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  }
-
-  .logo {
-    font-size: 24px;
-    font-weight: bold;
-    color: white;
-  }
-
-  .main-nav {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-
-  .main-nav a {
-    color: white;
-  text-decoration: none;
-  font-size: 16px;
-  padding: 8px;
-  transition: color 0.3s ease;
-  }
-
-  .main-nav a:hover {
-    color: #10B981;
-  }
-
-  .dropdown {
-    position: relative;
-  }
-
-  .dropbtn {
-    background-color: transparent;
-    border: none;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    padding: 8px;
-  }
-
-  .dropdown-content {
-    display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: rgba(16, 185, 129, 0.95);
-  min-width: 180px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 2;
-  border-radius: 5px;
-  overflow: hidden;
-  }
-
-  .dropdown-content a {
-    color: white;
-  padding: 10px 15px;
-  text-decoration: none;
-  display: block;
-  white-space: nowrap;
-  }
-
-  .dropdown-content a:hover {
-    background-color: #059669;
-  }
-
-  .dropdown:hover .dropdown-content {
-    display: block;
-  }
-
-  .container {
-    max-width: 1100px;
-    margin: 40px auto;
-    padding: 30px;
-    
-    border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    
-  }
-
-  .logo-img {
-    display: block;
-    background-image: url("https://i.pinimg.com/736x/bd/5d/83/bd5d8390bfc2b92eda8dc3ebcb89449d.jpg");
-    margin: 0 auto 20px auto;
-    max-width: 180px;
-  }
-
-  .intro {
-    text-align: center;
-    margin-bottom: 40px;
-  }
-
-  .intro h2 {
-    font-size: 32px;
-    color: #10B981;
-    margin-bottom: 15px;
-  }
-
-  .intro p {
-    font-size: 18px;
-    line-height: 1.6;
-    color: white;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  .content {
-    display: flex;
-    justify-content: space-between;
-    gap: 40px;
-    margin-top: 40px;
-  }
-
-  .section {
-    flex: 1;
-    padding: 20px;
-  }
-
-  .divider {
-    width: 1px;
-    background-color: #ccc;
-  }
-
-  .section h2 {
-    font-size: 24px;
-    color: #10B981;
-    margin-bottom: 15px;
-  }
-
-  .section p {
-    font-size: 16px;
-    line-height: 1.6;
-    color:white;
-  }
-
-  @media screen and (max-width: 768px) {
-    .content {
-      flex-direction: column;
+    .about-container {
+      max-width: 1000px;
+      margin: 100px auto;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 50px;
+      text-align: center;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
     }
 
-    .divider {
-      display: none;
+    .about-container img {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 3px solid var(--accent-color, #10B981);
+      margin-bottom: 20px;
     }
-  }
-</style>
 
+    .about-container h2 {
+      font-size: 32px;
+      color: var(--accent-color, #10B981);
+      margin-bottom: 20px;
+    }
+
+    .about-container p {
+      font-size: 18px;
+      color: #e5e5e5;
+      line-height: 1.7;
+      max-width: 850px;
+      margin: 0 auto 30px;
+    }
+
+    .about-sections {
+      display: flex;
+      justify-content: space-between;
+      gap: 40px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+
+    .about-section {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+      text-align: left;
+      transition: transform 0.3s ease;
+    }
+
+    .about-section:hover {
+      transform: translateY(-5px);
+    }
+
+    .about-section h3 {
+      color: var(--accent-color, #10B981);
+      font-size: 22px;
+      margin-bottom: 15px;
+    }
+
+    .about-section p {
+      color: #ddd;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .about-sections {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .about-section {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
-<body>
 
-  <!--Navbar -->
+<body>
+  <!-- Navbar (inherits from dashboard.css) -->
   <header>
     <div class="logo">Cal-FIT</div>
     <nav class="main-nav">
       <a href="{{ url_for('dashboard') }}">Home</a>
       <a href="{{ url_for('dashboard') }}">Explore</a>
-      <a href="{{ url_for('about') }}">About Us</a>
+      <a href="{{ url_for('scan_label') }}" class="active">Scan</a>
       <a href="{{ url_for('profile') }}">Profile</a>
-
     </nav>
   </header>
 
-  <!--  Page Content -->
-  <div class="container">
-    <img class="logo-img" src="https://i.pinimg.com/736x/97/3a/7c/973a7c64d0dfec6024b419e3e8b0c901.jpg" alt="Cal-FIT Logo">
+  <!-- About Page Content -->
+  <div class="about-container">
+    <img src="https://i.pinimg.com/736x/97/3a/7c/973a7c64d0dfec6024b419e3e8b0c901.jpg" alt="Cal-FIT Logo">
+    <h2>About Cal-FIT</h2>
+    <p>
+      Welcome to Cal-FIT, your AI-powered nutrition assistant.  
+      We believe healthy living begins with understanding what you eat.  
+      Our goal is to make nutritional awareness simple, personalized, and smart.
+    </p>
 
-    <div class="intro">
-      <h2>About Cal-FIT</h2>
-      <p>
-        Welcome to Cal-FIT, your personal nutrition guide powered by smart technology. At Cal-FIT, we believe that healthy living starts with awareness. Every day, we consume foods without truly understanding what goes into our bodies. Our mission is to change that.
-      </p>
-    </div>
-
-    <div class="content">
-      <div class="section">
-        <h2>What We Do</h2>
+    <div class="about-sections">
+      <div class="about-section">
+        <h3>What We Do</h3>
         <p>
-          Cal-FIT is a smart web application that scans food labels, analyzes the nutritional content, and tells you what's good, what's risky, and what to avoid — all in seconds. Whether you're watching your sugar intake, monitoring calories, or avoiding allergens, Cal-FIT gives you real-time insights tailored to your health goals.
+          Cal-FIT scans food labels and breaks down the nutritional content instantly.  
+          It tells you what’s good, what’s risky, and what to avoid — all tailored to your health profile.
         </p>
       </div>
 
-      <div class="divider"></div>
-
-      <div class="section">
-        <h2>Why Us?</h2>
+      <div class="about-section">
+        <h3>Why Choose Us</h3>
         <p>
-          Navigating food labels can be overwhelming, and most nutrition apps are either too generic or too complex. Cal-FIT bridges the gap by offering a simple, intelligent, and personalized experience.<br><br>
-          <strong>Who We Are:</strong><br>
-          We're a passionate team of developers, health enthusiasts, and AI nerds driven to make nutrition more accessible. We combine AI, OCR, and data analysis to create tools that make health tracking easy and insightful.
+          Most nutrition apps are either too complex or too basic.  
+          Cal-FIT bridges that gap with intelligent analysis, a clean design, and personalized health tracking powered by AI and OCR technology.
         </p>
       </div>
     </div>
   </div>
-
 </body>
 </html>

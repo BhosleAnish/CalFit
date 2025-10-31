@@ -3,292 +3,433 @@
 <head>
   <meta charset="UTF-8">
   <title>Edit Profile | Cal-FIT</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
     }
 
     html, body {
       height: 100%;
-      overflow: hidden;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: "Montserrat", sans-serif;
+      color: #252601;
+      background: linear-gradient(135deg, #D9D6D0 0%, #c4c1bb 100%);
       position: relative;
-      color: white;
-    }
-
-    body {
-      background: url('https://i.pinimg.com/736x/20/3a/9d/203a9d098f06541a1fd7e26b2eb71e29.jpg') no-repeat center center fixed;
-      background-size: cover;
+      overflow-x: hidden;
     }
 
     body::before {
       content: '';
-      position: fixed;
+      position: absolute;
       top: 0;
       left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(10px);
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 50%, rgba(132, 191, 4, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(37, 38, 1, 0.05) 0%, transparent 50%);
       z-index: 0;
+      pointer-events: none;
     }
 
-    /* ✅ Header Styling */
     header {
-      position: relative;
-      z-index: 2;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 20px 40px;
+      position: sticky;
+      top: 0;
+      height: 80px;
+      z-index: 1000;
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      padding: 0 40px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 4px 20px rgba(132, 191, 4, 0.3);
+      border-bottom: 2px solid rgba(37, 38, 1, 0.1);
     }
 
     .logo {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: bold;
-      color: white;
+      color: #252601;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+      letter-spacing: 1px;
     }
 
     .main-nav {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
-      align-items: center;
-      gap: 20px;
+      gap: 30px;
+      background: rgba(37, 38, 1, 0.05);
+      padding: 10px 25px;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
     }
 
     .main-nav a {
-      color: white;
+      color: #252601;
       text-decoration: none;
       font-size: 16px;
-      padding: 8px;
-      transition: color 0.3s ease;
-    }
-
-    .main-nav a:hover {
-      color: #10B981;
-    }
-
-    .container {
+      font-weight: 600;
+      padding: 10px 18px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 25px;
       position: relative;
-      z-index: 1;
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 30px;
-      background: rgba(0, 0, 0, 0.75);
-      border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+      overflow: hidden;
     }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #10B981;
-    }
-
-    form {
-      width: 100%;
-    }
-
-    table {
-      width: 100%;
-      color: white;
-      font-size: 16px;
-      border-spacing: 12px;
-    }
-
-    table td:first-child {
-      width: 30%;
-      font-weight: bold;
-      vertical-align: top;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-      color: #333;
-    }
-
-    textarea {
-      resize: vertical;
-    }
-
-    button {
-      display: block;
-      margin: 30px auto 0;
-      padding: 12px 30px;
-      font-size: 16px;
-      background-color: #10B981;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #059669;
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      height: 100%;
-      overflow: hidden; /* Prevents scrolling */
-      font-family: 'Segoe UI', sans-serif;
-      position: relative;
-      color: white;
-    }
-
-    body {
-      background: url('https://i.pinimg.com/736x/20/3a/9d/203a9d098f06541a1fd7e26b2eb71e29.jpg') no-repeat center center fixed;
-      background-size: cover;
-    }
-
-    body::before {
+    .main-nav a::before {
       content: '';
-      position: fixed; /* important to cover everything including overflow */
+      position: absolute;
       top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(10px);
-      z-index: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .main-nav a:hover::before {
+      left: 100%;
+    }
+
+    .main-nav a:hover,
+    .main-nav a.active {
+      color: #84BF04;
+      background: rgba(37, 38, 1, 0.9);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 4px 15px rgba(37, 38, 1, 0.3);
     }
 
     .container {
       position: relative;
       z-index: 1;
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 30px;
-      background: rgba(0, 0, 0, 0.75);
-      border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+      max-width: 900px;
+      margin: 60px auto;
+      padding: 60px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     }
 
     h2 {
       text-align: center;
-      margin-bottom: 30px;
-      color: #10B981;
+      margin-bottom: 50px;
+      color: #84BF04;
+      font-size: 48px;
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(132, 191, 4, 0.2);
     }
 
-    form {
-      width: 100%;
+    .form-group {
+      margin-bottom: 32px;
     }
 
-    table {
-      width: 100%;
-      color: white;
-      font-size: 16px;
-      border-spacing: 12px;
-    }
-
-    table td:first-child {
-      width: 30%;
-      font-weight: bold;
-      vertical-align: top;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-      color: #333;
-    }
-
-    textarea {
-      resize: vertical;
-    }
-
-    button {
+    .form-group label {
       display: block;
-      margin: 30px auto 0;
-      padding: 12px 30px;
-      font-size: 16px;
-      background-color: #10B981;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      margin-bottom: 12px;
+      color: #252601;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
     }
 
-    button:hover {
-      background-color: #059669;
+    input, select {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 2px solid rgba(132, 191, 4, 0.3);
+      background: rgba(255, 255, 255, 0.8);
+      font-size: 15px;
+      font-family: "Montserrat", sans-serif;
+      color: #252601;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    select option {
+      background: #fff;
+      color: #000;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #84BF04;
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 4px 15px rgba(132, 191, 4, 0.2);
+    }
+
+    input::placeholder {
+      color: #888;
+    }
+
+    .choices__inner {
+      background: rgba(255, 255, 255, 0.8);
+      border: 2px solid rgba(132, 191, 4, 0.3);
+      border-radius: 12px;
+      padding: 10px 14px;
+      min-height: 52px;
+      font-family: "Montserrat", sans-serif;
+    }
+
+    .choices__inner:focus,
+    .choices.is-focused .choices__inner {
+      border-color: #84BF04;
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 4px 15px rgba(132, 191, 4, 0.2);
+    }
+
+    .choices__list--multiple .choices__item {
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      border: 1px solid #84BF04;
+      color: #252601;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(132, 191, 4, 0.3);
+    }
+
+    .choices__list--dropdown {
+      background: #fff;
+      border: 2px solid rgba(132, 191, 4, 0.3);
+      border-radius: 12px;
+      margin-top: 4px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .choices__list--dropdown .choices__item {
+      color: #000;
+      padding: 12px 18px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+      background: rgba(132, 191, 4, 0.15);
+      color: #252601;
+    }
+
+    .choices__input {
+      background: transparent;
+      color: #252601;
+      font-family: "Montserrat", sans-serif;
+    }
+
+    .choices__input::placeholder {
+      color: #888;
+    }
+
+    .choices[data-type*='select-multiple'] .choices__button {
+      border-left: 1px solid #252601;
+      background: none;
+      opacity: 0.8;
+    }
+
+    .choices[data-type*='select-multiple'] .choices__button:hover {
+      opacity: 1;
+    }
+
+    button[type="submit"] {
+      display: block;
+      width: 100%;
+      margin-top: 50px;
+      padding: 16px 40px;
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      color: #252601;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      letter-spacing: 0.5px;
+      box-shadow: 0 6px 25px rgba(132, 191, 4, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    button[type="submit"]::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.6s ease;
+    }
+
+    button[type="submit"]:hover::before {
+      left: 100%;
+    }
+
+    button[type="submit"]:hover { 
+      box-shadow: 0 10px 35px rgba(132, 191, 4, 0.6);
+      transform: translateY(-3px) scale(1.02);
+    }
+
+    button[type="submit"]:active {
+      transform: translateY(-1px) scale(1);
+    }
+
+    .grid-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    .grid-form .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin: 30px 20px;
+        padding: 40px 28px;
+      }
+
+      .grid-form {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        padding: 16px 20px;
+      }
+
+      .main-nav {
+        position: static;
+        transform: none;
+        gap: 15px;
+        padding: 8px 15px;
+      }
+
+      .main-nav a {
+        font-size: 14px;
+        padding: 8px 12px;
+      }
+
+      h2 {
+        font-size: 36px;
+      }
     }
   </style>
 </head>
 <body>
-    <header>
+  <header>
     <div class="logo">Cal-FIT</div>
     <nav class="main-nav">
       <a href="{{ url_for('dashboard') }}">Home</a>
-      <a href="{{ url_for('about') }}">About Us</a>
-      <a href="#explore">Explore</a>
-      <a href="{{ url_for('profile') }}">Profile</a>
+      <a href="{{ url_for('scan_label') }}">Scan</a>
+      <a href="{{ url_for('profile') }}" class="active">Profile</a>
     </nav>
   </header>
+
   <div class="container">
     <h2>Edit Your Profile</h2>
     <form method="POST" action="{{ url_for('profile_form') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <table>
-        <tr>
-          <td>Full Name</td>
-          <td><input type="text" name="full_name" value="{{ profile.full_name }}" required></td>
-        </tr>
-        <tr>
-          <td>Age</td>
-          <td><input type="number" name="age" value="{{ profile.age }}" required></td>
-        </tr>
-        <tr>
-          <td>Gender</td>
-          <td>
-            <select name="gender" required>
-              <option value="Male" {% if profile.gender == 'Male' %}selected{% endif %}>Male</option>
-              <option value="Female" {% if profile.gender == 'Female' %}selected{% endif %}>Female</option>
-              <option value="Other" {% if profile.gender == 'Other' %}selected{% endif %}>Other</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td>Height (cm)</td>
-          <td><input type="number" name="height_cm" value="{{ profile.height_cm }}" required></td>
-        </tr>
-        <tr>
-          <td>Weight (kg)</td>
-          <td><input type="number" name="weight_kg" value="{{ profile.weight_kg }}" required></td>
-        </tr>
-        <tr>
-          <td>Activity Level</td>
-          <td>
-            <select name="activity_level" required>
-              <option value="sedentary" {% if profile.activity_level == 'sedentary' %}selected{% endif %}>Sedentary</option>
-              <option value="moderate" {% if profile.activity_level == 'moderate' %}selected{% endif %}>Moderate</option>
-              <option value="active" {% if profile.activity_level == 'active' %}selected{% endif %}>Active</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td>Medical Conditions</td>
-          <td><textarea name="medical_conditions" rows="2">{{ profile.medical_conditions }}</textarea></td>
-        </tr>
-        <tr>
-          <td>Allergies</td>
-          <td><textarea name="allergies" rows="2">{{ profile.allergies }}</textarea></td>
-        </tr>
-      </table>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <div class="grid-form">
+        <div class="form-group">
+          <label for="full_name">Full Name</label>
+          <input type="text" id="full_name" name="full_name" value="{{ profile.full_name }}" required placeholder="John Doe">
+        </div>
+
+        <div class="form-group">
+          <label for="age">Age</label>
+          <input type="number" id="age" name="age" value="{{ profile.age }}" required placeholder="25" min="1" step="1" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+        </div>
+
+        <div class="form-group">
+          <label for="gender">Gender</label>
+          <select id="gender" name="gender" required>
+            <option value="Male" {% if profile.gender == 'Male' %}selected{% endif %}>Male</option>
+            <option value="Female" {% if profile.gender == 'Female' %}selected{% endif %}>Female</option>
+            <option value="Other" {% if profile.gender == 'Other' %}selected{% endif %}>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="activity_level">Activity Level</label>
+          <select id="activity_level" name="activity_level" required>
+            <option value="sedentary" {% if profile.activity_level == 'sedentary' %}selected{% endif %}>Sedentary</option>
+            <option value="moderate" {% if profile.activity_level == 'moderate' %}selected{% endif %}>Moderate</option>
+            <option value="active" {% if profile.activity_level == 'active' %}selected{% endif %}>Active</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="height_cm">Height (cm)</label>
+          <input type="number" id="height_cm" name="height_cm" value="{{ profile.height_cm }}" required placeholder="170">
+        </div>
+
+        <div class="form-group">
+          <label for="weight_kg">Weight (kg)</label>
+          <input type="number" id="weight_kg" name="weight_kg" value="{{ profile.weight_kg }}" required placeholder="70">
+        </div>
+
+        <div class="form-group full-width">
+          <label for="medical_conditions">Medical Conditions</label>
+          <select id="medical_conditions" name="medical_conditions" multiple required>
+            <option value="None" {% if 'None' in profile.medical_conditions %}selected{% endif %}>None</option>
+            {% set conditions = [
+              'Diabetes','Hypertension','Heart Disease','Asthma','Arthritis','Thyroid Disorder','Obesity','High Cholesterol',
+              'Anemia','Anxiety','Depression','Kidney Disease','Liver Disease','Gastritis','IBS','PCOS','Migraine','Epilepsy',
+              'Cancer','Celiac Disease','COPD','Osteoporosis','Psoriasis','Eczema','Sleep Apnea','Gout','GERD','Ulcer',
+              'Scoliosis','Lupus','Hepatitis','HIV','Chronic Pain','Back Pain','Panic Disorder','Stroke','Autism','ADHD',
+              'Endometriosis','Fibromyalgia','Hyperthyroidism','Hypothyroidism','Vertigo','Fatty Liver','Bronchitis',
+              'Sinusitis','Hemophilia','Tuberculosis','Chronic Fatigue Syndrome'
+            ] %}
+            {% for condition in conditions %}
+              <option value="{{ condition }}" {% if condition in profile.medical_conditions %}selected{% endif %}>{{ condition }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="allergies">Allergies</label>
+          <select id="allergies" name="allergies" multiple required>
+            <option value="None" {% if 'None' in profile.allergies %}selected{% endif %}>None</option>
+            {% set allergies_list = [
+              'Peanuts','Tree Nuts','Milk','Eggs','Wheat','Soy','Fish','Shellfish','Corn','Sesame','Gluten','Mustard','Celery',
+              'Lupin','Sulfites','Latex','Pollen','Dust Mites','Animal Dander','Mold','Chocolate','Bananas','Kiwi','Strawberries',
+              'Apples','Tomatoes','Coconut','Garlic','Onion','Citrus Fruits','Beef','Pork','Chicken','Alcohol','Caffeine',
+              'Preservatives','Artificial Colors','MSG','Honey','Berries','Avocado','Spinach','Carrots','Peas','Soy Lecithin',
+              'Oats','Rice','Chili Peppers','Corn Syrup','Gelatin','Sunflower Seeds'
+            ] %}
+            {% for allergy in allergies_list %}
+              <option value="{{ allergy }}" {% if allergy in profile.allergies %}selected{% endif %}>{{ allergy }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
       <button type="submit">Update Profile</button>
     </form>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <script>
+    const medicalChoices = new Choices('#medical_conditions', {
+      removeItemButton: true,
+      searchEnabled: true,
+      searchChoices: true,
+      searchPlaceholderValue: 'Type to search...',
+      allowHTML: false,
+      itemSelectText: ''
+    });
+
+    const allergyChoices = new Choices('#allergies', {
+      removeItemButton: true,
+      searchEnabled: true,
+      searchChoices: true,
+      searchPlaceholderValue: 'Type to search...',
+      allowHTML: false,
+      itemSelectText: ''
+    });
+  </script>
 </body>
 </html>

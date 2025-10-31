@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Cal-FIT | Scan Label</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/scan_label.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <style>
     /* Loading Overlay */
     .loading-overlay {
@@ -77,7 +78,6 @@
       }
     }
 
-    /* Progress bar */
     .progress-container {
       width: 300px;
       height: 4px;
@@ -108,6 +108,138 @@
         margin-left: 100%;
       }
     }
+
+    /* Cropper Modal */
+    .cropper-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(10px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .cropper-modal.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .cropper-container-wrapper {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .cropper-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .cropper-header h3 {
+      color: #10B981;
+      font-size: 24px;
+      margin: 0;
+    }
+
+    .close-cropper {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      font-size: 28px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .close-cropper:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .cropper-image-container {
+      max-width: 800px;
+      max-height: 500px;
+      margin: 0 auto 20px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .cropper-image-container img {
+      max-width: 100%;
+      display: block;
+    }
+
+    .cropper-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .cropper-btn {
+      background-color: #10B981;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .cropper-btn:hover {
+      background-color: #059669;
+      transform: translateY(-2px);
+    }
+
+    .cropper-btn.secondary {
+      background-color: #000000;
+    }
+
+    .cropper-btn.secondary:hover {
+      background-color: #000000;
+    }
+
+    .cropper-btn.danger {
+      background-color: #EF4444;
+    }
+
+    .cropper-btn.danger:hover {
+      background-color: #DC2626;
+    }
+
+    /* Cropper.js custom styling */
+    .cropper-view-box,
+    .cropper-face {
+      border: 2px solid #10B981 !important;
+      outline: none;
+    }
+
+    .cropper-line,
+    .cropper-point {
+      background-color: #10B981 !important;
+    }
+
+    .cropper-point.point-se {
+      width: 8px !important;
+      height: 8px !important;
+    }
   </style>
 </head>
 <body>
@@ -115,14 +247,13 @@
   <div class="logo">Cal-FIT</div>
   <nav class="main-nav">
     <a href="{{ url_for('dashboard') }}">Home</a>
-    <a href="#explore">Explore</a>
-    <a href="#about">About Us</a>
+    <a href="{{ url_for('scan_label') }}" class="active">Scan</a>
     <a href="{{ url_for('profile') }}">Profile</a>
   </nav>
 </header>
 
 <div style="position: relative; z-index: 1; text-align: center; margin-top: 60px;">
-  <p style="max-width: 700px; margin: 0 auto 30px auto; font-size: 18px; color: #ddd;">
+  <p style="max-width: 700px; margin: 0 auto 30px auto; font-size: 18px; color: black;">
     Cal-FIT provides comprehensive analysis of your food labels, offering valuable insights into nutritional content and potential health risks.
   </p>
 </div>
@@ -149,32 +280,34 @@
   </div>
 </div>
 
-<div class="text">
-  <h1>How To Use Cal-FIT</h1>
-</div>
 
-<div class="tutorial">
-  <div class="step1">
-    <p>1</p>
-    <h1>Scan</h1>
-    <p>Scan your item using camera or uploading an image</p>
-  </div>
-  <div class="step2">
-    <p>2</p>
-    <h1>Read</h1>
-    <p>Get results that highlight the good and bad in your food, backed by real nutritional science.</p>
-  </div>
-  <div class="step3">
-    <p>3</p>
-    <h1>Eat</h1>
-    <p>Eat based on personalized suggestions tailored to your diet plan.</p>
+
+
+<!-- Cropper Modal -->
+<div class="cropper-modal" id="cropperModal">
+  <div class="cropper-container-wrapper">
+    <div class="cropper-header">
+      <h3>Edit Your Image</h3>
+      <button class="close-cropper" id="closeCropper">&times;</button>
+    </div>
+    
+    <div class="cropper-image-container">
+      <img id="cropperImage" src="" alt="Image to crop">
+    </div>
+    
+    <div class="cropper-controls">
+      <button type="button" class="cropper-btn secondary" id="rotateLeft">↶ Rotate Left</button>
+      <button type="button" class="cropper-btn secondary" id="rotateRight">↷ Rotate Right</button>
+      <button type="button" class="cropper-btn secondary" id="resetCrop">↺ Reset</button>
+      <button type="button" class="cropper-btn" id="applyCrop">✓ Done - Proceed to Scan</button>
+      <button type="button" class="cropper-btn danger" id="cancelCrop">✕ Cancel</button>
+    </div>
   </div>
 </div>
 
 <!-- Loading Overlay -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="loading-content">
-    <!-- Scanning Animation SVG -->
     <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="scanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -287,9 +420,31 @@
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script>
+  let cropper = null;
+  let currentForm = null;
+  let currentFileInput = null;
+  let pendingSubmit = false;
+
+  // Elements
+  const labelForm = document.getElementById('labelForm');
+  const barcodeForm = document.getElementById('barcodeForm');
+  const labelImage = document.getElementById('labelImage');
+  const barcodeImage = document.getElementById('barcodeImage');
+  const cropperModal = document.getElementById('cropperModal');
+  const cropperImage = document.getElementById('cropperImage');
+  const closeCropper = document.getElementById('closeCropper');
+  const rotateLeft = document.getElementById('rotateLeft');
+  const rotateRight = document.getElementById('rotateRight');
+  const resetCrop = document.getElementById('resetCrop');
+  const applyCrop = document.getElementById('applyCrop');
+  const cancelCrop = document.getElementById('cancelCrop');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
+
   // Handle Label Form Submission
-  document.getElementById('labelForm').addEventListener('submit', function(e) {
+  labelForm.addEventListener('submit', function(e) {
     const fileInput = document.getElementById('labelImage');
     
     if (!fileInput.files || fileInput.files.length === 0) {
@@ -297,30 +452,34 @@
       alert('Please select an image file first');
       return;
     }
-    
-    // Prevent default form submission
+
+    // If already processed (after cropping), proceed with normal submission
+    if (pendingSubmit) {
+      pendingSubmit = false;
+      
+      // Prevent default form submission
+      e.preventDefault();
+      
+      // Show loading overlay immediately
+      loadingText.textContent = 'Analyzing your food label...';
+      loadingOverlay.style.display = 'flex';
+      loadingOverlay.offsetHeight;
+      loadingOverlay.classList.add('active');
+      
+      // Submit form after a small delay to ensure overlay is visible
+      setTimeout(() => {
+        e.target.submit();
+      }, 100);
+      return;
+    }
+
+    // First time - show cropper
     e.preventDefault();
-    
-    // Show loading overlay immediately
-    const overlay = document.getElementById('loadingOverlay');
-    const loadingText = document.getElementById('loadingText');
-    loadingText.textContent = 'Analyzing your food label...';
-    overlay.style.display = 'flex';
-    
-    // Force reflow to ensure display takes effect
-    overlay.offsetHeight;
-    
-    // Add active class for animation
-    overlay.classList.add('active');
-    
-    // Submit form after a small delay to ensure overlay is visible
-    setTimeout(() => {
-      e.target.submit();
-    }, 100);
+    openCropperModal(fileInput, labelForm, 'label');
   });
 
   // Handle Barcode Form Submission
-  document.getElementById('barcodeForm').addEventListener('submit', function(e) {
+  barcodeForm.addEventListener('submit', function(e) {
     const fileInput = document.getElementById('barcodeImage');
     
     if (!fileInput.files || fileInput.files.length === 0) {
@@ -328,45 +487,162 @@
       alert('Please select an image file first');
       return;
     }
-    
-    // Prevent default form submission
+
+    // If already processed (after cropping), proceed with normal submission
+    if (pendingSubmit) {
+      pendingSubmit = false;
+      
+      // Prevent default form submission
+      e.preventDefault();
+      
+      // Show loading overlay immediately
+      loadingText.textContent = 'Scanning barcode...';
+      loadingOverlay.style.display = 'flex';
+      loadingOverlay.offsetHeight;
+      loadingOverlay.classList.add('active');
+      
+      // Submit form after a small delay to ensure overlay is visible
+      setTimeout(() => {
+        e.target.submit();
+      }, 100);
+      return;
+    }
+
+    // First time - show cropper
     e.preventDefault();
-    
-    // Show loading overlay immediately
-    const overlay = document.getElementById('loadingOverlay');
-    const loadingText = document.getElementById('loadingText');
-    loadingText.textContent = 'Scanning barcode...';
-    overlay.style.display = 'flex';
-    
-    // Force reflow to ensure display takes effect
-    overlay.offsetHeight;
-    
-    // Add active class for animation
-    overlay.classList.add('active');
-    
-    // Submit form after a small delay to ensure overlay is visible
-    setTimeout(() => {
-      e.target.submit();
-    }, 100);
+    openCropperModal(fileInput, barcodeForm, 'barcode');
   });
 
-  // Hide overlay if page loads with an error (optional)
-  window.addEventListener('load', function() {
-    // If there's an error message on the page, hide the overlay
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('error')) {
-      const overlay = document.getElementById('loadingOverlay');
-      overlay.classList.remove('active');
-      overlay.style.display = 'none';
+  // Open cropper modal
+  function openCropperModal(fileInput, form, scanType) {
+    const file = fileInput.files[0];
+    
+    // Validate file type
+    if (!file.type.match('image.*')) {
+      alert('Please select a valid image file');
+      return;
+    }
+
+    currentForm = form;
+    currentFileInput = fileInput;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      cropperImage.src = e.target.result;
+      cropperModal.classList.add('active');
+      
+      // Initialize cropper
+      if (cropper) {
+        cropper.destroy();
+      }
+      
+      cropper = new Cropper(cropperImage, {
+        aspectRatio: NaN,
+        viewMode: 1,
+        background: false,
+        autoCropArea: 0.9,
+        responsive: true,
+        restore: true,
+        guides: true,
+        center: true,
+        highlight: true,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+      });
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Close cropper modal
+  function closeCropperModal() {
+    cropperModal.classList.remove('active');
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+    currentForm = null;
+    currentFileInput = null;
+  }
+
+  // Rotation controls
+  rotateLeft.addEventListener('click', () => {
+    if (cropper) cropper.rotate(-90);
+  });
+
+  rotateRight.addEventListener('click', () => {
+    if (cropper) cropper.rotate(90);
+  });
+
+  resetCrop.addEventListener('click', () => {
+    if (cropper) cropper.reset();
+  });
+
+  // Cancel crop
+  cancelCrop.addEventListener('click', () => {
+    closeCropperModal();
+    // Reset file input
+    if (currentFileInput) {
+      currentFileInput.value = '';
     }
   });
 
-  // Prevent back button from showing the overlay
+  closeCropper.addEventListener('click', () => {
+    closeCropperModal();
+    // Reset file input
+    if (currentFileInput) {
+      currentFileInput.value = '';
+    }
+  });
+
+  // Apply crop and submit
+  applyCrop.addEventListener('click', () => {
+    if (!cropper || !currentForm) return;
+
+    // Get cropped canvas
+    const canvas = cropper.getCroppedCanvas({
+      maxWidth: 2048,
+      maxHeight: 2048,
+      fillColor: '#fff',
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high',
+    });
+
+    // Convert to blob
+    canvas.toBlob((blob) => {
+      // Create new file from blob
+      const file = new File([blob], 'cropped_image.jpg', { type: 'image/jpeg' });
+      
+      // Create new DataTransfer to set file input
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      currentFileInput.files = dataTransfer.files;
+
+      // Set flag to allow submission
+      pendingSubmit = true;
+
+      // Close modal
+      closeCropperModal();
+
+      // Trigger form submission
+      currentForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    }, 'image/jpeg', 0.92);
+  });
+
+  // Hide overlay on page load with error
+  window.addEventListener('load', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('error')) {
+      loadingOverlay.classList.remove('active');
+      loadingOverlay.style.display = 'none';
+    }
+  });
+
+  // Prevent back button from showing overlay
   window.addEventListener('pageshow', function(event) {
     if (event.persisted) {
-      const overlay = document.getElementById('loadingOverlay');
-      overlay.classList.remove('active');
-      overlay.style.display = 'none';
+      loadingOverlay.classList.remove('active');
+      loadingOverlay.style.display = 'none';
     }
   });
 </script>

@@ -21,8 +21,11 @@ from datetime import datetime, timedelta
 import openai
 import json
 from flask_cors import CORS
+from flask_session import Session
 from flask import jsonify, request # Make sure jsonify and request are imported
 from nlp_analyzer import analyze_report_text # <-- ADD THIS
+from authlib.integrations.flask_client import OAuth
+from functools import wraps
 load_dotenv()
 
 
@@ -41,16 +44,55 @@ except Exception as e:
 
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key'
+
+# --- FIX 1: ADDED SESSION COOKIE CONFIG FOR OAUTH ---
+# Explicitly configure the session cookie for cross-site development
+# This is necessary for OAuth redirects between different ports (e.g., 5173 -> 5000)
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to False for http://localhost
+# ----------------------------------------------------
+
+# --- RE-ORDERED INITIALIZATION BLOCK ---
+
+# --- RE-ORDERED INITIALIZATION BLOCK ---
+app.secret_key = "super_secret_static_key_123"  # must be consistent across runs
+app.config["SESSION_TYPE"] = "filesystem"    # store sessions on disk
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_USE_SIGNER"] = True
+app.config["SESSION_FILE_DIR"] = "./.flask_session/"
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = False
+
+Session(app)
+# 1. Initialize OAuth first
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+
+# 2. Initialize CORS
 CORS(app, 
      origins=["http://localhost:5173"], 
-     supports_credentials=True # This is crucial for session cookies
+     supports_credentials=True
 )
+
+# 3. Initialize CSRFProtect and exempt the callback
 csrf = CSRFProtect(app)
+csrf.exempt('google_callback')
+
+# 4. Initialize Limiter 
 limiter = Limiter(
     key_func=get_remote_address,
-    app=app,
-    storage_uri="redis://localhost:6379"
+    app=app
+    # storage_uri="redis://localhost:6379"  # <-- REMOVED. This is the problem.
 )
+
 
 @app.context_processor
 def inject_csrf_token():
@@ -173,6 +215,17 @@ class UserCredentialsStorage:
         except Exception as e:
             print(f"❌ Failed to retrieve all users: {e}")
             return {}
+    
+    def get_user_by_google_id(self, google_id):
+        """Get user by Google ID"""
+        if self.collection is None:
+            return None
+        try:
+            user = self.collection.find_one({"google_id": google_id})
+            return user
+        except Exception as e:
+            print(f"❌ Failed to retrieve user by Google ID: {e}")
+            return None
 
 # ==================== USER PROFILE STORAGE CLASS ====================
 class UserProfileStorage:
@@ -504,9 +557,27 @@ def load_user_health_profile(username):
     return profile_storage.get_profile(username)
 
 def calculate_daily_needs(weight_kg, activity_level):
-    weight_kg = float(weight_kg)
+    """Calculate daily nutritional needs with proper validation"""
+    # Validate weight_kg
+    if weight_kg is None:
+        raise ValueError("Weight is required to calculate daily needs")
+    
+    try:
+        weight_kg = float(weight_kg)
+    except (ValueError, TypeError):
+        raise ValueError("Invalid weight value")
+    
+    if weight_kg <= 0:
+        raise ValueError("Weight must be greater than 0")
+    
+    # Validate activity_level
+    if not activity_level:
+        raise ValueError("Activity level is required")
+    
+    # Calculate based on activity level
     multiplier = {'sedentary': 25, 'moderate': 30, 'active': 35}.get(activity_level, 30)
     calories = weight_kg * multiplier
+    
     return {
         "calories": round(calories),
         "protein_g": round(weight_kg * 1.2),
@@ -685,7 +756,7 @@ def get_comprehensive_ai_analysis():
             "activity_level": user_profile.get("activity_level")
         },
         "risk_distribution": risk_counts,
-        "average_nutrients": avg_nutrients  # kept for AI to interpret, not shown directly
+        "average_nutrients": avg_nutrients
     }
 
     if user_profile.get("weight_kg") and user_profile.get("activity_level"):
@@ -699,7 +770,6 @@ def get_comprehensive_ai_analysis():
 
     data_json = json.dumps(analysis_data, indent=2)
 
-    # ✅ New Prompt with merged and simplified sections
     prompt = f"""
     You are an expert nutritionist providing a personalized health analysis. Analyze the following data:
 
@@ -727,7 +797,6 @@ def get_comprehensive_ai_analysis():
     - Use <p> for normal text, <ul>/<li> for bullet points, and <strong> for key terms.
     - DO NOT include <html>, <body>, or markdown fences.
     """
-
 
     try:
         if not client:
@@ -920,8 +989,6 @@ Format: Return ONLY the analysis text, no headers or extra formatting.
     except Exception as e:
         print(f"❌ AI analysis failed for {nutrient_name}: {e}")
         return "Unable to generate personalized analysis at this time."
-# REPLACE your old 'get_community_warnings' function with this
-# In app.py, replace your get_community_warnings with this:
 
 def get_community_warnings(product_name):
     """
@@ -999,7 +1066,7 @@ def get_community_warnings(product_name):
             # Add the user to a set for that topic
             if topic not in topic_users:
                 topic_users[topic] = set()
-            topic_users[topic].add(username)  # A set automatically handles duplicates
+            topic_users[topic].add(username)
 
         # Now, create counts based on the *number of unique users*
         topic_counts = {topic: len(users) for topic, users in topic_users.items()}
@@ -1113,6 +1180,7 @@ def get_community_warnings(product_name):
             "positive_reports": 0,
             "summary_message": "Error retrieving community warnings."
         }
+
 # ==================== ROUTES ====================
 
 @app.route('/')
@@ -1126,6 +1194,112 @@ def about():
 @app.errorhandler(429)
 def ratelimit_handler(e):
     flash("Too many login attempts. Try again later.", "error")
+    return redirect(url_for('landing'))
+
+@app.route('/auth/google')
+def google_login():
+    """Initiate Google OAuth login"""
+    redirect_uri = url_for('google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+# --- FIX 2: UPDATED GOOGLE CALLBACK LOGIC ---
+@app.route('/auth/google/callback')
+def google_callback():
+    """Handle Google OAuth callback"""
+    try:
+        # Get the authorization token
+        print("Session before token:", dict(session)) 
+        token = google.authorize_access_token()
+        print("Session after token:", dict(session))
+        
+        # Get user info from Google
+        user_info = token.get('userinfo')
+        
+        if not user_info:
+            flash("Failed to get user information from Google.", "error")
+            return redirect(url_for('landing'))
+        
+        # Extract user details
+        google_id = user_info.get('sub')
+        email = user_info.get('email')
+        name = user_info.get('name')
+        picture = user_info.get('picture')
+        
+        # Create username from email (before @)
+        username = email.split('@')[0] if email else f"google_user_{google_id}"
+        
+        # Check if user exists
+        existing_user = credentials_storage.get_user(username)
+        
+        if existing_user:
+            # Check if this is a Google OAuth user
+            if existing_user.get('auth_provider') != 'google':
+                # Username exists but registered with regular login
+                flash(f"An account with username '{username}' already exists. Please login with password.", "error")
+                return redirect(url_for('landing'))
+            
+            # --- LOGIC FOR EXISTING USER ---
+            # Update last login
+            credentials_storage.collection.update_one(
+                {"username": username},
+                {"$set": {"last_login": datetime.utcnow()}}
+            )
+            
+            # Log the user in
+            session['username'] = username
+            session['auth_provider'] = 'google'
+            session['profile_picture'] = picture
+            
+            flash(f"Welcome back, {name or username}!", "success")
+            # Redirect EXISTING user to their main profile
+            return redirect(url_for('profile')) 
+    
+        else:
+            # --- LOGIC FOR NEW USER ---
+            # Create new user account
+            user_document = {
+                "username": username,
+                "email": email,
+                "google_id": google_id,
+                "auth_provider": "google",
+                "password": None,  # No password for OAuth users
+                "profile_picture": picture,
+                "created_at": datetime.utcnow(),
+                "last_login": datetime.utcnow()
+            }
+            
+            credentials_storage.collection.insert_one(user_document)
+            
+            # Create basic profile
+            profile_data = {
+                'username': username,
+                'full_name': name or '',
+                'email': email
+            }
+            profile_storage.save_profile(profile_data)
+            
+            # Log the new user in
+            session['username'] = username
+            session['auth_provider'] = 'google'
+            session['profile_picture'] = picture
+            
+            flash("Account created successfully with Google! Please complete your profile.", "success")
+            # Redirect NEW user to the profile creation form
+            return redirect(url_for('profile_form')) 
+            
+    except Exception as e:
+        print(f"❌ Google OAuth Error: {e}")
+        flash(f"Authentication failed: {e}. Please try again.", "error")
+        return redirect(url_for('landing'))
+# --- END OF FIX 2 ---
+limiter.exempt(google_callback)
+
+@app.route('/auth/logout')
+def oauth_logout():
+    """Enhanced logout that handles both regular and OAuth users"""
+    session.clear()
+    flash("Logged out successfully.", "info")
     return redirect(url_for('landing'))
 
 @limiter.limit("3 per minute", methods=["POST"])
@@ -1142,11 +1316,21 @@ def login():
     if not user:
         flash("Account does not exist. Please sign up first.", "error")
         return redirect(url_for('landing'))
+    
+    # Check if this is a Google OAuth user
+    if user.get('auth_provider') == 'google':
+        flash("This account uses Google Sign-In. Please click 'Continue with Google'.", "error")
+        return redirect(url_for('landing'))
 
     hashed = user.get('password')
+    
+    if not hashed:
+        flash("Invalid account configuration. Please contact support.", "error")
+        return redirect(url_for('landing'))
 
     if check_password_hash(hashed, password):
         session['username'] = username
+        session['auth_provider'] = 'regular'
         flash("Logged in successfully!", "success")
         return redirect(url_for('profile'))
 
@@ -1351,8 +1535,9 @@ def index():
         'index.html',
         barcode_processed=barcode_processed,
         scan_data=scan_data,
-        community_warnings=community_warnings  # ← ADD THIS LINE
+        community_warnings=community_warnings
     )
+
 @app.route('/add_to_diet', methods=['POST'])
 def add_to_diet():
     username = session.get('username')
@@ -1545,6 +1730,7 @@ def get_ai_analysis():
     except Exception as e:
         print(f"❌ Error generating AI analysis: {e}")
         return jsonify({"error": "Failed to generate analysis"}), 500
+
 @app.route('/food-tracker', methods=['GET', 'POST'])
 def food_tracker():
     if 'username' not in session:
@@ -1558,7 +1744,7 @@ def food_tracker():
             # Handle scan upload
             image = request.files['food_image']
             if image.filename != '':
-                nutrients = process_label_image(image)  # Your OCR function
+                nutrients = process_label_image(image)
                 if nutrients:
                     session['food_items'].append({
                         'item': 'Scanned Item',
@@ -1624,7 +1810,11 @@ def get_health_score_data(period='weekly'):
     if period not in valid_periods:
         return jsonify({"error": "Invalid period"}), 400
 
-    recommendations = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
+    try:
+        recommendations = calculate_daily_needs(profile['weight_kg'], profile['activity_level'])
+    except (ValueError, TypeError) as e:
+        return jsonify({"error": f"Could not calculate recommendations: {str(e)}"}), 400
+    
     data = get_historical_health_scores(username, period, recommendations)
     
     goal_score = 85 
@@ -1648,7 +1838,7 @@ def profile():
 
     try:
         recommendation = calculate_daily_needs(profile_data['weight_kg'], profile_data['activity_level'])
-    except (ValueError, KeyError):
+    except (ValueError, KeyError, TypeError) as e:
         flash("Your profile is incomplete. Please update your weight and activity level.", "warning")
         return redirect(url_for('edit_profile'))
 
@@ -1752,7 +1942,7 @@ def get_scan_count_data(period='weekly'):
                 try:
                     year, month = label.split('-')
                     month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                     formatted_labels.append(f"{month_names[int(month)-1]} {year}")
                 except:
                     formatted_labels.append(label)
@@ -1834,21 +2024,17 @@ def delete_account():
             "success": False,
             "error": str(e)
         }), 500
-# Add these routes to your app.py file
-# Add these routes to your app.py file
 
 @app.route('/view-all-scans')
 def view_all_scans():
     """Display the view scans page"""
     if 'username' not in session:
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            # If it's an AJAX request, return JSON instead of redirect
             return jsonify({"error": "Unauthorized"}), 401
         flash("Please log in to view your scans.", "error")
         return redirect(url_for('landing'))
     
     return render_template('view_all_scans.html')
-
 
 @app.route('/api/get-all-scans')
 def api_get_all_scans():
@@ -1862,18 +2048,15 @@ def api_get_all_scans():
         return jsonify({"error": "Database not available"}), 503
 
     try:
-        # Fetch all scans for the user
         scans = list(scan_storage.collection.find(
             {"username": username}
         ).sort("scan_date", -1))
 
-        # Convert ObjectId and datetime
         for scan in scans:
             scan['_id'] = str(scan['_id'])
             if isinstance(scan.get('scan_date'), datetime):
                 scan['scan_date'] = scan['scan_date'].isoformat()
 
-        # Calculate statistics
         total_scans = len(scans)
         week_ago = datetime.utcnow() - timedelta(days=7)
         recent_scans = len([
@@ -1881,7 +2064,6 @@ def api_get_all_scans():
             if 'scan_date' in s and datetime.fromisoformat(s['scan_date']) >= week_ago
         ])
 
-        # Count high risk items
         high_risk_count = 0
         for scan in scans:
             summary = scan.get('nutrition_analysis', {}).get('summary', {})
@@ -1904,7 +2086,6 @@ def api_get_all_scans():
         import traceback; traceback.print_exc()
         return jsonify({"success": False, "error": "Failed to fetch scans"}), 500
 
-
 @app.route('/api/delete-scan/<scan_id>', methods=['DELETE'])
 def api_delete_scan(scan_id):
     """API endpoint to delete a specific scan"""
@@ -1917,7 +2098,6 @@ def api_delete_scan(scan_id):
         return jsonify({"error": "Database not available"}), 503
 
     try:
-        # Validate ObjectId
         try:
             obj_id = ObjectId(scan_id)
         except (InvalidId, TypeError):
@@ -1927,7 +2107,6 @@ def api_delete_scan(scan_id):
                 "error": "Invalid scan ID format"
             }), 400
 
-        # Perform deletion
         result = scan_storage.collection.delete_one({
             "_id": obj_id,
             "username": username
@@ -1953,7 +2132,6 @@ def api_delete_scan(scan_id):
             "success": False,
             "error": f"Server error: {str(e)}"
         }), 500
-# Place this near your other API routes like api_delete_scan
 
 @app.route('/api/submit-report/<scan_id>', methods=['POST'])
 def api_submit_report(scan_id):
@@ -1967,39 +2145,31 @@ def api_submit_report(scan_id):
         return jsonify({"success": False, "error": "Database not available"}), 503
 
     try:
-        # Validate ObjectId
         try:
             obj_id = ObjectId(scan_id)
         except (InvalidId, TypeError):
             print(f"❌ Invalid scan ID format for report: {scan_id}")
             return jsonify({"success": False, "error": "Invalid scan ID format"}), 400
 
-        # Get report data from JSON body
         report_data = request.get_json()
         if not report_data or 'description' not in report_data or not report_data['description']:
             return jsonify({"success": False, "error": "Report description is required"}), 400
 
         description = report_data['description'].strip()
-        severity = report_data.get('severity') # Optional
-        contact_consent = report_data.get('contact_consent', False) # Optional, defaults to False
+        severity = report_data.get('severity')
+        contact_consent = report_data.get('contact_consent', False)
 
-        # Prepare the update document
         report_payload = {
             "reported_at": datetime.utcnow(),
             "description": description,
             "severity": severity,
             "contact_consent": contact_consent,
-            "status": "submitted" # You can add status tracking later
+            "status": "submitted"
         }
 
-        # Update the specific scan document
-        # We use $set to add or update the 'user_feedback.issue_report' field
         result = scan_storage.collection.update_one(
-            {"_id": obj_id, "username": username}, # Ensure user owns the scan
+            {"_id": obj_id, "username": username},
             {"$set": {"user_feedback.issue_report": report_payload}} 
-            # Note: This overwrites previous reports in this structure.
-            # To store multiple reports, use '$push' with an array field instead:
-            # {"$push": {"user_feedback.issue_reports": report_payload}}
         )
 
         if result.matched_count > 0:
@@ -2007,7 +2177,6 @@ def api_submit_report(scan_id):
                  print(f"✅ Issue report added/updated for scan: {scan_id} by {username}")
                  return jsonify({"success": True, "message": "Report submitted successfully"})
             else:
-                 # Matched but nothing changed (e.g., submitted identical report twice)
                  print(f"ℹ️ Issue report submitted but no changes detected for scan: {scan_id}")
                  return jsonify({"success": True, "message": "Report received (no changes detected)"})
         else:
@@ -2018,6 +2187,6 @@ def api_submit_report(scan_id):
         print(f"❌ Error submitting report for scan {scan_id}: {e}")
         import traceback; traceback.print_exc()
         return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
-if __name__ == '__main__':
-    app.run(debug=True, use_reloader=False)
 
+if __name__ == "__main__":
+    app.run(host="localhost", port=5000, debug=True)

@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <title>Cal-FIT | All-in-One</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cal-FIT | Login & Sign Up</title>
   <style>
     * {
       margin: 0;
@@ -13,275 +12,598 @@
     }
 
     body {
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       position: relative;
-      font-family: 'Segoe UI', sans-serif;
-      height: 100vh;
-      background: url("{{ url_for('static', filename='backgrounds/landing page.jpg') }}") no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-      overflow: hidden;
+      overflow:auto;
     }
 
+    /* Animated Background */
     body::before {
-      content: "";
+      content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(15px);
-      z-index: 0;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(239, 68, 68, 0.2) 0%, transparent 50%);
+      animation: gradientShift 15s ease infinite;
     }
 
-    header {
+    @keyframes gradientShift {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-10%, -10%); }
+    }
+
+    /* Left Side - Branding */
+    .left-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px;
+      color: white;
       position: relative;
       z-index: 1;
-      width: 100%;
-      padding: 20px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-container {
+      max-width: 500px;
+      text-align: center;
     }
 
     .logo {
-      font-size: 28px;
-      font-weight: bold;
-      color: #10B981;
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #10B981, #34D399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
 
-    nav a {
-      margin: 0 15px;
-      text-decoration: none;
-      color: white;
-      font-size: 16px;
-      transition: color 0.3s;
+    .tagline {
+      font-size: 24px;
+      font-weight: 300;
+      margin-bottom: 30px;
+      opacity: 0.95;
     }
 
-    nav a:hover {
-      color: #10B981;
+    .features {
+      display: grid;
+      gap: 20px;
+      margin-top: 40px;
     }
 
-    .hero {
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .feature-item:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateX(5px);
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    /* Right Side - Auth Forms */
+    .right-panel {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
       position: relative;
       z-index: 1;
-      min-height: calc(100vh - 100px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding-top: 50px;
     }
 
-    .hero h1 {
-      font-size: 44px;
-      margin-bottom: 10px;
+    .auth-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 50px 45px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.5);
     }
 
-    .hero p {
-      font-size: 18px;
-      margin-bottom: 30px;
+    .auth-header {
+      text-align: center;
+      margin-bottom: 35px;
     }
 
-    .form-box {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 30px;
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
-      width: 320px;
+    .auth-header h2 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1F2937;
+      margin-bottom: 8px;
     }
 
-    .tabs {
-      display: flex;
-      margin-bottom: 20px;
-    }
-
-    .tabs button {
-      flex: 1;
-      padding: 10px;
-      background: transparent;
-      border: none;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-    }
-
-    .tabs button.active {
-      border-color: #10B981;
-    }
-
-    form {
-      display: none;
-      flex-direction: column;
-    }
-
-    form.active {
-      display: flex;
-    }
-
-    input {
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 6px;
-      border: none;
+    .auth-header p {
+      color: #6B7280;
       font-size: 15px;
     }
 
-    .form-box button[type="submit"] {
-      padding: 10px;
-      background-color: #10B981;
-      border: none;
-      color: white;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .form-box button:hover {
-      background-color: #059669;
-    }
-
-    /* Dropdown styling */
-    .dropdown {
+    /* Tab Switcher */
+    .tab-switcher {
+      display: flex;
+      background: #F3F4F6;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 30px;
       position: relative;
-      display: inline-block;
     }
 
-    .dropbtn {
-      background: none;
+    .tab-button {
+      flex: 1;
+      padding: 12px 20px;
       border: none;
-      color: white;
-      font-size: 16px;
+      background: transparent;
+      color: #6B7280;
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
     }
 
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      right: 0;
-      background-color: rgba(16, 185, 129, 0.95);
-      min-width: 180px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      z-index: 2;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-
-    .dropdown-content a {
+    .tab-button.active {
       color: white;
-      padding: 10px 15px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Form Styles */
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+      animation: fadeInUp 0.4s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #374151;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #E5E7EB;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .input-wrapper input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .submit-button {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .submit-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .submit-button:active {
+      transform: translateY(0);
+    }
+
+    /* OAuth Button Styles */
+    .oauth-button {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #E5E7EB;
+      border-radius: 10px;
+      background: white;
+      color: #374151;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .oauth-button:hover {
+      background: #F9FAFB;
+      border-color: #D1D5DB;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .oauth-button:active {
+      transform: translateY(0);
+    }
+
+    /* Alert Messages */
+    .alert {
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .alert-success {
+      background: #D1FAE5;
+      color: #065F46;
+      border: 1px solid #10B981;
+    }
+
+    .alert-error {
+      background: #FEE2E2;
+      color: #991B1B;
+      border: 1px solid #EF4444;
+    }
+
+    .divider {
+      text-align: center;
+      margin: 25px 0;
+      position: relative;
+    }
+
+    .divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #E5E7EB;
+    }
+
+    .divider span {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 0 15px;
+      color: #9CA3AF;
+      font-size: 13px;
+      position: relative;
+    }
+
+    .footer-links {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 14px;
+      color: #6B7280;
+    }
+
+    .footer-links a {
+      color: #667eea;
       text-decoration: none;
-      display: block;
+      font-weight: 600;
     }
 
-    .dropdown-content a:hover {
-      background-color: #059669;
+    .footer-links a:hover {
+      text-decoration: underline;
     }
 
-    .dropdown:hover .dropdown-content {
-      display: block;
+    /* Responsive Design */
+    @media (max-width: 968px) {
+      body {
+        flex-direction: column;
+      }
+
+      .left-panel {
+        padding: 40px 20px;
+      }
+
+      .logo {
+        font-size: 36px;
+      }
+
+      .tagline {
+        font-size: 18px;
+      }
+
+      .features {
+        display: none;
+      }
+
+      .auth-container {
+        padding: 40px 30px;
+      }
     }
   </style>
-
-  <script>
-    function showForm(type) {
-      document.getElementById('loginForm').classList.remove('active');
-      document.getElementById('signupForm').classList.remove('active');
-      document.getElementById(type + 'Form').classList.add('active');
-
-      document.getElementById('loginBtn').classList.remove('active');
-      document.getElementById('signupBtn').classList.remove('active');
-      document.getElementById(type + 'Btn').classList.add('active');
-    }
-
-    window.onload = function () {
-      showForm('login'); // default form
-    };
-  </script>
-  <script>
-    function showForm(type) {
-      document.getElementById('loginForm').classList.remove('active');
-      document.getElementById('signupForm').classList.remove('active');
-      document.getElementById(type + 'Form').classList.add('active');
-
-      document.getElementById('loginBtn').classList.remove('active');
-      document.getElementById('signupBtn').classList.remove('active');
-      document.getElementById(type + 'Btn').classList.add('active');
-    }
-    window.onload = function () {
-      showForm('login');
-    };
-  </script>
 </head>
-
 <body>
-
-  <!-- Navbar -->
-  <header>
-    <div class="logo">Cal-FIT</div>
-    <nav class="main-nav">
-      <a href="{{ url_for('dashboard') }}">Home</a>
-      <a href="#explore">Explore</a>
-      <a href="#about">About Us</a>
-      <a href="{{ url_for('profile') }}">Profile</a>
-
-    </nav>
-  </header>
-
-
-  <!--  Hero Section -->
-  <section class="hero">
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <div style="margin-bottom: 20px;">
-      {% for category, message in messages %}
-      <div style="
-              padding: 10px;
-              border-radius: 5px;
-              margin-bottom: 10px;
-              color: white;
-              background-color: {% if category == 'error' %}#EF4444{% else %}#10B981{% endif %};
-            ">
-        {{ message }}
+  <!-- Left Panel - Branding -->
+  <div class="left-panel">
+    <div class="brand-container">
+      <div class="logo">Cal-FIT</div>
+      <p class="tagline">Scan Smarter. Eat Healthier.</p>
+      
+      <div class="features">
+        <div class="feature-item">
+          <div class="feature-icon">📸</div>
+          <div>
+            <strong>Smart Scanning</strong>
+            <p style="font-size: 14px; opacity: 0.9; margin-top: 4px;">Instant nutrition analysis from labels</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🎯</div>
+          <div>
+            <strong>Personalized Insights</strong>
+            <p style="font-size: 14px; opacity: 0.9; margin-top: 4px;">AI-powered health recommendations</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">📊</div>
+          <div>
+            <strong>Track Progress</strong>
+            <p style="font-size: 14px; opacity: 0.9; margin-top: 4px;">Monitor your nutrition goals daily</p>
+          </div>
+        </div>
       </div>
-      {% endfor %}
     </div>
-    {% endif %}
-    {% endwith %}
+  </div>
 
-    <h1>Scan Smarter. Eat Healthier.</h1>
-    <p>Join the Cal-FIT mission. Start your healthy journey now!</p>
+  <!-- Right Panel - Auth Forms -->
+  <div class="right-panel">
+    <div class="auth-container">
+      <div class="auth-header">
+        <h2>Welcome Back</h2>
+        <p>Enter your credentials to continue</p>
+      </div>
 
-    <div class="form-box">
-      <div class="tabs">
-        <button id="loginBtn" onclick="showForm('login')">Login</button>
-        <button id="signupBtn" onclick="showForm('signup')">Sign Up</button>
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{% if category == 'error' %}⚠️{% else %}✓{% endif %}</span>
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Tab Switcher -->
+      <div class="tab-switcher">
+        <button class="tab-button active" id="loginTab" onclick="switchTab('login')">
+          Login
+        </button>
+        <button class="tab-button" id="signupTab" onclick="switchTab('signup')">
+          Sign Up
+        </button>
       </div>
 
       <!-- Login Form -->
-      <form id="loginForm" method="POST" action="/login">
+      <form id="loginForm" class="auth-form active" method="POST" action="/login">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="text" name="username" placeholder="Username" autocomplete="off" required>
-        <input type="password" name="password" placeholder="Password" autocomplete="off" required>
-        <button type="submit">Login</button>
+        
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="login-username" 
+              name="username" 
+              placeholder="Enter your username" 
+              autocomplete="username"
+              required
+            >
+          </div>
+        </div>
 
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <div class="input-wrapper">
+            <input 
+              type="password" 
+              id="login-password" 
+              name="password" 
+              placeholder="Enter your password" 
+              autocomplete="current-password"
+              required
+            >
+          </div>
+        </div>
 
+        <button type="submit" class="submit-button">
+          Sign In
+        </button>
+
+        <div class="divider">
+          <span>OR</span>
+        </div>
+
+        <!-- FIXED: Changed onclick to proper href -->
+        <a href="/auth/google" style="text-decoration: none;">
+          <button type="button" class="oauth-button">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19.8055 10.2292C19.8055 9.55055 19.7501 8.86668 19.6305 8.19446H10.2002V12.0486H15.6014C15.3773 13.2905 14.6571 14.3894 13.6025 15.0875V17.5862H16.8251C18.7173 15.8444 19.8055 13.2723 19.8055 10.2292Z" fill="#4285F4"/>
+              <path d="M10.2002 20C12.9593 20 15.2732 19.1056 16.8294 17.5862L13.6068 15.0875C12.7065 15.6972 11.5521 16.0431 10.2045 16.0431C7.54388 16.0431 5.29649 14.2834 4.50661 11.9167H1.1792V14.4931C2.77705 17.6681 6.30493 20 10.2002 20Z" fill="#34A853"/>
+              <path d="M4.50235 11.9167C4.06702 10.6748 4.06702 9.32917 4.50235 8.08723V5.51086H1.17919C-0.395153 8.63752 -0.395153 12.3667 1.17919 15.4931L4.50235 11.9167Z" fill="#FBBC04"/>
+              <path d="M10.2002 3.95834C11.6251 3.93611 13.0017 4.47223 14.0388 5.45834L16.8936 2.60278C15.1827 0.990557 12.9377 0.0847804 10.2002 0.111123C6.30493 0.111123 2.77705 2.44307 1.1792 5.61112L4.50235 8.18749C5.28797 5.81668 7.53962 3.95834 10.2002 3.95834Z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
+          </button>
+        </a>
+
+        <div class="footer-links">
+          Don't have an account? <a href="#" onclick="switchTab('signup'); return false;">Create one</a>
+        </div>
       </form>
 
       <!-- Signup Form -->
-      <form id="signupForm" method="POST" action="/signup">
+      <form id="signupForm" class="auth-form" method="POST" action="/signup">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="text" name="username" placeholder="Username" autocomplete="off" required>
-        <input type="password" name="password" placeholder="Password" autocomplete="off" required>
-        <button type="submit">Sign Up</button>
+        
+        <div class="form-group">
+          <label for="signup-username">Username</label>
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="signup-username" 
+              name="username" 
+              placeholder="Choose a username" 
+              autocomplete="username"
+              required
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <div class="input-wrapper">
+            <input 
+              type="password" 
+              id="signup-password" 
+              name="password" 
+              placeholder="Create a strong password" 
+              autocomplete="new-password"
+              required
+            >
+          </div>
+        </div>
+
+        <button type="submit" class="submit-button">
+          Create Account
+        </button>
+
+        <div class="divider">
+          <span>OR</span>
+        </div>
+
+        <!-- FIXED: Added Google OAuth for signup as well -->
+        <a href="/auth/google" style="text-decoration: none;">
+          <button type="button" class="oauth-button">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19.8055 10.2292C19.8055 9.55055 19.7501 8.86668 19.6305 8.19446H10.2002V12.0486H15.6014C15.3773 13.2905 14.6571 14.3894 13.6025 15.0875V17.5862H16.8251C18.7173 15.8444 19.8055 13.2723 19.8055 10.2292Z" fill="#4285F4"/>
+              <path d="M10.2002 20C12.9593 20 15.2732 19.1056 16.8294 17.5862L13.6068 15.0875C12.7065 15.6972 11.5521 16.0431 10.2045 16.0431C7.54388 16.0431 5.29649 14.2834 4.50661 11.9167H1.1792V14.4931C2.77705 17.6681 6.30493 20 10.2002 20Z" fill="#34A853"/>
+              <path d="M4.50235 11.9167C4.06702 10.6748 4.06702 9.32917 4.50235 8.08723V5.51086H1.17919C-0.395153 8.63752 -0.395153 12.3667 1.17919 15.4931L4.50235 11.9167Z" fill="#FBBC04"/>
+              <path d="M10.2002 3.95834C11.6251 3.93611 13.0017 4.47223 14.0388 5.45834L16.8936 2.60278C15.1827 0.990557 12.9377 0.0847804 10.2002 0.111123C6.30493 0.111123 2.77705 2.44307 1.1792 5.61112L4.50235 8.18749C5.28797 5.81668 7.53962 3.95834 10.2002 3.95834Z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
+          </button>
+        </a>
+
+        <div class="footer-links">
+          Already have an account? <a href="#" onclick="switchTab('login'); return false;">Sign in</a>
+        </div>
       </form>
     </div>
-  </section>
+  </div>
 
+  <script>
+    function switchTab(tab) {
+      // Update tab buttons
+      const loginTab = document.getElementById('loginTab');
+      const signupTab = document.getElementById('signupTab');
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+
+      if (tab === 'login') {
+        loginTab.classList.add('active');
+        signupTab.classList.remove('active');
+        loginForm.classList.add('active');
+        signupForm.classList.remove('active');
+        document.querySelector('.auth-header h2').textContent = 'Welcome Back';
+        document.querySelector('.auth-header p').textContent = 'Enter your credentials to continue';
+      } else {
+        signupTab.classList.add('active');
+        loginTab.classList.remove('active');
+        signupForm.classList.add('active');
+        loginForm.classList.remove('active');
+        document.querySelector('.auth-header h2').textContent = 'Create Account';
+        document.querySelector('.auth-header p').textContent = 'Join Cal-FIT and start your journey';
+      }
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', function() {
+      // Check if there are error messages and switch to appropriate tab
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => {
+        const message = alert.textContent.toLowerCase();
+        if (message.includes('sign up') || message.includes('create')) {
+          switchTab('signup');
+        }
+      });
+    });
+  </script>
 </body>
-
 </html>

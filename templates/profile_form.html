@@ -13,7 +13,7 @@
     body {
       font-family: 'Segoe UI', sans-serif;
       min-height: 100vh;
-      background: url('https://i.pinimg.com/736x/03/40/7c/03407ca4471ecb59e09ce074efde921d.jpg  ') no-repeat center center fixed;
+      background: url('https://i.pinimg.com/736x/03/40/7c/03407ca4471ecb59e09ce074efde921d.jpg') no-repeat center center fixed;
       background-size: cover;
       color: white;
       position: relative;
@@ -46,7 +46,7 @@
       padding: 40px;
       border-radius: 12px;
       box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-      max-width: 500px;
+      max-width: 550px;
       width: 100%;
     }
 
@@ -62,13 +62,18 @@
       font-weight: 600;
     }
 
-    input, select, textarea {
+    input, select {
       width: 100%;
       padding: 10px;
       margin-top: 5px;
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 15px;
+    }
+
+    select[multiple] {
+      height: 120px;
+      overflow-y: auto;
     }
 
     button {
@@ -86,6 +91,15 @@
     button:hover {
       background-color: #059669;
     }
+
+    /* Search box for multiselect */
+    .search-box {
+      margin-top: 5px;
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
@@ -95,11 +109,12 @@
       <h2>Setup Your Health Profile</h2>
       <form method="POST" action="{{ url_for('profile_form') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
         <label for="full_name">Full Name</label>
-        <input type="text" name="full_name" id="full_name" required>
+        <input type="text" name="full_name" id="full_name" required pattern="[A-Za-z\s]{2,50}" title="Only alphabets allowed">
 
         <label for="age">Age</label>
-        <input type="number" name="age" id="age" required>
+        <input type="number" name="age" id="age" min="1" max="120" required>
 
         <label for="gender">Gender</label>
         <select name="gender" id="gender" required>
@@ -110,10 +125,10 @@
         </select>
 
         <label for="height_cm">Height (cm)</label>
-        <input type="number" name="height_cm" id="height_cm" required>
+        <input type="number" name="height_cm" id="height_cm" min="50" max="250" required>
 
         <label for="weight_kg">Weight (kg)</label>
-        <input type="number" name="weight_kg" id="weight_kg" required>
+        <input type="number" name="weight_kg" id="weight_kg" min="10" max="300" required>
 
         <label for="activity_level">Activity Level</label>
         <select name="activity_level" id="activity_level" required>
@@ -123,16 +138,63 @@
           <option value="active">Active</option>
         </select>
 
-        <label for="medical_conditions">Medical Conditions (optional)</label>
-        <textarea name="medical_conditions" id="medical_conditions" rows="2"></textarea>
+        <!-- MEDICAL CONDITIONS -->
+        <label for="medical_search">Medical Conditions (select multiple)</label>
+        <input type="text" id="medical_search" class="search-box" placeholder="Search medical conditions...">
+        <select id="medical_conditions" name="medical_conditions" multiple>
+          <option>Asthma</option><option>Arthritis</option><option>Diabetes Type 1</option><option>Diabetes Type 2</option>
+          <option>Hypertension</option><option>Heart Disease</option><option>Thyroid Disorder</option><option>High Cholesterol</option>
+          <option>Obesity</option><option>Depression</option><option>Anxiety</option><option>PCOS</option><option>Osteoporosis</option>
+          <option>Epilepsy</option><option>Chronic Kidney Disease</option><option>Chronic Pain</option><option>Insomnia</option>
+          <option>Migraine</option><option>GERD</option><option>Ulcer</option><option>COPD</option><option>Cancer</option>
+          <option>Stroke</option><option>Parkinson’s Disease</option><option>Multiple Sclerosis</option><option>IBS</option>
+          <option>Celiac Disease</option><option>Gout</option><option>Liver Disease</option><option>Hepatitis</option>
+          <option>Anemia</option><option>Psoriasis</option><option>Rheumatoid Arthritis</option><option>Back Pain</option>
+          <option>HIV/AIDS</option><option>Bronchitis</option><option>Glaucoma</option><option>Autoimmune Disease</option>
+          <option>ADHD</option><option>Autism Spectrum Disorder</option><option>Sleep Apnea</option><option>Gastroenteritis</option>
+          <option>Hyperthyroidism</option><option>Hypothyroidism</option><option>Low Blood Pressure</option><option>Kidney Stones</option>
+          <option>Ulcerative Colitis</option><option>Peptic Ulcer</option><option>Sinusitis</option><option>Vertigo</option>
+        </select>
 
-        <label for="allergies">Allergies (optional)</label>
-        <textarea name="allergies" id="allergies" rows="2"></textarea>
+        <!-- ALLERGIES -->
+        <label for="allergy_search">Allergies (select multiple)</label>
+        <input type="text" id="allergy_search" class="search-box" placeholder="Search allergies...">
+        <select id="allergies" name="allergies" multiple>
+          <option>Peanuts</option><option>Tree Nuts</option><option>Milk</option><option>Eggs</option><option>Wheat</option>
+          <option>Soy</option><option>Fish</option><option>Shellfish</option><option>Sesame</option><option>Gluten</option>
+          <option>Lactose</option><option>Pollen</option><option>Dust</option><option>Mold</option><option>Pet Dander</option>
+          <option>Bees</option><option>Insect Bites</option><option>Latex</option><option>Nickel</option><option>Fragrance</option>
+          <option>Penicillin</option><option>Sulfa Drugs</option><option>Aspirin</option><option>NSAIDs</option><option>Chocolate</option>
+          <option>Tomatoes</option><option>Citrus Fruits</option><option>Strawberries</option><option>Bananas</option><option>Avocado</option>
+          <option>Kiwi</option><option>Garlic</option><option>Onions</option><option>Alcohol</option><option>Caffeine</option>
+          <option>Food Coloring</option><option>Preservatives</option><option>Perfume</option><option>Detergents</option>
+          <option>Grass</option><option>Pea Protein</option><option>Mustard</option><option>Corn</option><option>Celery</option>
+          <option>Lupin</option><option>Clams</option><option>Oysters</option><option>Crab</option><option>Lobster</option>
+          <option>Shrimp</option><option>Scallops</option>
+        </select>
 
         <button type="submit">Save Profile</button>
       </form>
     </div>
   </div>
+
+  <script>
+    // simple search filter for medical conditions
+    function filterOptions(searchInputId, selectId) {
+      const searchInput = document.getElementById(searchInputId);
+      const select = document.getElementById(selectId);
+      searchInput.addEventListener("input", () => {
+        const filter = searchInput.value.toLowerCase();
+        Array.from(select.options).forEach(option => {
+          const text = option.text.toLowerCase();
+          option.style.display = text.includes(filter) ? '' : 'none';
+        });
+      });
+    }
+
+    filterOptions('medical_search', 'medical_conditions');
+    filterOptions('allergy_search', 'allergies');
+  </script>
 
 </body>
 </html>

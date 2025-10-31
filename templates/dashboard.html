@@ -4,8 +4,513 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard | Cal-FIT</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Kaisei+Tokumin:wght@400;500;700;800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Montserrat", sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #D9D6D0 0%, #c4c1bb 100%);
+      color: #252601;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 50%, rgba(132, 191, 4, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(37, 38, 1, 0.05) 0%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      height: 80px;
+      z-index: 1000;
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      padding: 0 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      opacity: 0;
+      transform: translateY(-30px);
+      animation: headerEnter 1s ease forwards;
+      box-shadow: 0 4px 20px rgba(132, 191, 4, 0.3);
+      border-bottom: 2px solid rgba(37, 38, 1, 0.1);
+    }
+
+    @keyframes headerEnter {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #252601;
+      opacity: 0;
+      transform: translateY(-15px);
+      animation: logoDrop 0.8s 0.3s ease forwards;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+      letter-spacing: 1px;
+    }
+
+    @keyframes logoDrop {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .main-nav {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 30px;
+      background: rgba(37, 38, 1, 0.05);
+      padding: 10px 25px;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+    }
+
+    .main-nav a {
+      color: #252601;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 10px 18px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+      transform: translateY(-10px);
+      animation: navDrop 0.5s ease forwards;
+      border-radius: 25px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .main-nav a::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .main-nav a:hover::before {
+      left: 100%;
+    }
+
+    .main-nav a:nth-child(1) {
+      animation-delay: 0.4s;
+    }
+
+    .main-nav a:nth-child(2) {
+      animation-delay: 0.55s;
+    }
+
+    .main-nav a:nth-child(3) {
+      animation-delay: 0.7s;
+    }
+
+    @keyframes navDrop {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .main-nav a:hover {
+      color: #84BF04;
+      background: rgba(37, 38, 1, 0.9);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 4px 15px rgba(37, 38, 1, 0.3);
+    }
+
+    .hero-section {
+      position: relative;
+      z-index: 1;
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .hero-text {
+      position: relative;
+      z-index: 1;
+      padding: 60px 80px 20px;
+      color: #252601;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-text h1 {
+      font-size: 65px;
+      margin-bottom: 30px;
+      color: #84BF04;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      line-height: 1.2;
+    }
+
+    .rotating-text-wrapper {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      padding: 8px 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(132, 191, 4, 0.3);
+      min-width: 200px;
+      height: 70px;
+    }
+
+    .text-rotate {
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+      font-size: 65px;
+      font-weight: 700;
+      color: #252601;
+    }
+
+    .text-rotate-word {
+      display: inline-flex;
+      overflow: hidden;
+    }
+
+    .text-rotate-element {
+      display: inline-block;
+      animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .text-rotate-element.exit {
+      animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(-120%);
+        opacity: 0;
+      }
+    }
+
+    .text-rotate-space {
+      white-space: pre;
+    }
+
+    .hero-text p {
+      font-size: 20px;
+      color: #252601;
+      font-weight: 500;
+      margin-top: 20px;
+    }
+
+    .scroll-stack-container {
+      position: relative;
+      z-index: 1;
+    }
+
+    .stack-card {
+      position: sticky;
+      top: 80px;
+      transform-origin: top center;
+      will-change: transform;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      height: calc(100vh - 80px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .intro-section {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
+      backdrop-filter: blur(15px);
+      padding: 60px 40px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .intro-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .intro-text {
+      flex: 1;
+      text-align: center;
+    }
+
+    .intro-text h2 {
+      font-size: 56px;
+      color: #252601;
+      font-weight: 700;
+      line-height: 1.3;
+      margin: 0;
+      text-shadow: 2px 2px 4px rgba(132, 191, 4, 0.2);
+    }
+
+    .intro-image {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .intro-image img {
+      max-width: 100%;
+      max-height: 500px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: transform 0.4s ease;
+    }
+
+    .solution-section {
+      background: linear-gradient(135deg, #84bf04 0%, #9dd305 100%);
+      padding: 80px 40px;
+      box-shadow: 0 10px 40px rgba(132, 191, 4, 0.4);
+      text-align: center;
+    }
+
+    .solution-content {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .solution-content h2 {
+      font-size: 52px;
+      color: #252601;
+      font-weight: 800;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+    }
+
+    .solution-subtitle {
+      font-size: 32px;
+      color: #252601;
+      font-weight: 600;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .solution-cta {
+      font-size: 24px;
+      color: #252601;
+      font-weight: 500;
+      margin-top: 15px;
+      opacity: 0.9;
+    }
+
+    .card-section {
+      background: #0D0D0D;
+      position: relative;
+      z-index: 1;
+      padding: 60px 20px;
+      margin: 40px 0;
+    }
+
+    .card-wrapper {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      padding: 40px;
+      border-radius: 20px;
+    }
+
+    .card {
+      position: relative;
+      padding: 60px 35px;
+      width: 100%;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .card-inner {
+      min-height: 260px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 40px;
+      position: relative;
+    }
+
+    .card h3 {
+      margin-bottom: 15px;
+      color: #84BF04;
+      font-size: 28px;
+      font-weight: 700;
+      text-shadow: 1px 1px 2px rgba(37, 38, 1, 0.1);
+    }
+
+    .card p {
+      color: #D9D6D0;
+      margin-bottom: 20px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .card a {
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      color: #252601;
+      padding: 12px 28px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 700;
+      display: inline-block;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(132, 191, 4, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(132, 191, 4, 0.5);
+    }
+
+    .card-content1 {
+      flex: 1;
+      text-align: left;
+    }
+
+    .card-img {
+      max-height: 140px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 12px;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    }
+
+    .card:hover .card-img {
+      transform: scale(1.05) rotate(2deg);
+      filter: drop-shadow(0 8px 15px rgba(132, 191, 4, 0.3));
+    }
+
+    .stack-spacer {
+      height: 50vh;
+      width: 100%;
+      z-index: -1;
+      position: relative;
+    }
+
+    .footer {
+      background: linear-gradient(135deg, #252601 0%, #1a1b01 100%);
+      color: #D9D6D0;
+      padding: 40px 20px;
+      font-family: 'Inter', sans-serif;
+      margin-top: 80px;
+      z-index: 2;
+      position: relative;
+      border-top: 3px solid #84BF04;
+    }
+
+    .footer-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .socials {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .footer-right {
+      text-align: center;
+    }
+
+    .footer-right p {
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #D9D6D0;
+    }
+
+    .socials a {
+      display: inline-block;
+      margin-left: 10px;
+      padding: 10px;
+      background: rgba(132, 191, 4, 0.1);
+      border-radius: 50%;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .socials a:hover {
+      background: #84BF04;
+      transform: translateY(-3px) scale(1.1);
+      box-shadow: 0 5px 15px rgba(132, 191, 4, 0.4);
+    }
+
+    .socials img {
+      width: 24px;
+      height: 24px;
+      opacity: 0.8;
+      filter: brightness(0) invert(1);
+      transition: all 0.3s ease;
+    }
+
+    .socials a:hover img {
+      opacity: 1;
+      filter: brightness(0) invert(0);
+    }
+  </style>
 </head>
 
 <body>
@@ -16,23 +521,26 @@
     <div class="logo">Cal-FIT</div>
     <nav class="main-nav">
       <a href="{{ url_for('dashboard') }}">Home</a>
-      <a href="#explore">Explore</a>
-      <a href="{{ url_for('about') }}">About Us</a>
+      <a href="{{ url_for('scan_label') }}" class="active">Scan</a>
       <a href="{{ url_for('profile') }}">Profile</a>
     </nav>
   </header>
 
   <section class="hero-section">
     <div class="hero-text">
-      <h1>Your Fastest Path to Fitness</h1>
-      <p>Cal-FIT helps you make smarter food choices, one scan at a time.</p>
-      <a href="#" class="hero-btn">Get App</a>
+      <h1>
+        Make 
+        <div class="rotating-text-wrapper">
+          <span class="text-rotate" id="rotatingText"></span>
+        </div>
+        Food Choices
+      </h1>
+      <p>Cal-FIT helps you understand nutrition labels, one scan at a time.</p>
     </div>
   </section>
 
   <div class="scroll-stack-container">
 
-    <!-- New Section 1: Barcode Question -->
     <section class="intro-section stack-card">
       <div class="intro-content">
         <div class="intro-text">
@@ -44,7 +552,6 @@
       </div>
     </section>
 
-    <!-- New Section 2: Healthy Question -->
     <section class="intro-section stack-card">
       <div class="intro-content">
         <div class="intro-text">
@@ -56,7 +563,6 @@
       </div>
     </section>
 
-    <!-- New Section 3: Solution Text -->
     <section class="solution-section stack-card">
       <div class="solution-content">
         <h2>If not, there's no need to worry!</h2>
@@ -69,44 +575,19 @@
       <div class="card-wrapper">
         <div class="card card-left" id="scan-card">
           <div class="card-inner">
-            <div class="hover-bar"></div>
             <div class="card-content1">
               <h3>Scan & Analyze</h3>
               <p>Upload a food label and instantly check for health risks.</p>
               <a href="{{ url_for('scan_label') }}">Start Scan</a>
             </div>
-            <img src="{{ url_for('static', filename='images/scan1.png') }}" class="card-img slideshow-img"
-              id="scan-image" alt="Scan Image">
+            <img src="{{ url_for('static', filename='images/scan1.png') }}" class="card-img" id="scan-image" alt="Scan Image">
           </div>
         </div>
       </div>
     </section>
 
-    <section class="trust stack-card">
-      <h3>Cal-FIT</h3>
-      <p>Your partner in smart food decisions and better health.</p>
-      <h1>
-        Cal-FIT securely collects and analyzes nutritional data...
-      </h1>
-      <div class="company-logos">
-        <div class="company">
-          <img id="company-1" src="{{ url_for('static', filename='images/FDA.png') }}" alt="FDA">
-          <p>U.S. Food and Drug Administration</p>
-        </div>
-        <div class="company">
-          <img id="company-2" src="{{ url_for('static', filename='images/FSSAI.png') }}" alt="FSSAI">
-          <p>Food Safety and Standards Authority of India</p>
-        </div>
-        <div class="company">
-          <img id="company-3" src="{{ url_for('static', filename='images/WHO.png') }}" alt="WHO">
-          <p>World Health Organization</p>
-        </div>
-      </div>
-    </section>
-
-    <div class="stack-spacer"></div>
-
   </div>
+
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-right">
@@ -127,29 +608,57 @@
   </footer>
 
   <script>
-    // --- Original Scan Card Hover Logic ---
-    const scanCard = document.getElementById('scan-card');
-    const scanImage = document.getElementById('scan-image');
-    const scanImages = [
-      "{{ url_for('static', filename='images/scan1.png') }}",
-      "{{ url_for('static', filename='images/scan2.png') }}",
-      "{{ url_for('static', filename='images/scan3.png') }}"
-    ];
+    // Rotating Text Animation
+    const texts = ['Fastest', 'Smartest', 'Easiest', 'Healthiest'];
     let currentIndex = 0;
-    let intervalId = null;
-    scanCard.addEventListener('mouseenter', () => {
-      intervalId = setInterval(() => {
-        currentIndex = (currentIndex + 1) % scanImages.length;
-        scanImage.src = scanImages[currentIndex];
-      }, 1000);
-    });
-    scanCard.addEventListener('mouseleave', () => {
-      clearInterval(intervalId);
-      currentIndex = 0;
-      scanImage.src = scanImages[0];
-    });
+    const rotatingTextEl = document.getElementById('rotatingText');
 
-    // 1. Initialize Lenis for smooth scrolling
+    function splitIntoCharacters(text) {
+      return text.split('');
+    }
+
+    function createWordElement(word) {
+      const wordSpan = document.createElement('span');
+      wordSpan.className = 'text-rotate-word';
+      
+      const chars = splitIntoCharacters(word);
+      chars.forEach((char, index) => {
+        const charSpan = document.createElement('span');
+        charSpan.className = 'text-rotate-element';
+        charSpan.textContent = char;
+        charSpan.style.animationDelay = `${index * 0.025}s`;
+        wordSpan.appendChild(charSpan);
+      });
+      
+      return wordSpan;
+    }
+
+    function animateText() {
+      const currentWord = rotatingTextEl.querySelector('.text-rotate-word');
+      
+      if (currentWord) {
+        const chars = currentWord.querySelectorAll('.text-rotate-element');
+        chars.forEach((char, index) => {
+          char.classList.add('exit');
+          char.style.animationDelay = `${(chars.length - 1 - index) * 0.025}s`;
+        });
+        
+        setTimeout(() => {
+          rotatingTextEl.innerHTML = '';
+          currentIndex = (currentIndex + 1) % texts.length;
+          const newWord = createWordElement(texts[currentIndex]);
+          rotatingTextEl.appendChild(newWord);
+        }, 600);
+      } else {
+        const newWord = createWordElement(texts[currentIndex]);
+        rotatingTextEl.appendChild(newWord);
+      }
+    }
+
+    animateText();
+    setInterval(animateText, 2000);
+
+    // Lenis Smooth Scrolling
     const lenis = new Lenis({
       lerp: 0.1,
       duration: 1.2,
@@ -162,12 +671,10 @@
     }
     requestAnimationFrame(raf);
 
-    // 2. Define stacking parameters
-    const STICKY_TOP_PX = 100;
+    const STICKY_TOP_PX = 80;
     const BASE_SCALE = 0.9;
     const STACK_OFFSET = 10;
 
-    // 3. Listen for the 'scroll' event from Lenis
     lenis.on('scroll', (e) => {
       const cards = document.querySelectorAll(".stack-card");
       if (!cards.length) return;
@@ -202,6 +709,10 @@
         }
       });
     });
+
+    // Scan Card Hover (if you have multiple images)
+    const scanCard = document.getElementById('scan-card');
+    const scanImage = document.getElementById('scan-image');
   </script>
 </body>
 
