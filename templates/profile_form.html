@@ -3,198 +3,293 @@
 <head>
   <meta charset="UTF-8">
   <title>Setup Your Health Profile | Cal-FIT</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      background: url('https://i.pinimg.com/736x/03/40/7c/03407ca4471ecb59e09ce074efde921d.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: white;
+    html, body {
+      height: 100%;
+      font-family: "Montserrat", sans-serif;
+      color: #252601;
+      background: linear-gradient(135deg, #D9D6D0 0%, #c4c1bb 100%);
       position: relative;
+      overflow-x: hidden;
     }
 
     body::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: radial-gradient(circle at 20% 50%, rgba(132, 191, 4, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, rgba(37, 38, 1, 0.05) 0%, transparent 50%);
       z-index: 0;
+      pointer-events: none;
     }
 
-    .center-wrapper {
+    header {
+      position: sticky;
+      top: 0;
+      height: 80px;
+      z-index: 1000;
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      padding: 0 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(132, 191, 4, 0.3);
+      border-bottom: 2px solid rgba(37, 38, 1, 0.1);
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #252601;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+      letter-spacing: 1px;
+    }
+
+    .main-nav {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 30px;
+      background: rgba(37, 38, 1, 0.05);
+      padding: 10px 25px;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
+    }
+
+    .main-nav a {
+      color: #252601;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 10px 18px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 25px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .main-nav a:hover,
+    .main-nav a.active {
+      color: #84BF04;
+      background: rgba(37, 38, 1, 0.9);
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 4px 15px rgba(37, 38, 1, 0.3);
+    }
+
+    .container {
       position: relative;
       z-index: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .form-container {
-      background-color: rgba(255, 255, 255, 0.95);
-      color: #333;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-      max-width: 550px;
-      width: 100%;
+      max-width: 900px;
+      margin: 60px auto;
+      padding: 60px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
     }
 
     h2 {
       text-align: center;
-      margin-bottom: 25px;
-      color: #10B981;
+      margin-bottom: 50px;
+      color: #84BF04;
+      font-size: 48px;
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(132, 191, 4, 0.2);
     }
 
-    label {
+    .form-group {
+      margin-bottom: 32px;
+    }
+
+    .form-group label {
       display: block;
-      margin-top: 15px;
+      margin-bottom: 12px;
+      color: #252601;
+      font-size: 15px;
       font-weight: 600;
+      letter-spacing: 0.3px;
     }
 
     input, select {
       width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 2px solid rgba(132, 191, 4, 0.3);
+      background: rgba(255, 255, 255, 0.8);
       font-size: 15px;
+      font-family: "Montserrat", sans-serif;
+      color: #252601;
+      transition: all 0.3s ease;
     }
 
-    select[multiple] {
-      height: 120px;
-      overflow-y: auto;
+    input:focus, select:focus {
+      outline: none;
+      border-color: #84BF04;
+      background: rgba(255, 255, 255, 1);
+      box-shadow: 0 4px 15px rgba(132, 191, 4, 0.2);
     }
 
-    button {
-      margin-top: 25px;
+    .choices__inner {
+      background: rgba(255, 255, 255, 0.8);
+      border: 2px solid rgba(132, 191, 4, 0.3);
+      border-radius: 12px;
+      padding: 10px 14px;
+      min-height: 52px;
+      font-family: "Montserrat", sans-serif;
+    }
+
+    .choices__list--multiple .choices__item {
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      border: 1px solid #84BF04;
+      color: #252601;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(132, 191, 4, 0.3);
+    }
+
+    button[type="submit"] {
+      display: block;
       width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      background-color: #10B981;
-      color: white;
+      margin-top: 50px;
+      padding: 16px 40px;
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      color: #252601;
       border: none;
-      border-radius: 6px;
+      border-radius: 50px;
       cursor: pointer;
+      transition: all 0.4s ease;
+      letter-spacing: 0.5px;
+      box-shadow: 0 6px 25px rgba(132, 191, 4, 0.4);
     }
 
-    button:hover {
-      background-color: #059669;
+    button[type="submit"]:hover {
+      box-shadow: 0 10px 35px rgba(132, 191, 4, 0.6);
+      transform: translateY(-3px) scale(1.02);
     }
 
-    /* Search box for multiselect */
-    .search-box {
-      margin-top: 5px;
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
+    .grid-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    .full-width { grid-column: 1 / -1; }
+
+    @media (max-width: 768px) {
+      .container { margin: 30px 20px; padding: 40px 28px; }
+      .grid-form { grid-template-columns: 1fr; }
+      h2 { font-size: 36px; }
     }
   </style>
 </head>
 <body>
+  <header>
+    <div class="logo">Cal-FIT</div>
+    <nav class="main-nav">
+      <a href="{{ url_for('dashboard') }}">Home</a>
+      <a href="{{ url_for('scan_label') }}">Scan</a>
+      <a href="{{ url_for('profile') }}" class="active">Profile</a>
+    </nav>
+  </header>
 
-  <div class="center-wrapper">
-    <div class="form-container">
-      <h2>Setup Your Health Profile</h2>
-      <form method="POST" action="{{ url_for('profile_form') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="container">
+    <h2>Setup Your Health Profile</h2>
+    <form method="POST" action="{{ url_for('profile_form') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <label for="full_name">Full Name</label>
-        <input type="text" name="full_name" id="full_name" required pattern="[A-Za-z\s]{2,50}" title="Only alphabets allowed">
+      <div class="grid-form">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" name="full_name" required pattern="[A-Za-z\s]{2,50}" placeholder="John Doe">
+        </div>
 
-        <label for="age">Age</label>
-        <input type="number" name="age" id="age" min="1" max="120" required>
+        <div class="form-group">
+          <label>Age</label>
+          <input type="number" name="age" min="1" max="120" required placeholder="25">
+        </div>
 
-        <label for="gender">Gender</label>
-        <select name="gender" id="gender" required>
-          <option value="">-- Select --</option>
-          <option>Male</option>
-          <option>Female</option>
-          <option>Other</option>
-        </select>
+        <div class="form-group">
+          <label>Gender</label>
+          <select name="gender" required>
+            <option value="">-- Select --</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
 
-        <label for="height_cm">Height (cm)</label>
-        <input type="number" name="height_cm" id="height_cm" min="50" max="250" required>
+        <div class="form-group">
+          <label>Activity Level</label>
+          <select name="activity_level" required>
+            <option value="">-- Select --</option>
+            <option value="sedentary">Sedentary</option>
+            <option value="moderate">Moderate</option>
+            <option value="active">Active</option>
+          </select>
+        </div>
 
-        <label for="weight_kg">Weight (kg)</label>
-        <input type="number" name="weight_kg" id="weight_kg" min="10" max="300" required>
+        <div class="form-group">
+          <label>Height (cm)</label>
+          <input type="number" name="height_cm" min="50" max="250" required placeholder="170">
+        </div>
 
-        <label for="activity_level">Activity Level</label>
-        <select name="activity_level" id="activity_level" required>
-          <option value="">-- Select --</option>
-          <option value="sedentary">Sedentary</option>
-          <option value="moderate">Moderate</option>
-          <option value="active">Active</option>
-        </select>
+        <div class="form-group">
+          <label>Weight (kg)</label>
+          <input type="number" name="weight_kg" min="10" max="300" required placeholder="70">
+        </div>
 
-        <!-- MEDICAL CONDITIONS -->
-        <label for="medical_search">Medical Conditions (select multiple)</label>
-        <input type="text" id="medical_search" class="search-box" placeholder="Search medical conditions...">
-        <select id="medical_conditions" name="medical_conditions" multiple>
-          <option>Asthma</option><option>Arthritis</option><option>Diabetes Type 1</option><option>Diabetes Type 2</option>
-          <option>Hypertension</option><option>Heart Disease</option><option>Thyroid Disorder</option><option>High Cholesterol</option>
-          <option>Obesity</option><option>Depression</option><option>Anxiety</option><option>PCOS</option><option>Osteoporosis</option>
-          <option>Epilepsy</option><option>Chronic Kidney Disease</option><option>Chronic Pain</option><option>Insomnia</option>
-          <option>Migraine</option><option>GERD</option><option>Ulcer</option><option>COPD</option><option>Cancer</option>
-          <option>Stroke</option><option>Parkinson’s Disease</option><option>Multiple Sclerosis</option><option>IBS</option>
-          <option>Celiac Disease</option><option>Gout</option><option>Liver Disease</option><option>Hepatitis</option>
-          <option>Anemia</option><option>Psoriasis</option><option>Rheumatoid Arthritis</option><option>Back Pain</option>
-          <option>HIV/AIDS</option><option>Bronchitis</option><option>Glaucoma</option><option>Autoimmune Disease</option>
-          <option>ADHD</option><option>Autism Spectrum Disorder</option><option>Sleep Apnea</option><option>Gastroenteritis</option>
-          <option>Hyperthyroidism</option><option>Hypothyroidism</option><option>Low Blood Pressure</option><option>Kidney Stones</option>
-          <option>Ulcerative Colitis</option><option>Peptic Ulcer</option><option>Sinusitis</option><option>Vertigo</option>
-        </select>
+        <div class="form-group full-width">
+          <label>Medical Conditions</label>
+          <select id="medical_conditions" name="medical_conditions" multiple>
+            <option>Asthma</option><option>Arthritis</option><option>Diabetes</option><option>Hypertension</option>
+            <option>Heart Disease</option><option>Thyroid Disorder</option><option>High Cholesterol</option>
+            <option>Obesity</option><option>Depression</option><option>Anxiety</option><option>PCOS</option>
+            <option>Osteoporosis</option><option>Epilepsy</option><option>Cancer</option><option>IBS</option>
+            <option>Gastritis</option><option>Liver Disease</option><option>Sleep Apnea</option><option>None</option>
+          </select>
+        </div>
 
-        <!-- ALLERGIES -->
-        <label for="allergy_search">Allergies (select multiple)</label>
-        <input type="text" id="allergy_search" class="search-box" placeholder="Search allergies...">
-        <select id="allergies" name="allergies" multiple>
-          <option>Peanuts</option><option>Tree Nuts</option><option>Milk</option><option>Eggs</option><option>Wheat</option>
-          <option>Soy</option><option>Fish</option><option>Shellfish</option><option>Sesame</option><option>Gluten</option>
-          <option>Lactose</option><option>Pollen</option><option>Dust</option><option>Mold</option><option>Pet Dander</option>
-          <option>Bees</option><option>Insect Bites</option><option>Latex</option><option>Nickel</option><option>Fragrance</option>
-          <option>Penicillin</option><option>Sulfa Drugs</option><option>Aspirin</option><option>NSAIDs</option><option>Chocolate</option>
-          <option>Tomatoes</option><option>Citrus Fruits</option><option>Strawberries</option><option>Bananas</option><option>Avocado</option>
-          <option>Kiwi</option><option>Garlic</option><option>Onions</option><option>Alcohol</option><option>Caffeine</option>
-          <option>Food Coloring</option><option>Preservatives</option><option>Perfume</option><option>Detergents</option>
-          <option>Grass</option><option>Pea Protein</option><option>Mustard</option><option>Corn</option><option>Celery</option>
-          <option>Lupin</option><option>Clams</option><option>Oysters</option><option>Crab</option><option>Lobster</option>
-          <option>Shrimp</option><option>Scallops</option>
-        </select>
+        <div class="form-group full-width">
+          <label>Allergies</label>
+          <select id="allergies" name="allergies" multiple>
+            <option>Peanuts</option><option>Tree Nuts</option><option>Milk</option><option>Eggs</option>
+            <option>Wheat</option><option>Soy</option><option>Fish</option><option>Shellfish</option>
+            <option>Gluten</option><option>Pollen</option><option>Dust</option><option>Mold</option>
+            <option>Animal Dander</option><option>Preservatives</option><option>Artificial Colors</option>
+            <option>MSG</option><option>Honey</option><option>None</option>
+          </select>
+        </div>
+      </div>
 
-        <button type="submit">Save Profile</button>
-      </form>
-    </div>
+      <button type="submit">Save Profile</button>
+    </form>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script>
-    // simple search filter for medical conditions
-    function filterOptions(searchInputId, selectId) {
-      const searchInput = document.getElementById(searchInputId);
-      const select = document.getElementById(selectId);
-      searchInput.addEventListener("input", () => {
-        const filter = searchInput.value.toLowerCase();
-        Array.from(select.options).forEach(option => {
-          const text = option.text.toLowerCase();
-          option.style.display = text.includes(filter) ? '' : 'none';
-        });
-      });
-    }
+    new Choices('#medical_conditions', {
+      removeItemButton: true,
+      searchEnabled: true,
+      searchPlaceholderValue: 'Type to search...',
+      allowHTML: false
+    });
 
-    filterOptions('medical_search', 'medical_conditions');
-    filterOptions('allergy_search', 'allergies');
+    new Choices('#allergies', {
+      removeItemButton: true,
+      searchEnabled: true,
+      searchPlaceholderValue: 'Type to search...',
+      allowHTML: false
+    });
   </script>
-
 </body>
 </html>

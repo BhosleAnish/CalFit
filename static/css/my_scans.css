@@ -4,7 +4,9 @@
     padding: 40px 20px;
     min-height: calc(100vh - 80px);
 }
-
+header{
+    background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+}
 .scans-wrapper {
     max-width: 1400px;
     margin: 0 auto;

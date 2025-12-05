@@ -28,6 +28,28 @@ from authlib.integrations.flask_client import OAuth
 from functools import wraps
 load_dotenv()
 
+# ==================== AUTHENTICATION DECORATOR ====================
+def login_required(f):
+    """Decorator to protect routes that require authentication"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            flash("Please log in to access this page.", "error")
+            return redirect(url_for('landing'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def prevent_cache(f):
+    """Decorator to prevent browser caching of protected pages"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        response = f(*args, **kwargs)
+        if hasattr(response, 'headers'):
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        return response
+    return decorated_function
 
 # --- CONFIGURE THE AI MODEL ---
 try:
@@ -45,18 +67,13 @@ except Exception as e:
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key'
 
-# --- FIX 1: ADDED SESSION COOKIE CONFIG FOR OAUTH ---
-# Explicitly configure the session cookie for cross-site development
-# This is necessary for OAuth redirects between different ports (e.g., 5173 -> 5000)
+# --- SESSION COOKIE CONFIG FOR OAUTH ---
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to False for http://localhost
-# ----------------------------------------------------
+app.config['SESSION_COOKIE_SECURE'] = False
 
 # --- RE-ORDERED INITIALIZATION BLOCK ---
-
-# --- RE-ORDERED INITIALIZATION BLOCK ---
-app.secret_key = "super_secret_static_key_123"  # must be consistent across runs
-app.config["SESSION_TYPE"] = "filesystem"    # store sessions on disk
+app.secret_key = "super_secret_static_key_123"
+app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_FILE_DIR"] = "./.flask_session/"
@@ -64,6 +81,7 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = False
 
 Session(app)
+
 # 1. Initialize OAuth first
 oauth = OAuth(app)
 google = oauth.register(
@@ -90,7 +108,6 @@ csrf.exempt('google_callback')
 limiter = Limiter(
     key_func=get_remote_address,
     app=app
-    # storage_uri="redis://localhost:6379"  # <-- REMOVED. This is the problem.
 )
 
 
@@ -1203,7 +1220,6 @@ def google_login():
     return google.authorize_redirect(redirect_uri)
 
 
-# --- FIX 2: UPDATED GOOGLE CALLBACK LOGIC ---
 @app.route('/auth/google/callback')
 def google_callback():
     """Handle Google OAuth callback"""
@@ -1239,7 +1255,6 @@ def google_callback():
                 flash(f"An account with username '{username}' already exists. Please login with password.", "error")
                 return redirect(url_for('landing'))
             
-            # --- LOGIC FOR EXISTING USER ---
             # Update last login
             credentials_storage.collection.update_one(
                 {"username": username},
@@ -1247,23 +1262,22 @@ def google_callback():
             )
             
             # Log the user in
+            session.permanent = False
             session['username'] = username
             session['auth_provider'] = 'google'
             session['profile_picture'] = picture
             
             flash(f"Welcome back, {name or username}!", "success")
-            # Redirect EXISTING user to their main profile
             return redirect(url_for('profile')) 
     
         else:
-            # --- LOGIC FOR NEW USER ---
             # Create new user account
             user_document = {
                 "username": username,
                 "email": email,
                 "google_id": google_id,
                 "auth_provider": "google",
-                "password": None,  # No password for OAuth users
+                "password": None,
                 "profile_picture": picture,
                 "created_at": datetime.utcnow(),
                 "last_login": datetime.utcnow()
@@ -1280,27 +1294,32 @@ def google_callback():
             profile_storage.save_profile(profile_data)
             
             # Log the new user in
+            session.permanent = False
             session['username'] = username
             session['auth_provider'] = 'google'
             session['profile_picture'] = picture
             
             flash("Account created successfully with Google! Please complete your profile.", "success")
-            # Redirect NEW user to the profile creation form
             return redirect(url_for('profile_form')) 
             
     except Exception as e:
         print(f"❌ Google OAuth Error: {e}")
         flash(f"Authentication failed: {e}. Please try again.", "error")
         return redirect(url_for('landing'))
-# --- END OF FIX 2 ---
+
 limiter.exempt(google_callback)
 
 @app.route('/auth/logout')
+@login_required
 def oauth_logout():
     """Enhanced logout that handles both regular and OAuth users"""
     session.clear()
     flash("Logged out successfully.", "info")
-    return redirect(url_for('landing'))
+    response = redirect(url_for('landing'))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @limiter.limit("3 per minute", methods=["POST"])
 @app.route('/login', methods=['GET', 'POST'])
@@ -1329,6 +1348,7 @@ def login():
         return redirect(url_for('landing'))
 
     if check_password_hash(hashed, password):
+        session.permanent = False
         session['username'] = username
         session['auth_provider'] = 'regular'
         flash("Logged in successfully!", "success")
@@ -1347,6 +1367,7 @@ def signup():
         return redirect(url_for('landing'))
 
     if add_user(username, password):
+        session.permanent = False
         session['username'] = username
         flash("Account created successfully!", "success")
         return redirect(url_for('profile_form'))
@@ -1355,10 +1376,9 @@ def signup():
         return redirect(url_for('landing'))
 
 @app.route('/dashboard')
+@login_required
+@prevent_cache
 def dashboard():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-    
     username = session['username']
     scan_stats = scan_storage.get_user_scan_stats(username)
     
@@ -1367,6 +1387,8 @@ def dashboard():
                            scan_stats=scan_stats)
 
 @app.route('/scan-label', methods=['GET', 'POST'])
+@login_required
+@prevent_cache
 def scan_label():
     if request.method == 'POST':
         if 'label_image' in request.files and request.files['label_image'].filename != '':
@@ -1426,6 +1448,8 @@ def scan_label():
     return render_template('scan_label.html')
 
 @app.route('/scan-result')
+@login_required
+@prevent_cache
 def scan_result():
     scan_type = session.get('scan_type')
     
@@ -1439,10 +1463,6 @@ def scan_result():
 
     if not raw_text or not structured_nutrients:
         return redirect(url_for('scan_label'))
-
-    if not username:
-        flash("Please log in to save scan results.", "error")
-        return redirect(url_for('landing'))
 
     user_profile = load_user_health_profile(username)
     
@@ -1502,6 +1522,8 @@ def scan_result():
     return render_template('scan_result.html', raw_text=raw_text, structured_nutrients=structured_nutrients)
 
 @app.route('/index')
+@login_required
+@prevent_cache
 def index():
     barcode_processed = session.get('barcode_processed', False)
     scan_data = session.get('scan_data', {})
@@ -1539,16 +1561,11 @@ def index():
     )
 
 @app.route('/add_to_diet', methods=['POST'])
+@login_required
 def add_to_diet():
     username = session.get('username')
     scan_data = session.get('scan_data', {})
     image_filename = session.get('scan_image_filename')
-    
-    if not username:
-        return jsonify({
-            "status": "error",
-            "message": "Please log in to save items to your diet."
-        })
     
     product_name = scan_data.get('product_name')
     product_image_url = scan_data.get('product_image_url')
@@ -1586,11 +1603,9 @@ def add_to_diet():
         })
 
 @app.route('/my-scans')
+@login_required
+@prevent_cache
 def my_scans():
-    if 'username' not in session:
-        flash("Please log in to view your scans.", "error")
-        return redirect(url_for('landing'))
-    
     username = session['username']
     scans = scan_storage.get_user_scans(username)
     stats = scan_storage.get_user_scan_stats(username)
@@ -1598,25 +1613,23 @@ def my_scans():
     return render_template('my_scans.html', scans=scans, stats=stats)
 
 @app.route('/view-scan/<scan_id>')
-def view_scan(scan_id):
-    if 'username' not in session:
-        flash("Please log in to view scans.", "error")
-        return redirect(url_for('landing'))
-    
+@login_required
+@prevent_cache
+def view_scan(scan_id): 
     scan = scan_storage.get_scan_by_id(scan_id)
     
     if not scan or scan['username'] != session['username']:
         flash("Scan not found or access denied.", "error")
         return redirect(url_for('my_scans'))
     
-    return render_template('view_scan.html', scan=scan)
-
-@app.route('/delete-scan/<scan_id>', methods=['POST'])
-def delete_scan(scan_id):
-    if 'username' not in session:
-        flash("Please log in.", "error")
-        return redirect(url_for('landing'))
+    # Get community warnings for this product
+    product_name = scan.get('product_info', {}).get('name', '')
     
+    
+    return render_template('view_scan.html', scan=scan)
+@app.route('/delete-scan/<scan_id>', methods=['POST'])
+@login_required
+def delete_scan(scan_id):
     username = session['username']
     
     if scan_storage.delete_scan(scan_id, username):
@@ -1627,15 +1640,15 @@ def delete_scan(scan_id):
     return redirect(url_for('my_scans'))
 
 @app.route('/admin/cleanup-scans')
+@login_required
 def cleanup_scans():
     deleted_count = scan_storage.cleanup_expired_scans()
     return jsonify({"message": f"Cleaned up {deleted_count} expired scans"})
 
 @app.route('/debug/mongodb-collections')
+@login_required
+@prevent_cache
 def mongodb_collections():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-    
     try:
         db = credentials_storage.mongo_config.db
         
@@ -1664,10 +1677,9 @@ def mongodb_collections():
         return f"<h2>MongoDB Error</h2><p>Error: {e}</p>"
 
 @app.route('/debug/my-profile-info')
+@login_required
+@prevent_cache
 def my_profile_info():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-    
     username = session['username']
     profile = load_user_health_profile(username)
     
@@ -1694,10 +1706,9 @@ def my_profile_info():
     return html
 
 @app.route('/profile-form', methods=['GET', 'POST'])
+@login_required
+@prevent_cache
 def profile_form():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-
     if request.method == 'POST':
         profile_data = {
             'username': session['username'],
@@ -1720,10 +1731,8 @@ def profile_form():
     return render_template('profile_form.html')
 
 @app.route('/get-ai-analysis', methods=['POST'])
+@login_required
 def get_ai_analysis():
-    if 'username' not in session:
-        return jsonify({"error": "Please log in to get analysis"}), 401
-    
     try:
         analysis_html = get_comprehensive_ai_analysis()
         return jsonify({"success": True, "analysis": analysis_html})
@@ -1732,10 +1741,9 @@ def get_ai_analysis():
         return jsonify({"error": "Failed to generate analysis"}), 500
 
 @app.route('/food-tracker', methods=['GET', 'POST'])
+@login_required
+@prevent_cache
 def food_tracker():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-
     if 'food_items' not in session:
         session['food_items'] = []
 
@@ -1794,10 +1802,8 @@ def food_tracker():
     return render_template('food_tracker.html', food_items=session['food_items'], total=total)
 
 @app.route('/get-health-score-data/<period>')
+@login_required
 def get_health_score_data(period='weekly'):
-    if 'username' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
     username = session['username']
     profile = load_user_health_profile(username)
     if not profile:
@@ -1826,10 +1832,9 @@ def get_health_score_data(period='weekly'):
     })
 
 @app.route('/profile')
+@login_required
+@prevent_cache
 def profile():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-
     username = session['username']
     profile_data = load_user_health_profile(username)
     if not profile_data:
@@ -1878,10 +1883,8 @@ def profile():
     )
 
 @app.route('/get-scan-count-data/<period>')
+@login_required
 def get_scan_count_data(period='weekly'):
-    if 'username' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
     username = session['username']
     
     if scan_storage.collection is None:
@@ -1960,20 +1963,25 @@ def get_scan_count_data(period='weekly'):
         return jsonify({"error": "Failed to fetch scan data"}), 500
 
 @app.route('/logout')
+@login_required
 def logout():
     session.clear()
     flash("Logged out.", "info")
-    return redirect(url_for('landing'))
+    response = redirect(url_for('landing'))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/download-report')
+@login_required
 def download_report():
     return "Download functionality not implemented yet."
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
+@login_required
+@prevent_cache
 def edit_profile():
-    if 'username' not in session:
-        return redirect(url_for('landing'))
-
     username = session['username']
     
     if request.method == 'POST':
@@ -2003,10 +2011,8 @@ def edit_profile():
     return render_template('edit_profile.html', profile=profile)
 
 @app.route('/delete-account', methods=['POST'])
+@login_required
 def delete_account():
-    if 'username' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-    
     username = session['username']
     
     try:
@@ -2026,22 +2032,16 @@ def delete_account():
         }), 500
 
 @app.route('/view-all-scans')
+@login_required
+@prevent_cache
 def view_all_scans():
     """Display the view scans page"""
-    if 'username' not in session:
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return jsonify({"error": "Unauthorized"}), 401
-        flash("Please log in to view your scans.", "error")
-        return redirect(url_for('landing'))
-    
     return render_template('view_all_scans.html')
 
 @app.route('/api/get-all-scans')
+@login_required
 def api_get_all_scans():
     """API endpoint to fetch all scans for the logged-in user"""
-    if 'username' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-    
     username = session['username']
 
     if scan_storage.collection is None:
@@ -2087,11 +2087,9 @@ def api_get_all_scans():
         return jsonify({"success": False, "error": "Failed to fetch scans"}), 500
 
 @app.route('/api/delete-scan/<scan_id>', methods=['DELETE'])
+@login_required
 def api_delete_scan(scan_id):
     """API endpoint to delete a specific scan"""
-    if 'username' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
     username = session['username']
 
     if scan_storage.collection is None:
@@ -2134,11 +2132,9 @@ def api_delete_scan(scan_id):
         }), 500
 
 @app.route('/api/submit-report/<scan_id>', methods=['POST'])
+@login_required
 def api_submit_report(scan_id):
     """API endpoint to submit an issue report for a scan"""
-    if 'username' not in session:
-        return jsonify({"success": False, "error": "Unauthorized"}), 401
-
     username = session['username']
 
     if scan_storage.collection is None:
