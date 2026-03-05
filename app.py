@@ -2185,4 +2185,4 @@ def api_submit_report(scan_id):
         return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=5000, debug=True)
+    app.run(host="localhost", port=5000, debug=True, use_reloader = False)

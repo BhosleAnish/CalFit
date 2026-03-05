@@ -154,17 +154,62 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 40px 20px;
+      padding: 40px 60px;
+    }
+
+    .hero-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 60px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .hero-image {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: translateX(-50px);
+      animation: slideInLeft 1s 0.3s ease forwards;
+    }
+
+    @keyframes slideInLeft {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .hero-image img {
+      max-width: 100%;
+      max-height: 600px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 20px;
     }
 
     .hero-text {
+      flex: 1;
       position: relative;
       z-index: 1;
-      padding: 60px 80px 20px;
+      padding: 40px;
       color: #252601;
-      text-align: center;
-      max-width: 900px;
-      margin: 0 auto;
+      text-align: left;
+      opacity: 0;
+      transform: translateX(50px);
+      animation: slideInRight 1s 0.5s ease forwards;
+    }
+
+    @keyframes slideInRight {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .hero-text h1 {
@@ -510,6 +555,21 @@
       opacity: 1;
       filter: brightness(0) invert(0);
     }
+
+    @media (max-width: 1024px) {
+      .hero-content {
+        flex-direction: column;
+        gap: 40px;
+      }
+
+      .hero-text {
+        text-align: center;
+      }
+
+      .hero-text h1 {
+        font-size: 48px;
+      }
+    }
   </style>
 </head>
 
@@ -527,15 +587,20 @@
   </header>
 
   <section class="hero-section">
-    <div class="hero-text">
-      <h1>
-        Make 
-        <div class="rotating-text-wrapper">
-          <span class="text-rotate" id="rotatingText"></span>
-        </div>
-        Food Choices
-      </h1>
-      <p>Cal-FIT helps you understand nutrition labels, one scan at a time.</p>
+    <div class="hero-content">
+      <div class="hero-image">
+        <img src="https://i.pinimg.com/1200x/b5/0b/15/b50b15ce020575f8602432fa0b7dbf6a.jpg" alt="Nutrition Facts">
+      </div>
+      <div class="hero-text">
+        <h1>
+          Make 
+          <div class="rotating-text-wrapper">
+            <span class="text-rotate" id="rotatingText"></span>
+          </div>
+          Food Choices
+        </h1>
+        <p>Cal-FIT helps you understand nutrition labels, one scan at a time.</p>
+      </div>
     </div>
   </section>
 
@@ -709,10 +774,6 @@
         }
       });
     });
-
-    // Scan Card Hover (if you have multiple images)
-    const scanCard = document.getElementById('scan-card');
-    const scanImage = document.getElementById('scan-image');
   </script>
 </body>
 
