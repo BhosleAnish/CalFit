@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../api/axios";
 
 // ─── Chart.js via CDN (loaded once) ──────────────────────────────────────────
 function useChartJS() {
@@ -69,14 +68,23 @@ function ScanCard({ scan }) {
 // ─── Dual Charts ─────────────────────────────────────────────────────────────
 function DualCharts({ chartReady }) {
   const healthRef = useRef(null);
-  const scanRef = useRef(null);
+  const scanRef   = useRef(null);
   const healthChartInstance = useRef(null);
-  const scanChartInstance = useRef(null);
+  const scanChartInstance   = useRef(null);
+
   const [activePeriod, setActivePeriod] = useState("weekly");
-  const [healthMsg, setHealthMsg] = useState("");
-  const [scanMsg, setScanMsg] = useState("");
+  const [healthMsg,    setHealthMsg]    = useState("");
+  const [scanMsg,      setScanMsg]      = useState("");
   const [healthLoading, setHealthLoading] = useState(false);
-  const [scanLoading, setScanLoading] = useState(false);
+  const [scanLoading,   setScanLoading]   = useState(false);
+
+  // Destroy + recreate canvas to avoid "canvas already in use" errors
+  const resetCanvas = (ref, instanceRef) => {
+    if (instanceRef.current) {
+      instanceRef.current.destroy();
+      instanceRef.current = null;
+    }
+  };
 
   const renderHealthChart = (data) => {
     if (!data || !data.labels?.length) {
@@ -84,22 +92,43 @@ function DualCharts({ chartReady }) {
       return;
     }
     setHealthMsg("");
+    resetCanvas(healthRef, healthChartInstance);
     const ctx = healthRef.current.getContext("2d");
-    if (healthChartInstance.current) healthChartInstance.current.destroy();
     healthChartInstance.current = new window.Chart(ctx, {
       type: "line",
       data: {
         labels: data.labels,
         datasets: [
-          { label: "Your Diet Score", data: data.actual_scores, borderColor: "#10B981", backgroundColor: "rgba(16,185,129,0.1)", fill: true, tension: 0.3, borderWidth: 2 },
-          { label: "Goal Score", data: data.goal_scores, borderColor: "#F59E0B", borderDash: [5, 5], fill: false, borderWidth: 2, pointRadius: 0 }
+          {
+            label: "Your Diet Score",
+            data: data.actual_scores,
+            borderColor: "#10B981",
+            backgroundColor: "rgba(16,185,129,0.1)",
+            fill: true, tension: 0.3, borderWidth: 2
+          },
+          {
+            label: "Goal Score",
+            data: data.goal_scores,
+            borderColor: "#F59E0B",
+            borderDash: [5, 5],
+            fill: false, borderWidth: 2, pointRadius: 0
+          }
         ]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 600 },
         scales: {
-          y: { beginAtZero: true, max: 100, ticks: { color: "#9CA3AF" }, grid: { color: "rgba(255,255,255,0.1)" } },
-          x: { ticks: { color: "#9CA3AF" }, grid: { color: "rgba(255,255,255,0.1)" } }
+          y: {
+            beginAtZero: true, max: 100,
+            ticks: { color: "#9CA3AF" },
+            grid: { color: "rgba(255,255,255,0.1)" }
+          },
+          x: {
+            ticks: { color: "#9CA3AF", maxRotation: 45 },
+            grid: { color: "rgba(255,255,255,0.1)" }
+          }
         },
         plugins: {
           legend: { labels: { color: "#E5E7EB" } },
@@ -115,23 +144,34 @@ function DualCharts({ chartReady }) {
       return;
     }
     setScanMsg("");
+    resetCanvas(scanRef, scanChartInstance);
     const ctx = scanRef.current.getContext("2d");
-    if (scanChartInstance.current) scanChartInstance.current.destroy();
     scanChartInstance.current = new window.Chart(ctx, {
       type: "bar",
       data: {
         labels: data.labels,
         datasets: [{
-          label: "Scans", data: data.scan_counts,
-          backgroundColor: "rgba(59,130,246,0.7)", borderColor: "#3B82F6",
+          label: "Scans",
+          data: data.scan_counts,
+          backgroundColor: "rgba(59,130,246,0.7)",
+          borderColor: "#3B82F6",
           borderWidth: 1, borderRadius: 4, borderSkipped: false
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 600 },
         scales: {
-          y: { beginAtZero: true, ticks: { color: "#9CA3AF", stepSize: 1 }, grid: { color: "rgba(255,255,255,0.1)" } },
-          x: { ticks: { color: "#9CA3AF", maxRotation: 45 }, grid: { color: "rgba(255,255,255,0.1)" } }
+          y: {
+            beginAtZero: true,
+            ticks: { color: "#9CA3AF", stepSize: 1 },
+            grid: { color: "rgba(255,255,255,0.1)" }
+          },
+          x: {
+            ticks: { color: "#9CA3AF", maxRotation: 45 },
+            grid: { color: "rgba(255,255,255,0.1)" }
+          }
         },
         plugins: {
           legend: { labels: { color: "#E5E7EB" } },
@@ -148,20 +188,27 @@ function DualCharts({ chartReady }) {
     if (!chartReady) return;
     setActivePeriod(period);
     setHealthLoading(true); setScanLoading(true);
-    setHealthMsg(""); setScanMsg("");
+    setHealthMsg("");      setScanMsg("");
+
+    // Destroy existing charts immediately before fetch
+    resetCanvas(healthRef, healthChartInstance);
+    resetCanvas(scanRef,   scanChartInstance);
 
     try {
       const [healthRes, scanRes] = await Promise.all([
-        api.get(`/health-score/${period}`).catch(() => null),
-        api.get(`/scan-count/${period}`).catch(() => null)
+        fetch(`/api/health-score/${period}`, { credentials: "include" })
+          .then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`/api/scan-count/${period}`,   { credentials: "include" })
+          .then(r => r.ok ? r.json() : null).catch(() => null)
       ]);
-      renderHealthChart(healthRes?.data);
-      renderScanChart(scanRes?.data);
-    } catch (e) {
+      renderHealthChart(healthRes);
+      renderScanChart(scanRes);
+    } catch {
       setHealthMsg("Failed to load chart data.");
       setScanMsg("Failed to load chart data.");
     } finally {
-      setHealthLoading(false); setScanLoading(false);
+      setHealthLoading(false);
+      setScanLoading(false);
     }
   };
 
@@ -177,8 +224,11 @@ function DualCharts({ chartReady }) {
     <div style={s.chartsContainer}>
       <div style={s.chartControls}>
         {["daily", "weekly", "monthly"].map(p => (
-          <button key={p} style={{ ...s.timeBtn, ...(activePeriod === p ? s.timeBtnActive : {}) }}
-            onClick={() => updateCharts(p)}>
+          <button
+            key={p}
+            style={{ ...s.timeBtn, ...(activePeriod === p ? s.timeBtnActive : {}) }}
+            onClick={() => updateCharts(p)}
+          >
             {p.charAt(0).toUpperCase() + p.slice(1)}
           </button>
         ))}
@@ -188,18 +238,38 @@ function DualCharts({ chartReady }) {
         <div style={s.chartWrapper}>
           <h3 style={s.chartTitle}>Dietary Health Score Trend</h3>
           <div style={s.chartContainer}>
-            {healthLoading && <div style={s.chartLoader}><div style={s.spinner} /><p style={{ color: "#E5E7EB" }}>Analyzing health trends...</p></div>}
-            {healthMsg && !healthLoading && <p style={s.chartMessage}>{healthMsg}</p>}
-            <canvas ref={healthRef} style={{ display: healthMsg ? "none" : "block" }} />
+            {healthLoading && (
+              <div style={s.chartLoader}>
+                <div style={s.spinner} />
+                <p style={{ color: "#E5E7EB" }}>Analyzing health trends...</p>
+              </div>
+            )}
+            {healthMsg && !healthLoading && (
+              <p style={s.chartMessage}>{healthMsg}</p>
+            )}
+            <canvas
+              ref={healthRef}
+              style={{ display: (healthMsg || healthLoading) ? "none" : "block" }}
+            />
           </div>
         </div>
         {/* Scan Count Chart */}
         <div style={s.chartWrapper}>
           <h3 style={s.chartTitle}>Scanning Activity</h3>
           <div style={s.chartContainer}>
-            {scanLoading && <div style={s.chartLoader}><div style={s.spinner} /><p style={{ color: "#E5E7EB" }}>Loading scan activity...</p></div>}
-            {scanMsg && !scanLoading && <p style={s.chartMessage}>{scanMsg}</p>}
-            <canvas ref={scanRef} style={{ display: scanMsg ? "none" : "block" }} />
+            {scanLoading && (
+              <div style={s.chartLoader}>
+                <div style={s.spinner} />
+                <p style={{ color: "#E5E7EB" }}>Loading scan activity...</p>
+              </div>
+            )}
+            {scanMsg && !scanLoading && (
+              <p style={s.chartMessage}>{scanMsg}</p>
+            )}
+            <canvas
+              ref={scanRef}
+              style={{ display: (scanMsg || scanLoading) ? "none" : "block" }}
+            />
           </div>
         </div>
       </div>
@@ -211,27 +281,30 @@ function DualCharts({ chartReady }) {
 export default function Profile() {
   const navigate = useNavigate();
   const chartReady = useChartJS();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+
+  const [data,      setData]      = useState(null);
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState("");
-  const [aiVisible, setAiVisible] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
+  const [aiVisible,  setAiVisible]  = useState(false);
+  const [aiLoading,  setAiLoading]  = useState(false);
   const aiRef = useRef(null);
 
   useEffect(() => {
-    api.get("/profile")
-      .then(res => setData(res.data))
-      .catch(err => {
-        if (err.response?.status === 404) navigate("/profile-form");
-        else if (err.response?.status === 400) navigate("/edit-profile");
-        else setError("Failed to load profile.");
+    fetch("/api/profile", { credentials: "include" })
+      .then(r => {
+        if (r.status === 401) { navigate("/"); return null; }
+        if (r.status === 404) { navigate("/profile-form"); return null; }
+        if (r.status === 400) { navigate("/edit-profile"); return null; }
+        return r.json();
       })
+      .then(d => { if (d) setData(d); })
+      .catch(() => setError("Failed to load profile."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [navigate]);
 
   const handleLogout = async () => {
-    try { await api.post("/logout"); } catch (_) {}
+    try { await fetch("/api/logout", { method: "POST", credentials: "include" }); } catch (_) {}
     navigate("/");
   };
 
@@ -239,13 +312,14 @@ export default function Profile() {
     if (aiVisible) { setAiVisible(false); return; }
     setAiLoading(true);
     try {
-      const res = await api.post("/ai-analysis");
-      if (res.data.success) {
-        setAiAnalysis(res.data.analysis);
+      const res  = await fetch("/api/ai-analysis", { method: "POST", credentials: "include" });
+      const data = await res.json();
+      if (data.success) {
+        setAiAnalysis(data.analysis);
         setAiVisible(true);
         setTimeout(() => aiRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
       }
-    } catch (e) {
+    } catch {
       alert("Failed to get analysis. Please try again.");
     } finally {
       setAiLoading(false);
@@ -276,7 +350,6 @@ export default function Profile() {
   return (
     <div style={s.body}>
       <Navbar onLogout={handleLogout} />
-
       <div style={s.container}>
         <h2 style={s.pageTitle}>Your Nutritional Overview</h2>
 
@@ -287,14 +360,13 @@ export default function Profile() {
 
         {/* ── Profile Grid ── */}
         <div style={s.profileGrid}>
-
           {/* Left — Scan Stats */}
           <div style={s.leftCol}>
             <div style={s.card}>
               <h3 style={s.cardTitle}>Your Scanning Activity</h3>
               {scan_stats?.has_scans ? (
                 <div style={s.statsGrid}>
-                  <StatItem value={scan_stats.total_scans} label="Total Scans" />
+                  <StatItem value={scan_stats.total_scans}  label="Total Scans" />
                   <StatItem value={scan_stats.recent_scans} label="This Week" />
                   <StatItem value={today_scans?.length || 0} label="Today" />
                   {scan_stats.latest_scan_date && (
@@ -330,20 +402,22 @@ export default function Profile() {
 
         {/* ── AI Analysis ── */}
         <div style={s.aiSection}>
-          <button style={{ ...s.aiBtn, opacity: aiLoading ? 0.7 : 1 }} onClick={handleAiAnalysis} disabled={aiLoading}>
+          <button
+            style={{ ...s.aiBtn, opacity: aiLoading ? 0.7 : 1 }}
+            onClick={handleAiAnalysis}
+            disabled={aiLoading}
+          >
             {aiLoading
               ? <><div style={{ ...s.spinner, width: 20, height: 20, marginRight: 8 }} />Analyzing...</>
               : aiVisible ? "Hide Analysis" : "Get Comprehensive AI Health Analysis"
             }
           </button>
-
           <p style={{ textAlign: "center", fontSize: 14, marginTop: 10, color: (scan_stats?.total_scans || 0) >= 10 ? "#10B981" : "#9CA3AF" }}>
             {(scan_stats?.total_scans || 0) >= 10
               ? `Analysis available (${scan_stats.total_scans}/10) ✓`
               : `Scan at least 10 food items for analysis (${scan_stats?.total_scans || 0}/10)`
             }
           </p>
-
           {aiVisible && (
             <div ref={aiRef} style={s.aiContent}
               dangerouslySetInnerHTML={{ __html: aiAnalysis }} />
@@ -353,7 +427,7 @@ export default function Profile() {
         {/* ── Actions ── */}
         <div style={s.actions}>
           <Link to="/edit-profile" style={s.actionBtn}>Edit Profile</Link>
-          <Link to="/scans" style={s.actionBtn}>View All Scans</Link>
+          <Link to="/my-scans"    style={s.actionBtn}>View All Scans</Link>
           <button onClick={handleLogout} style={{ ...s.actionBtn, border: "none", cursor: "pointer" }}>Logout</button>
         </div>
       </div>
@@ -361,8 +435,6 @@ export default function Profile() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes shimmer { 0%,100%{left:-100%} 50%{left:100%} }
-
         .analysis-section {
           background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(217,214,208,0.95) 100%);
           backdrop-filter: blur(15px);
@@ -380,13 +452,6 @@ export default function Profile() {
         .analysis-section li { margin-bottom: 10px; padding-left: 5px; font-weight: 500; }
         .analysis-section ul li::marker { color: #84BF04; }
         .analysis-section strong { color: #84BF04; font-weight: 700; }
-
-        nav a:hover {
-          color: #84BF04 !important;
-          background: rgba(37,38,1,0.9) !important;
-          transform: translateY(-2px) scale(1.05) !important;
-        }
-        .time-btn-hover { background: linear-gradient(135deg,#84BF04,#9dd305) !important; }
       `}</style>
     </div>
   );
@@ -422,8 +487,6 @@ const s = {
   container: { maxWidth: 1400, margin: "40px auto", padding: "0 25px", position: "relative", zIndex: 1 },
   pageTitle: { textAlign: "center", marginBottom: 40, color: "#84BF04", fontSize: 48, fontWeight: 700, textShadow: "2px 2px 4px rgba(132,191,4,0.2)" },
   topSection: { marginBottom: 40 },
-
-  // Charts
   chartsContainer: {
     background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(217,214,208,0.95) 100%)",
     backdropFilter: "blur(15px)", borderRadius: 20, padding: 30,
@@ -441,14 +504,11 @@ const s = {
   chartWrapper: {
     flex: 1, background: "#0D0D0D", borderRadius: 15, padding: 20,
     border: "2px solid rgba(132,191,4,0.3)", position: "relative", overflow: "hidden",
-    transition: "all 0.3s ease",
   },
   chartTitle: { color: "#84BF04", marginBottom: 15, fontSize: "1.2em", textAlign: "center", fontWeight: 700 },
   chartContainer: { height: 300, position: "relative", minHeight: 300 },
   chartLoader: { position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", background: "rgba(13,13,13,0.95)", borderRadius: 8, zIndex: 2, gap: 12 },
   chartMessage: { textAlign: "center", marginTop: 15, fontSize: "0.95em", color: "#9CA3AF", padding: 20, fontWeight: 500 },
-
-  // Profile grid
   profileGrid: { display: "flex", gap: 30, flexWrap: "wrap", marginBottom: 40 },
   leftCol: { flex: 1, minWidth: 300 },
   rightCol: { flex: 1, minWidth: 300 },
@@ -463,8 +523,6 @@ const s = {
   statItem: { textAlign: "center", background: "rgba(255,255,255,0.6)", padding: 20, borderRadius: 12, border: "2px solid rgba(132,191,4,0.15)", transition: "all 0.3s ease" },
   statValue: { display: "block", fontSize: "2em", fontWeight: "bold", color: "#84BF04", marginBottom: 8 },
   statLabel: { fontSize: "0.9em", color: "#666", fontWeight: 600 },
-
-  // Scans
   scanCards: { display: "flex", flexDirection: "column", gap: 15, maxHeight: 400, overflowY: "auto" },
   scanCard: { background: "rgba(255,255,255,0.6)", padding: 18, borderRadius: 12, border: "2px solid rgba(132,191,4,0.15)", transition: "all 0.3s ease" },
   scanCardTitle: { marginBottom: 8, color: "#84BF04", fontWeight: 700, fontSize: "1.1em" },
@@ -479,8 +537,6 @@ const s = {
     fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 15px rgba(132,191,4,0.3)",
     marginTop: 15, fontFamily: "'Montserrat', sans-serif",
   },
-
-  // AI
   aiSection: { margin: "40px 0", textAlign: "center" },
   aiBtn: {
     background: "linear-gradient(135deg,#84BF04,#9dd305)", border: "none",
@@ -490,8 +546,6 @@ const s = {
     fontFamily: "'Montserrat', sans-serif",
   },
   aiContent: { marginTop: 30, textAlign: "left" },
-
-  // Actions
   actions: { display: "flex", justifyContent: "center", gap: 20, marginTop: 40, flexWrap: "wrap" },
   actionBtn: {
     background: "linear-gradient(135deg,#84BF04,#9dd305)", color: "#252601",
@@ -500,8 +554,6 @@ const s = {
     transition: "all 0.3s ease", fontFamily: "'Montserrat', sans-serif",
     display: "inline-block",
   },
-
-  // Spinner
   spinner: {
     border: "4px solid rgba(132,191,4,0.2)", borderTop: "4px solid #84BF04",
     borderRadius: "50%", width: 40, height: 40,

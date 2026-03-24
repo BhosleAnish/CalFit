@@ -1,16 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap');
-
   .ms-root {
     min-height: 100vh;
     background: #f4f1eb;
     font-family: 'DM Sans', sans-serif;
     color: #1a1a0e;
   }
-
   .ms-header {
     background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
     padding: 0 40px;
@@ -23,16 +20,13 @@ const styles = `
     z-index: 100;
     box-shadow: 0 4px 20px rgba(132,191,4,0.3);
   }
-
   .ms-logo {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 32px;
     color: #1a1a0e;
     letter-spacing: 3px;
   }
-
   .ms-nav { display: flex; gap: 8px; }
-
   .ms-nav a {
     padding: 8px 20px;
     border-radius: 50px;
@@ -42,19 +36,16 @@ const styles = `
     color: #1a1a0e;
     transition: all 0.25s ease;
   }
-
   .ms-nav a:hover,
   .ms-nav a.active {
     background: #1a1a0e;
     color: #84BF04;
   }
-
   .ms-body {
     max-width: 1400px;
     margin: 0 auto;
     padding: 40px 24px 80px;
   }
-
   .ms-back {
     display: inline-flex;
     align-items: center;
@@ -71,12 +62,10 @@ const styles = `
     text-decoration: none;
     transition: all 0.25s ease;
   }
-
   .ms-back:hover {
     background: #84BF04;
     transform: translateX(-4px);
   }
-
   .ms-hero {
     background: #1a1a0e;
     border-radius: 24px;
@@ -85,7 +74,6 @@ const styles = `
     position: relative;
     overflow: hidden;
   }
-
   .ms-hero::before {
     content: '';
     position: absolute;
@@ -94,7 +82,6 @@ const styles = `
     background: radial-gradient(circle, rgba(132,191,4,0.18) 0%, transparent 70%);
     pointer-events: none;
   }
-
   .ms-hero h1 {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 72px;
@@ -103,20 +90,17 @@ const styles = `
     margin: 0 0 8px;
     line-height: 1;
   }
-
   .ms-hero p {
     color: #a8a89a;
     font-size: 17px;
     margin: 0;
   }
-
   .ms-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     margin-bottom: 36px;
   }
-
   .ms-stat {
     background: white;
     border-radius: 20px;
@@ -126,13 +110,11 @@ const styles = `
     transition: all 0.3s ease;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   }
-
   .ms-stat:hover {
     border-color: #84BF04;
     transform: translateY(-6px);
     box-shadow: 0 12px 30px rgba(132,191,4,0.2);
   }
-
   .ms-stat-num {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 56px;
@@ -140,7 +122,6 @@ const styles = `
     line-height: 1;
     letter-spacing: 2px;
   }
-
   .ms-stat-label {
     font-size: 13px;
     font-weight: 700;
@@ -149,7 +130,6 @@ const styles = `
     letter-spacing: 1px;
     margin-top: 6px;
   }
-
   .ms-filters {
     background: white;
     border-radius: 16px;
@@ -161,7 +141,6 @@ const styles = `
     align-items: center;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   }
-
   .ms-filters input,
   .ms-filters select {
     flex: 1;
@@ -176,13 +155,11 @@ const styles = `
     transition: border-color 0.2s;
     outline: none;
   }
-
   .ms-filters input:focus,
   .ms-filters select:focus {
     border-color: #84BF04;
     background: white;
   }
-
   .ms-btn {
     padding: 11px 26px;
     border-radius: 50px;
@@ -193,34 +170,28 @@ const styles = `
     font-size: 14px;
     transition: all 0.25s ease;
   }
-
   .ms-btn-primary {
     background: linear-gradient(135deg, #84BF04, #9dd305);
     color: #1a1a0e;
     box-shadow: 0 4px 14px rgba(132,191,4,0.35);
   }
-
   .ms-btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 22px rgba(132,191,4,0.5);
   }
-
   .ms-btn-secondary {
     background: #1a1a0e;
     color: #84BF04;
   }
-
   .ms-btn-secondary:hover {
     background: #333320;
     transform: translateY(-2px);
   }
-
   .ms-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: 24px;
   }
-
   .ms-card {
     background: white;
     border-radius: 20px;
@@ -229,41 +200,34 @@ const styles = `
     box-shadow: 0 4px 16px rgba(0,0,0,0.07);
     transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
   }
-
   .ms-card:hover {
     border-color: #84BF04;
     transform: translateY(-8px);
     box-shadow: 0 16px 40px rgba(132,191,4,0.22);
   }
-
   .ms-card-head {
     background: linear-gradient(135deg, #84BF04, #9dd305);
     padding: 22px 24px;
     border-bottom: 3px solid #1a1a0e;
   }
-
   .ms-card-head h3 {
     font-size: 19px;
     font-weight: 700;
     color: #1a1a0e;
     margin: 0 0 6px;
   }
-
   .ms-card-date {
     font-size: 13px;
     color: rgba(26,26,14,0.7);
     font-weight: 600;
   }
-
   .ms-card-body { padding: 22px 24px; }
-
   .ms-nutrients {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     margin-bottom: 18px;
   }
-
   .ms-nutrient {
     background: #f4f1eb;
     border: 1px solid rgba(132,191,4,0.25);
@@ -272,12 +236,10 @@ const styles = `
     text-align: center;
     transition: all 0.2s;
   }
-
   .ms-nutrient:hover {
     background: rgba(132,191,4,0.1);
     transform: scale(1.04);
   }
-
   .ms-nutrient strong {
     display: block;
     font-size: 20px;
@@ -285,34 +247,28 @@ const styles = `
     color: #1a1a0e;
     margin-bottom: 3px;
   }
-
   .ms-nutrient span {
     font-size: 12px;
     color: #6b6b5a;
     font-weight: 600;
     text-transform: capitalize;
   }
-
   .ms-badges {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     margin-bottom: 18px;
   }
-
   .ms-badge {
     padding: 6px 14px;
     border-radius: 50px;
     font-size: 12px;
     font-weight: 700;
   }
-
   .ms-badge-high { background: linear-gradient(135deg, #ff6b6b, #ff5252); color: white; }
   .ms-badge-normal { background: linear-gradient(135deg, #51cf66, #37b24d); color: white; }
   .ms-badge-low { background: linear-gradient(135deg, #ffd43b, #fab005); color: #1a1a0e; }
-
   .ms-actions { display: flex; gap: 10px; }
-
   .ms-act {
     flex: 1;
     padding: 10px;
@@ -324,16 +280,12 @@ const styles = `
     font-family: 'DM Sans', sans-serif;
     transition: all 0.25s ease;
   }
-
   .ms-act-view { background: linear-gradient(135deg,#84BF04,#9dd305); color: #1a1a0e; }
   .ms-act-view:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(132,191,4,0.4); }
-
   .ms-act-report { background: #ffc107; color: #1a1a0e; }
   .ms-act-report:hover { background: #e0a800; transform: translateY(-2px); }
-
   .ms-act-delete { background: linear-gradient(135deg,#ff6b6b,#ff5252); color: white; }
   .ms-act-delete:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(255,82,82,0.4); }
-
   .ms-empty {
     background: white;
     border-radius: 24px;
@@ -341,7 +293,6 @@ const styles = `
     text-align: center;
     box-shadow: 0 4px 16px rgba(0,0,0,0.07);
   }
-
   .ms-empty h2 {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 48px;
@@ -349,9 +300,7 @@ const styles = `
     letter-spacing: 3px;
     margin-bottom: 12px;
   }
-
   .ms-empty p { color: #6b6b5a; font-size: 17px; margin-bottom: 28px; }
-
   .ms-scan-link {
     display: inline-block;
     padding: 14px 36px;
@@ -366,12 +315,10 @@ const styles = `
     cursor: pointer;
     border: none;
   }
-
   .ms-scan-link:hover {
     transform: translateY(-3px) scale(1.04);
     box-shadow: 0 10px 32px rgba(132,191,4,0.55);
   }
-
   .ms-loading {
     text-align: center;
     padding: 80px;
@@ -380,7 +327,6 @@ const styles = `
     letter-spacing: 3px;
     color: #6b6b5a;
   }
-
   /* Modal */
   .ms-overlay {
     display: none;
@@ -392,9 +338,7 @@ const styles = `
     align-items: center;
     justify-content: center;
   }
-
   .ms-overlay.open { display: flex; }
-
   .ms-modal {
     background: white;
     border-radius: 20px;
@@ -405,12 +349,10 @@ const styles = `
     box-shadow: 0 24px 60px rgba(0,0,0,0.3);
     animation: modalIn 0.28s cubic-bezier(0.4,0,0.2,1);
   }
-
   @keyframes modalIn {
     from { opacity: 0; transform: scale(0.93) translateY(12px); }
     to   { opacity: 1; transform: scale(1) translateY(0); }
   }
-
   .ms-modal h2 {
     font-family: 'Bebas Neue', sans-serif;
     font-size: 28px;
@@ -418,7 +360,6 @@ const styles = `
     margin: 0 0 24px;
     color: #1a1a0e;
   }
-
   .ms-close {
     position: absolute;
     top: 16px; right: 20px;
@@ -430,11 +371,8 @@ const styles = `
     line-height: 1;
     transition: color 0.2s;
   }
-
   .ms-close:hover { color: #1a1a0e; }
-
   .ms-form-group { margin-bottom: 20px; }
-
   .ms-form-group label {
     display: block;
     font-weight: 600;
@@ -442,7 +380,6 @@ const styles = `
     margin-bottom: 7px;
     color: #333;
   }
-
   .ms-form-group textarea {
     width: 100%;
     padding: 11px 14px;
@@ -455,11 +392,8 @@ const styles = `
     outline: none;
     transition: border-color 0.2s;
   }
-
   .ms-form-group textarea:focus { border-color: #84BF04; }
-
   .ms-radio-group { display: flex; gap: 16px; flex-wrap: wrap; }
-
   .ms-radio-group label {
     display: flex;
     align-items: center;
@@ -467,7 +401,6 @@ const styles = `
     font-weight: 500;
     cursor: pointer;
   }
-
   .ms-submit {
     width: 100%;
     padding: 13px;
@@ -482,16 +415,13 @@ const styles = `
     transition: all 0.25s ease;
     box-shadow: 0 4px 14px rgba(132,191,4,0.35);
   }
-
   .ms-submit:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 22px rgba(132,191,4,0.5);
   }
-
   .ms-status { margin-top: 14px; font-weight: 700; font-size: 14px; }
   .ms-status.success { color: #37b24d; }
   .ms-status.error { color: #ff5252; }
-
   @media (max-width: 768px) {
     .ms-hero h1 { font-size: 48px; }
     .ms-stats { grid-template-columns: 1fr; }
@@ -518,14 +448,14 @@ export default function MyScans() {
   const [contactConsent, setContactConsent] = useState(false);
   const [reportStatus, setReportStatus] = useState({ msg: "", cls: "" });
 
-  const getCsrf = () =>
-    document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
-
   const loadScans = useCallback(async () => {
     try {
-      const res = await fetch("/api/get-all-scans");
+      const res = await fetch("/api/scans", {
+        credentials: "include"
+      });
+      if (res.status === 401) { navigate("/"); return; }
       const data = await res.json();
-      if (data.error) { navigate("/"); return; }
+      if (!data.success) { setDisplayed(null); return; }
       setAllScans(data.scans);
       setDisplayed(data.scans);
       setStats(data.stats || {});
@@ -562,14 +492,13 @@ export default function MyScans() {
   const deleteScan = async (scanId) => {
     if (!confirm("Delete this scan? This cannot be undone.")) return;
     try {
-      const res = await fetch(`/api/delete-scan/${scanId}`, {
+      const res = await fetch(`/api/scans/${scanId}`, {
         method: "DELETE",
-        credentials: "include",
-        headers: { "X-Requested-With": "XMLHttpRequest", "X-CSRFToken": getCsrf() }
+        credentials: "include"
       });
       const data = await res.json();
       if (data.success) { alert("✅ Scan deleted!"); loadScans(); }
-      else if (data.error === "Unauthorized") { alert("Session expired. Please log in."); navigate("/"); }
+      else if (res.status === 401) { alert("Session expired. Please log in."); navigate("/"); }
       else alert(`⚠️ ${data.error || "Failed to delete"}`);
     } catch { alert("❌ Could not delete scan."); }
   };
@@ -579,16 +508,16 @@ export default function MyScans() {
     setReportDesc(""); setSeverity(""); setContactConsent(false);
     setReportStatus({ msg: "", cls: "" });
   };
-
   const closeModal = () => setModal({ open: false, scanId: null });
 
   const submitReport = async () => {
     if (!reportDesc.trim()) { setReportStatus({ msg: "Please describe the issue.", cls: "error" }); return; }
     setReportStatus({ msg: "Submitting...", cls: "" });
     try {
-      const res = await fetch(`/api/submit-report/${modal.scanId}`, {
+      const res = await fetch(`/api/scans/${modal.scanId}/report`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf(), "X-Requested-With": "XMLHttpRequest" },
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: reportDesc, severity: severity || null, contact_consent: contactConsent })
       });
       const data = await res.json();
@@ -611,7 +540,6 @@ export default function MyScans() {
       .filter(n => ["protein","carbohydrates","carbs","fat","fats","sugar","sodium"].includes(n.nutrient?.toLowerCase()))
       .slice(0, 4);
     const { high_risk_count: hc = 0, normal_count: nc = 0, low_risk_count: lc = 0 } = scan.nutrition_analysis?.summary || {};
-
     return (
       <div className="ms-card" key={scan._id}>
         <div className="ms-card-head">
@@ -725,7 +653,6 @@ export default function MyScans() {
           <div className="ms-modal">
             <button className="ms-close" onClick={closeModal}>&times;</button>
             <h2>Report Issue</h2>
-
             <div className="ms-form-group">
               <label>Describe the issue:</label>
               <textarea
@@ -735,7 +662,6 @@ export default function MyScans() {
                 onChange={e => setReportDesc(e.target.value)}
               />
             </div>
-
             <div className="ms-form-group">
               <label>Severity (Optional):</label>
               <div className="ms-radio-group">
@@ -747,14 +673,12 @@ export default function MyScans() {
                 ))}
               </div>
             </div>
-
             <div className="ms-form-group">
               <label>
                 <input type="checkbox" checked={contactConsent} onChange={e => setContactConsent(e.target.checked)} />
                 {" "}Okay to contact you for follow-up? (Optional)
               </label>
             </div>
-
             <button className="ms-submit" onClick={submitReport}>Submit Report</button>
             {reportStatus.msg && (
               <div className={`ms-status ${reportStatus.cls}`}>{reportStatus.msg}</div>

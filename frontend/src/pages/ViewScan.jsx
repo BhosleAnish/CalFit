@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import api from "../api/axios";
 import "../styles/ViewScan.css";
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -24,26 +23,38 @@ export default function ViewScan() {
   useEffect(() => {
     const fetchScan = async () => {
       try {
-        const res = await api.get(`/scan/${scanId}`);
-        setScan(res.data.scan);
+        const res = await fetch(`/api/scans/${scanId}`, {
+          credentials: "include"
+        });
+        if (res.status === 401) { navigate("/"); return; }
+        const data = await res.json();
+        if (!data.success) {
+          setError(data.error || "Scan not found.");
+        } else {
+          setScan(data.scan);
+        }
       } catch (err) {
-        setError(err.response?.data?.error || "Scan not found.");
+        setError("Could not load scan details.");
       } finally {
         setLoading(false);
       }
     };
     fetchScan();
-  }, [scanId]);
+  }, [scanId, navigate]);
 
   const handleDelete = async () => {
     if (!window.confirm("⚠️ Are you sure you want to delete this scan? This action cannot be undone.")) return;
     try {
-      const res = await api.delete(`/delete-scan/${scanId}`);
-      if (res.data.success) {
+      const res = await fetch(`/api/scans/${scanId}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
         alert("✅ Scan deleted successfully");
         navigate("/my-scans");
       } else {
-        alert("❌ " + (res.data.error || "Failed to delete scan"));
+        alert("❌ " + (data.error || "Failed to delete scan"));
       }
     } catch {
       alert("❌ An error occurred while deleting the scan");
@@ -75,10 +86,10 @@ export default function ViewScan() {
     </div>
   );
 
-  const nutrients = scan?.nutrition_analysis?.structured_nutrients || [];
-  const summary   = scan?.nutrition_analysis?.summary || {};
+  const nutrients   = scan?.nutrition_analysis?.structured_nutrients || [];
+  const summary     = scan?.nutrition_analysis?.summary || {};
   const productInfo = scan?.product_info || {};
-  const scanMeta  = scan?.scan_metadata || {};
+  const scanMeta    = scan?.scan_metadata || {};
 
   const imageUrl = productInfo.image_url
     || (scanMeta.image_filename ? `http://localhost:5000/static/uploads/${scanMeta.image_filename}` : null)
