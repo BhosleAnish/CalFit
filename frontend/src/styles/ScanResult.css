@@ -1,0 +1,287 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+/* ========= PAGE ========= */
+.sr-body {
+  font-family: "Montserrat", sans-serif;
+  min-height: 100vh;
+  height: 100vh;
+  background: url('https://i.pinimg.com/1200x/72/60/95/7260950c90c74e81d0206b3476a0a6c7.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: white;
+  position: relative;
+  line-height: 1.6;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.sr-body::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  z-index: 0;
+}
+
+/* ========= HEADER ========= */
+.sr-header {
+  position: relative;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sr-logo {
+  font-size: 26px;
+  font-weight: 700;
+  color: white;
+}
+
+.sr-main-nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 25px;
+}
+
+.sr-main-nav a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  padding: 8px 10px;
+  transition: all 0.3s ease;
+}
+
+.sr-main-nav a:hover {
+  color: #10B981;
+  text-decoration: underline;
+}
+
+/* ========= CONTAINER ========= */
+.sr-container {
+  position: relative;
+  z-index: 1;
+  margin: 10px auto;
+  max-width: 800px;
+  padding: 35px 30px;
+  border-radius: 12px;
+  height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+
+.sr-container h2 {
+  text-align: center;
+  color: white;
+  margin-bottom: 25px;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+/* ========= LAYOUT ========= */
+.main-content {
+  display: flex;
+  gap: 20px;
+  transition: all 0.5s ease;
+  align-items: flex-start;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.main-content.detail-active .scroll-table-wrapper {
+  width: 50%;
+  flex: 0 0 50%;
+}
+
+/* ========= TABLE WRAPPER ========= */
+.scroll-table-wrapper {
+  flex: 1;
+  overflow-y: scroll !important;
+  overflow-x: hidden;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.08);
+  transition: all 0.5s ease;
+  width: 100%;
+  position: relative;
+  min-height: 400px;
+  max-height: 400px;
+}
+
+/* Always-visible scrollbar */
+.scroll-table-wrapper::-webkit-scrollbar {
+  width: 14px !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-radius: 7px;
+}
+.scroll-table-wrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 7px;
+  margin: 8px 0;
+}
+.scroll-table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-radius: 7px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  min-height: 40px !important;
+}
+.scroll-table-wrapper::-webkit-scrollbar-thumb:hover  { background: rgba(255,255,255,0.7) !important; }
+.scroll-table-wrapper::-webkit-scrollbar-thumb:active { background: rgba(255,255,255,0.9) !important; }
+
+/* Firefox */
+.scroll-table-wrapper {
+  scrollbar-width: auto !important;
+  scrollbar-color: rgba(255,255,255,0.5) rgba(255,255,255,0.1) !important;
+}
+
+/* ========= TABLE ========= */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  transition: transform 0.5s ease;
+  min-width: 100%;
+}
+
+.table.slide-left {
+  transform: translateX(-10%);
+}
+
+.table th,
+.table td {
+  padding: 14px 18px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.table th {
+  background-color: #073047;
+  color: white;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table td {
+  color: #f0f0f0;
+  font-size: 15px;
+}
+
+.table tr {
+  cursor: pointer;
+}
+
+.table tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.table tr.row-selected {
+  background-color: rgba(16, 185, 129, 0.15);
+}
+
+/* ========= DETAIL PANEL ========= */
+.detail-panel {
+  width: 50%;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  color: white;
+  transition: all 0.5s ease;
+  max-height: 100%;
+  overflow-y: auto;
+  animation: slideInRight 0.3s ease;
+}
+
+.detail-panel::-webkit-scrollbar        { width: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; }
+.detail-panel::-webkit-scrollbar-track  { background: rgba(255,255,255,0.05); border-radius: 4px; }
+.detail-panel::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.3); border-radius: 4px; min-height: 20px; }
+.detail-panel::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
+
+.detail-panel h3 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #10B981;
+}
+
+.detail-panel p {
+  margin-bottom: 10px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.detail-panel button {
+  margin-top: 16px;
+  background: #10B981;
+  border: none;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: "Montserrat", sans-serif;
+  transition: background 0.3s ease;
+}
+
+.detail-panel button:hover {
+  background: #059669;
+}
+
+/* ========= ANIMATIONS ========= */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ========= RESPONSIVE ========= */
+@media screen and (max-width: 768px) {
+  .sr-main-nav {
+    position: static;
+    transform: none;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .sr-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sr-container {
+    margin: 30px 20px;
+    padding: 25px 20px;
+    height: calc(100vh - 160px);
+  }
+
+  .main-content {
+    flex-direction: column;
+  }
+
+  .detail-panel {
+    width: 100%;
+  }
+
+  .sr-container h2 {
+    font-size: 24px;
+  }
+
+  .table th,
+  .table td {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .scroll-table-wrapper {
+    min-height: 250px;
+  }
+}
