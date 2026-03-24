@@ -36,19 +36,20 @@ def get_barcode_from_image(image_path):
 
 def get_product_from_api(barcode):
     url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
-    ### DEBUG ###
+    headers = {
+        "User-Agent": "NutritionApp/1.0 (student project; anish22it@student.mes.ac.in.com)"
+    }
+    print(f"[DEBUG] Headers being sent: {headers}")
     print(f"[DEBUG] Querying API: {url}")
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         data = response.json()
         if data.get("status") == 1 and "product" in data:
-            ### DEBUG ###
             print("[DEBUG] Product found in API.")
             return data["product"]
     except requests.exceptions.RequestException as e:
         print(f"[DEBUG] API request failed: {e}")
-    ### DEBUG ###
     print("[DEBUG] Product not found in API for the given barcode.")
     return None
 
