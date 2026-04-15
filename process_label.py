@@ -3,33 +3,33 @@ import re
 import sqlite3
 from PIL import Image
 import requests
-import zxingcpp  # <-- NEW LIBRARY IMPORT
+from pyzbar.pyzbar import decode as pyzbar_decode  # <-- REPLACED zxingcpp
 
 # ==============================================================================
-# SECTION 1: API-BASED EXTRACTION (Using the new zxing-cpp library)
+# SECTION 1: API-BASED EXTRACTION (Using pyzbar library)
 # ==============================================================================
 
 def get_barcode_from_image(image_path):
-    """Scans an image using the zxing-cpp library and returns the first barcode found."""
+    """Scans an image using the pyzbar library and returns the first barcode found."""
     ### DEBUG ###
-    print("\n[DEBUG] Step 1: Attempting to find barcode with zxing-cpp...")
+    print("\n[DEBUG] Step 1: Attempting to find barcode with pyzbar...")
     try:
         # Open the image file
         image = Image.open(image_path)
         # Read all barcodes from the image
-        results = zxingcpp.read_barcodes(image)
+        results = pyzbar_decode(image)
         
         if results:
-            # Get the text from the first barcode found
-            data = results[0].text
+            # Get the text from the first barcode found (decode bytes to str)
+            data = results[0].data.decode("utf-8")
             ### DEBUG ###
-            print(f"[DEBUG] Barcode found by zxing-cpp. Data: '{data}'")
+            print(f"[DEBUG] Barcode found by pyzbar. Data: '{data}'")
             return data
     except Exception as e:
-        print(f"[DEBUG] An error occurred during zxing-cpp barcode detection: {e}")
+        print(f"[DEBUG] An error occurred during pyzbar barcode detection: {e}")
 
     ### DEBUG ###
-    print("[DEBUG] No barcode was found by zxing-cpp.")
+    print("[DEBUG] No barcode was found by pyzbar.")
     return None
 
 # --- [The rest of the file remains the same] ---

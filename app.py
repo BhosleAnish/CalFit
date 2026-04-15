@@ -9,8 +9,7 @@ import  os, re
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from ocr_utils import process_label_image,extract_nutrients
-from PIL import Image
-import pillow_avif  # enables AVIF support in Pillow
+from PIL import Image  
 from io import BytesIO
 import sqlite3
 import pymongo
@@ -2185,4 +2184,4 @@ def api_submit_report(scan_id):
         return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(host="localhost", port=5000, debug=True, use_reloader = False)
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader = False)
