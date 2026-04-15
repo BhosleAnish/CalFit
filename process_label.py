@@ -41,15 +41,28 @@ def get_product_from_api(barcode):
     }
     print(f"[DEBUG] Headers being sent: {headers}")
     print(f"[DEBUG] Querying API: {url}")
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        if data.get("status") == 1 and "product" in data:
-            print("[DEBUG] Product found in API.")
-            return data["product"]
-    except requests.exceptions.RequestException as e:
-        print(f"[DEBUG] API request failed: {e}")
+    
+    for attempt in range(3):
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 429:
+                wait = 2 ** attempt  # 1s, 2s, 4s
+                print(f"[DEBUG] Rate limited (429). Waiting {wait}s before retry {attempt+1}/3...")
+                import time; time.sleep(wait)
+                continue
+            
+            response.raise_for_status()
+            data = response.json()
+            if data.get("status") == 1 and "product" in data:
+                print("[DEBUG] Product found in API.")
+                return data["product"]
+            break  # got a valid response, no point retrying
+            
+        except requests.exceptions.RequestException as e:
+            print(f"[DEBUG] API request failed: {e}")
+            break
+    
     print("[DEBUG] Product not found in API for the given barcode.")
     return None
 

@@ -25,6 +25,7 @@ from flask import jsonify, request # Make sure jsonify and request are imported
 from nlp_analyzer import analyze_report_text # <-- ADD THIS
 from authlib.integrations.flask_client import OAuth
 from functools import wraps
+from nlp_analyzer import analyze_reports_batch
 load_dotenv()
 
 # ==================== AUTHENTICATION DECORATOR ====================
@@ -1069,20 +1070,23 @@ def get_community_warnings(product_name):
 
         # 3. Categorize reports with NLP (by unique user)
         topic_users = {}  # e.g., {"Sickness...": {"user_A", "user_B"}}
-        
-        for report in all_reports:
-            desc = report.get("description", "").strip()
-            username = report.get("username")
-            
-            if not desc or not username:
-                continue
-                
-            topic = analyze_report_text(desc)
-            
-            # Add the user to a set for that topic
+
+        # Extract valid reports
+        valid_reports = [
+            (r.get("username"), r.get("description", "").strip())
+            for r in all_reports
+            if r.get("username") and r.get("description", "").strip()
+        ]
+        # Classify ALL in parallel — fires simultaneously instead of one by one
+        descriptions = [desc for _, desc in valid_reports]
+        topics = analyze_reports_batch(descriptions)
+
+        for (username, _), topic in zip(valid_reports, topics):
             if topic not in topic_users:
                 topic_users[topic] = set()
             topic_users[topic].add(username)
+        
+        
 
         # Now, create counts based on the *number of unique users*
         topic_counts = {topic: len(users) for topic, users in topic_users.items()}
@@ -1432,6 +1436,9 @@ def scan_label():
 
             elif scan_type == "barcode":
                 processed_data = process_nutrition_label(filepath)
+                if not processed_data:
+                    flash("Product not found. The barcode was scanned but no data was retrieved. Please try a label scan instead.", "warning")
+                    return render_template('scan_label.html')
 
                 session['scan_type'] = "barcode"
                 session['barcode_processed'] = True
@@ -1531,7 +1538,7 @@ def index():
     # Initialize community_warnings
     community_warnings = {"total_reports": 0, "top_reports": [], "product_name": None}
     
-    if barcode_processed and scan_data.get('structured_nutrients') and username:
+    if barcode_processed and scan_data and scan_data.get('structured_nutrients') and username:
         user_profile = load_user_health_profile(username)
         
         # Get community warnings for the product
@@ -2184,4 +2191,4 @@ def api_submit_report(scan_id):
         return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader = False)
+    app.run(host="0.0.0.0docker build -t nutritionapp .", port=5000, debug=True, use_reloader = False)

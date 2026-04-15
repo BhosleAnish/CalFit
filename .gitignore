@@ -25,3 +25,5 @@ static/images/
 .idea/
 .DS_Store
 Thumbs.db
+.env.local
+.flask_session/

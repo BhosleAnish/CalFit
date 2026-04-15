@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Flask session & uploads (runtime data, not part of image)
+.flask_session/
+static/uploads/
+
+# Environment secrets — NEVER bake into image
+.env
+
+# Dev/editor noise
+.vscode/
+.idea/
+*.log
+
+# Git
+.git/
+.gitignore
