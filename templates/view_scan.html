@@ -28,7 +28,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 20% 50%, rgba(0, 237, 100, 0.1) 0%, transparent 50%),
+            background: radial-gradient(circle at 20% 50%, rgba(132, 191, 4, 0.1) 0%, transparent 50%),
                         radial-gradient(circle at 80% 80%, rgba(37, 38, 1, 0.05) 0%, transparent 50%);
             z-index: 0;
             pointer-events: none;
@@ -41,11 +41,12 @@
             z-index: 1;
         }
 
+        /* ── HEADER ── */
         .header {
-            background: linear-gradient(135deg, #00ED64 0%, #01ED64 100%);
+            background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
             padding: 25px 40px;
             border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0, 237, 100, 0.3);
+            box-shadow: 0 4px 20px rgba(132, 191, 4, 0.3);
             margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
@@ -61,24 +62,41 @@
         }
 
         .back-btn {
-            background: linear-gradient(135deg, #252601 0%, #1a1b01 100%);
-            color: #00ED64;
+            background: rgba(255, 255, 255, 0.6);
+            color: #252601;
             padding: 12px 28px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 700;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(37, 38, 1, 0.3);
-            border: 2px solid #00ED64;
+            box-shadow: 0 4px 15px rgba(37, 38, 1, 0.15);
+            border: 2px solid rgba(37, 38, 1, 0.2);
             font-size: 16px;
+            position: relative;
+            overflow: hidden;
         }
+
+        .back-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .back-btn:hover::before { left: 100%; }
 
         .back-btn:hover {
-            background: linear-gradient(135deg, #1a1b01 0%, #252601 100%);
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(37, 38, 1, 0.35);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(37, 38, 1, 0.5);
+            box-shadow: 0 8px 25px rgba(37, 38, 1, 0.2);
         }
 
+        /* ── GRID ── */
         .scan-grid {
             display: grid;
             grid-template-columns: 1fr 2fr;
@@ -86,21 +104,24 @@
             margin-bottom: 30px;
         }
 
+        /* ── CARDS ── */
         .card {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
             backdrop-filter: blur(15px);
             border-radius: 20px;
             padding: 35px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            border: 2px solid rgba(0, 237, 100, 0.2);
+            border: 2px solid rgba(132, 191, 4, 0.2);
             transition: all 0.3s ease;
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 50px rgba(0, 237, 100, 0.3);
+            box-shadow: 0 15px 50px rgba(132, 191, 4, 0.25);
+            border-color: rgba(132, 191, 4, 0.4);
         }
 
+        /* ── PRODUCT CARD ── */
         .product-card {
             text-align: center;
         }
@@ -112,23 +133,25 @@
             object-fit: contain;
             border-radius: 15px;
             margin-bottom: 25px;
-            background: rgba(0, 237, 100, 0.05);
+            background: rgba(132, 191, 4, 0.05);
             padding: 20px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid rgba(132, 191, 4, 0.15);
         }
 
         .product-image:hover {
             transform: scale(1.05) rotate(2deg);
-            box-shadow: 0 8px 30px rgba(0, 237, 100, 0.3);
+            box-shadow: 0 8px 30px rgba(132, 191, 4, 0.3);
+            border-color: rgba(132, 191, 4, 0.3);
         }
 
         .product-name {
             font-size: 28px;
             font-weight: 800;
-            color: #00ED64;
+            color: #84BF04;
             margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0, 237, 100, 0.2);
+            text-shadow: 2px 2px 4px rgba(132, 191, 4, 0.2);
         }
 
         .scan-date {
@@ -143,10 +166,16 @@
             display: flex;
             justify-content: space-around;
             padding: 20px;
-            background: linear-gradient(135deg, rgba(0, 237, 100, 0.1), rgba(0, 237, 100, 0.05));
+            background: rgba(255, 255, 255, 0.6);
             border-radius: 15px;
             margin-top: 20px;
-            border: 2px solid rgba(0, 237, 100, 0.2);
+            border: 2px solid rgba(132, 191, 4, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .scan-meta:hover {
+            border-color: rgba(132, 191, 4, 0.3);
+            box-shadow: 0 6px 20px rgba(132, 191, 4, 0.15);
         }
 
         .meta-item {
@@ -156,8 +185,8 @@
         .meta-value {
             font-size: 32px;
             font-weight: 800;
-            color: #00ED64;
-            text-shadow: 2px 2px 4px rgba(0, 237, 100, 0.3);
+            color: #84BF04;
+            text-shadow: 2px 2px 4px rgba(132, 191, 4, 0.2);
         }
 
         .meta-label {
@@ -169,14 +198,17 @@
             letter-spacing: 1px;
         }
 
+        /* ── INFO CARD ── */
         .info-card h2 {
-            color: #00ED64;
+            color: #84BF04;
             margin-bottom: 25px;
-            font-size: 28px;
-            font-weight: 800;
-            text-shadow: 2px 2px 4px rgba(0, 237, 100, 0.2);
+            font-size: 1.4em;
+            font-weight: 700;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(132, 191, 4, 0.3);
         }
 
+        /* ── SUMMARY STATS ── */
         .summary-stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -190,32 +222,22 @@
             text-align: center;
             transition: all 0.3s ease;
             border: 2px solid;
+            background: rgba(255, 255, 255, 0.6);
         }
 
-        .stat-box.high { 
-            background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(231, 76, 60, 0.05));
-            border-color: #e74c3c;
-        }
-        
-        .stat-box.normal { 
-            background: linear-gradient(135deg, rgba(0, 237, 100, 0.1), rgba(0, 237, 100, 0.05));
-            border-color: #00ED64;
-        }
-        
-        .stat-box.low { 
-            background: linear-gradient(135deg, rgba(243, 156, 18, 0.1), rgba(243, 156, 18, 0.05));
-            border-color: #f39c12;
-        }
-        
-        .stat-box.unknown { 
-            background: linear-gradient(135deg, rgba(149, 165, 166, 0.1), rgba(149, 165, 166, 0.05));
-            border-color: #95a5a6;
-        }
+        .stat-box.high   { border-color: rgba(239, 68, 68, 0.4);  }
+        .stat-box.normal { border-color: rgba(132, 191, 4, 0.3);  }
+        .stat-box.low    { border-color: rgba(245, 158, 11, 0.4); }
+        .stat-box.unknown{ border-color: rgba(149, 165, 166, 0.4);}
 
         .stat-box:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
         }
+
+        .stat-box.high:hover   { box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2);  }
+        .stat-box.normal:hover { box-shadow: 0 8px 25px rgba(132, 191, 4, 0.2);  }
+        .stat-box.low:hover    { box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2); }
 
         .stat-number {
             font-size: 42px;
@@ -223,30 +245,31 @@
             margin-bottom: 8px;
         }
 
-        .stat-box.high .stat-number { color: #e74c3c; }
-        .stat-box.normal .stat-number { color: #00ED64; }
-        .stat-box.low .stat-number { color: #f39c12; }
+        .stat-box.high    .stat-number { color: #ef4444; }
+        .stat-box.normal  .stat-number { color: #84BF04; }
+        .stat-box.low     .stat-number { color: #f59e0b; }
         .stat-box.unknown .stat-number { color: #95a5a6; }
 
         .stat-label {
             font-size: 14px;
-            color: #252601;
+            color: #666;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
+        /* ── TABLE ── */
         .nutrients-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 25px;
+            margin-top: 10px;
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
 
         .nutrients-table th {
-            background: linear-gradient(135deg, #00ED64 0%, #01ED64 100%);
+            background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
             color: #252601;
             padding: 18px;
             text-align: left;
@@ -259,15 +282,18 @@
 
         .nutrients-table td {
             padding: 18px;
-            border-bottom: 1px solid rgba(0, 237, 100, 0.1);
+            border-bottom: 1px solid rgba(132, 191, 4, 0.1);
             background: rgba(255, 255, 255, 0.5);
             transition: all 0.3s ease;
+            color: #252601;
+            font-weight: 500;
         }
 
         .nutrients-table tr:hover td {
-            background: rgba(0, 237, 100, 0.05);
+            background: rgba(132, 191, 4, 0.05);
         }
 
+        /* ── BADGES ── */
         .status-badge {
             display: inline-block;
             padding: 6px 16px;
@@ -279,16 +305,17 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
-        .status-high { background: #e74c3c; color: white; }
-        .status-normal { background: #00ED64; color: #252601; }
-        .status-low { background: #f39c12; color: white; }
+        .status-high    { background: #ef4444; color: white; }
+        .status-normal  { background: linear-gradient(135deg, #84BF04, #9dd305); color: #252601; }
+        .status-low     { background: #f59e0b; color: white; }
         .status-unknown { background: #95a5a6; color: white; }
 
+        /* ── NUTRIENT MESSAGE ── */
         .nutrient-message {
             margin-top: 12px;
             padding: 15px;
-            background: linear-gradient(135deg, rgba(0, 237, 100, 0.1), rgba(0, 237, 100, 0.05));
-            border-left: 4px solid #00ED64;
+            background: rgba(255, 255, 255, 0.6);
+            border-left: 4px solid #84BF04;
             border-radius: 8px;
             font-size: 14px;
             color: #252601;
@@ -296,10 +323,11 @@
             line-height: 1.6;
         }
 
+        /* ── CATEGORY BADGE ── */
         .nutrient-category {
             display: inline-block;
             padding: 4px 10px;
-            background: linear-gradient(135deg, #00ED64, #01ED64);
+            background: linear-gradient(135deg, #84BF04, #9dd305);
             color: #252601;
             border-radius: 15px;
             font-size: 11px;
@@ -309,6 +337,7 @@
             letter-spacing: 0.5px;
         }
 
+        /* ── ACTION BUTTONS ── */
         .action-buttons {
             display: flex;
             gap: 15px;
@@ -328,63 +357,48 @@
             text-decoration: none;
             display: inline-block;
             font-family: 'Montserrat', sans-serif;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
         }
 
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before { left: 100%; }
+
         .btn-delete {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
-            border: 2px solid rgba(231, 76, 60, 0.3);
+            border: 2px solid rgba(239, 68, 68, 0.3);
         }
 
         .btn-delete:hover {
-            background: linear-gradient(135deg, #c0392b, #e74c3c);
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
         }
 
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(132, 191, 4, 0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #84BF04; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9dd305; }
+
+        /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            .scan-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .summary-stats {
-                grid-template-columns: 1fr;
-            }
-
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
-            .product-name {
-                font-size: 22px;
-            }
-        }
-
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(217, 214, 208, 0.5);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #00ED64, #01ED64);
-            border-radius: 10px;
-            border: 2px solid rgba(217, 214, 208, 0.5);
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #01ED64, #00ED64);
+            .scan-grid { grid-template-columns: 1fr; }
+            .summary-stats { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 15px; text-align: center; }
+            .header h1 { font-size: 24px; }
+            .product-name { font-size: 22px; }
         }
     </style>
 </head>
@@ -432,7 +446,7 @@
             <!-- Info Card -->
             <div class="card info-card">
                 <h2>Nutrition Summary</h2>
-                
+
                 <div class="summary-stats">
                     <div class="stat-box high">
                         <div class="stat-number">{{ scan.nutrition_analysis.summary.high_risk_count }}</div>

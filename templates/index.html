@@ -17,16 +17,6 @@
     </nav>
   </header>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-  <div class="flash-messages">
-    {% for category, message in messages %}
-    <div class="flash {{ category }}">{{ message }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
-  {% endwith %}
-
   {% if barcode_processed and scan_data and scan_data.structured_nutrients %}
   <div class="results">
     <h2>Barcode Scan Results</h2>
@@ -97,7 +87,6 @@
         <div class="nutrient-value">{{ nutrient.value }} {{ nutrient.unit }}</div>
         <span class="nutrient-status status-{{ nutrient.status|lower }}">{{ nutrient.status }}</span>
 
-        <!-- Hidden AI Analysis Section -->
         <div class="ai-analysis-section" style="display: none;">
           <div class="ai-divider"></div>
           {% if nutrient.ai_analysis %}
@@ -125,8 +114,6 @@
       <a href="{{ url_for('scan_label') }}" class="btn">Scan Another Item</a>
       <a href="{{ url_for('dashboard') }}" class="btn">Back to Dashboard</a>
     </div>
-
-    <div id="flash-messages"></div>
   </div>
 
   {% else %}
@@ -203,20 +190,13 @@
       e.preventDefault();
 
       const formData = new FormData(this);
-      const flashBox = document.getElementById("flash-messages");
 
       try {
         const response = await fetch(this.action, { method: "POST", body: formData });
         const result = await response.json();
-
-        flashBox.innerHTML = `<div class="flash ${result.status}"><p>${result.message}</p></div>`;
-        setTimeout(() => flashBox.innerHTML = '', 3000);
-
         if (result.status === 'success') this.style.display = 'none';
       } catch (error) {
-        console.error('Error:', error);
-        flashBox.innerHTML = `<div class="flash error"><p>Network error occurred</p></div>`;
-        setTimeout(() => flashBox.innerHTML = '', 3000);
+        console.error('Error submitting diet form:', error);
       }
     });
   </script>

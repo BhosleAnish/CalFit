@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product Not Found – NutriScan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Montserrat", sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #D9D6D0 0%, #c4c1bb 100%);
+      color: #252601;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(132, 191, 4, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(37, 38, 1, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      height: 80px;
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(132, 191, 4, 0.3);
+      border-bottom: 2px solid rgba(37, 38, 1, 0.1);
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: #252601;
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
+      letter-spacing: 1px;
+      text-decoration: none;
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+    }
+
+    /* ── CARD ── */
+    .error-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(217, 214, 208, 0.95) 100%);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 2px solid rgba(132, 191, 4, 0.2);
+      border-radius: 20px;
+      max-width: 680px;
+      width: 100%;
+      padding: 60px 50px 50px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+      transition: all 0.3s ease;
+    }
+
+    .error-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(132, 191, 4, 0.4);
+      box-shadow: 0 20px 50px rgba(132, 191, 4, 0.2);
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(32px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── ICON ── */
+    .icon-wrap {
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 32px;
+      border-radius: 20px;
+      background: #0D0D0D;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 28px rgba(37, 38, 1, 0.25);
+      animation: iconPulse 2.8s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid rgba(132, 191, 4, 0.3);
+    }
+
+    .icon-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(132, 191, 4, 0.15), transparent 60%);
+    }
+
+    @keyframes iconPulse {
+      0%,100% { box-shadow: 0 8px 28px rgba(37, 38, 1, 0.25); }
+      50%      { box-shadow: 0 8px 40px rgba(132, 191, 4, 0.35); }
+    }
+
+    .icon-wrap svg {
+      width: 58px;
+      height: 58px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* scan-line animation */
+    .scan-line {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      height: 2px;
+      background: #84BF04;
+      border-radius: 2px;
+      box-shadow: 0 0 8px #84BF04;
+      animation: scanLine 2s ease-in-out infinite;
+      z-index: 2;
+    }
+
+    @keyframes scanLine {
+      0%   { top: 14px; opacity: 1; }
+      50%  { top: 88px; opacity: 1; }
+      100% { top: 14px; opacity: 1; }
+    }
+
+    /* ── BADGE ── */
+    .oops-label {
+      display: inline-block;
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      color: #252601;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 50px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 15px rgba(132, 191, 4, 0.3);
+    }
+
+    /* ── HEADING ── */
+    h1 {
+      font-size: 34px;
+      font-weight: 800;
+      color: #252601;
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+
+    h1 span {
+      color: #84BF04;
+      position: relative;
+      display: inline-block;
+      text-shadow: 2px 2px 4px rgba(132, 191, 4, 0.2);
+    }
+
+    h1 span::after {
+      content: '';
+      position: absolute;
+      bottom: -3px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #84BF04;
+      border-radius: 2px;
+      opacity: 0.5;
+    }
+
+    /* ── DESCRIPTION ── */
+    .desc {
+      font-size: 15.5px;
+      color: #666;
+      line-height: 1.8;
+      max-width: 460px;
+      margin: 0 auto 36px;
+      font-weight: 500;
+    }
+
+    /* ── REASON PILLS ── */
+    .reasons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 40px;
+    }
+
+    .pill {
+      background: rgba(255, 255, 255, 0.6);
+      border: 2px solid rgba(132, 191, 4, 0.15);
+      border-radius: 50px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #252601;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .pill:hover {
+      background: rgba(255, 255, 255, 0.8);
+      border-color: rgba(132, 191, 4, 0.3);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(132, 191, 4, 0.2);
+    }
+
+    .pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #84BF04;
+    }
+
+    /* ── BUTTONS ── */
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #84BF04 0%, #9dd305 100%);
+      color: #252601;
+      font-family: "Montserrat", sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px 34px;
+      border-radius: 50px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(132, 191, 4, 0.3);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      left: -100%;
+      transition: left 0.55s ease;
+    }
+
+    .btn-primary:hover::before { left: 100%; }
+
+    .btn-primary:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(132, 191, 4, 0.5);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.6);
+      color: #252601;
+      font-family: "Montserrat", sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 11px 28px;
+      border-radius: 50px;
+      border: 2px solid rgba(37, 38, 1, 0.2);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(132, 191, 4, 0.4);
+      background: rgba(255, 255, 255, 0.8);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(132, 191, 4, 0.2);
+    }
+
+    /* ── TIP BOX ── */
+    .tip-box {
+      margin-top: 40px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 2px solid rgba(132, 191, 4, 0.2);
+      border-radius: 15px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      text-align: left;
+      transition: all 0.3s ease;
+    }
+
+    .tip-box:hover {
+      border-color: rgba(132, 191, 4, 0.3);
+      box-shadow: 0 6px 20px rgba(132, 191, 4, 0.15);
+    }
+
+    .tip-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .tip-box p {
+      font-size: 13.5px;
+      color: #555;
+      line-height: 1.7;
+      font-weight: 500;
+    }
+
+    .tip-box strong { color: #84BF04; font-weight: 700; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      header { padding: 0 20px; }
+      .logo { font-size: 22px; }
+      .error-card { padding: 40px 28px 36px; }
+      h1 { font-size: 26px; }
+      .desc { font-size: 14px; }
+    }
+
+    @media (max-width: 480px) {
+      .error-card { padding: 32px 20px 28px; }
+      h1 { font-size: 22px; }
+      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="/dashboard" class="logo">NutriScan</a>
+  </header>
+
+  <main>
+    <div class="error-card">
+
+      <!-- animated barcode icon -->
+      <div class="icon-wrap">
+        <div class="scan-line"></div>
+        <svg viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4"  y="10" width="4"  height="38" rx="1.5" fill="#84BF04"/>
+          <rect x="11" y="10" width="2"  height="38" rx="1"   fill="#84BF04" opacity=".7"/>
+          <rect x="16" y="10" width="5"  height="38" rx="1.5" fill="#84BF04"/>
+          <rect x="24" y="10" width="2"  height="38" rx="1"   fill="#84BF04" opacity=".7"/>
+          <rect x="29" y="10" width="4"  height="38" rx="1.5" fill="#84BF04"/>
+          <rect x="36" y="10" width="2"  height="38" rx="1"   fill="#84BF04" opacity=".7"/>
+          <rect x="41" y="10" width="5"  height="38" rx="1.5" fill="#84BF04"/>
+          <rect x="49" y="10" width="2"  height="38" rx="1"   fill="#84BF04" opacity=".7"/>
+          <rect x="53" y="10" width="3"  height="38" rx="1.5" fill="#84BF04"/>
+          <!-- X mark overlay -->
+          <line x1="14" y1="14" x2="44" y2="44" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round" opacity=".9"/>
+          <line x1="44" y1="14" x2="14" y2="44" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round" opacity=".9"/>
+        </svg>
+      </div>
+
+      <div class="oops-label">Product Not Found</div>
+
+      <h1>Oops! This product isn't<br>in our <span>database</span></h1>
+
+      <p class="desc">
+        The barcode you scanned couldn't be matched to any product in our database.
+        This could be an unregistered, regional, or unauthorized product.
+      </p>
+
+      <div class="reasons">
+        <div class="pill"><span class="pill-dot"></span>Unregistered product</div>
+        <div class="pill"><span class="pill-dot"></span>Regional / local brand</div>
+        <div class="pill"><span class="pill-dot"></span>Damaged barcode</div>
+        <div class="pill"><span class="pill-dot"></span>Unauthorized import</div>
+      </div>
+
+      <div class="actions">
+        <a href="/scan-label" class="btn-primary">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          Scan Barcode
+        </a>
+        <a href="/dashboard" class="btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Back to Dashboard
+        </a>
+      </div>
+
+      
+
+    </div>
+  </main>
+
+</body>
+</html>

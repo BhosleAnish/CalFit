@@ -6,6 +6,7 @@ from flask_wtf.csrf import generate_csrf
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import  os, re
+import re as _re
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from ocr_utils import process_label_image,extract_nutrients
@@ -26,8 +27,24 @@ from nlp_analyzer import analyze_report_text # <-- ADD THIS
 from authlib.integrations.flask_client import OAuth
 from functools import wraps
 from nlp_analyzer import analyze_reports_batch
+import time as _time
+import threading
 load_dotenv()
 
+# --- Community warnings cache (avoids re-running NLP on every page load) ---
+_community_cache = {}
+COMMUNITY_CACHE_TTL = 300  # 5 minutes
+
+def get_community_warnings_cached(product_name):
+    now = _time.time()
+    if product_name in _community_cache:
+        ts, result = _community_cache[product_name]
+        if now - ts < COMMUNITY_CACHE_TTL:
+            print(f"💾 Community cache hit for '{product_name}'")
+            return result
+    result = get_community_warnings(product_name)
+    _community_cache[product_name] = (now, result)
+    return result
 # ==================== AUTHENTICATION DECORATOR ====================
 def login_required(f):
     """Decorator to protect routes that require authentication"""
@@ -952,12 +969,42 @@ def get_historical_health_scores(username, period, recommendations):
         labels.append(period_label)
 
     return {"labels": labels, "scores": scores}
+def match_ai_result(ai_results, key):
+    """
+    Matches a nutrient key against AI result keys using:
+    1. Exact match
+    2. One contains the other (e.g. 'sugar' matches 'added sugar')
+    3. Any word overlap (e.g. 'total fat' matches 'fat')
+    Returns None if no match found.
+    """
+    if not ai_results:
+        return None
+ 
+    # 1. Exact match
+    if key in ai_results:
+        return ai_results[key]
+ 
+    # 2. Substring match in either direction
+    for ai_key, val in ai_results.items():
+        if ai_key in key or key in ai_key:
+            return val
+ 
+    # 3. Word overlap match (e.g. 'total carbohydrates' vs 'carbohydrates')
+    key_words = set(key.split())
+    for ai_key, val in ai_results.items():
+        ai_words = set(ai_key.split())
+        if key_words & ai_words:  # any common word
+            return val
+ 
+    return None
 
-def get_personalized_nutrient_analysis(nutrient_name, nutrient_value, nutrient_unit, nutrient_status, user_profile):
-    """Generate personalized AI analysis for a specific nutrient"""
-    if not client:
-        return "AI analysis unavailable. Please configure OpenAI API key."
-    
+
+def get_personalized_nutrient_analysis_batch(nutrients, user_profile):
+    """Single OpenAI call for ALL nutrients with rich, personalized insights."""
+    if not client or not user_profile:
+        return {n.get('nutrient', '').lower(): "Complete your profile for insights."
+                for n in nutrients}
+
     user_context = {
         "age": user_profile.get('age', 'N/A'),
         "gender": user_profile.get('gender', 'N/A'),
@@ -967,9 +1014,16 @@ def get_personalized_nutrient_analysis(nutrient_name, nutrient_value, nutrient_u
         "medical_conditions": user_profile.get('medical_conditions', 'None'),
         "allergies": user_profile.get('allergies', 'None')
     }
-    
-    prompt = f"""
-You are a nutritionist providing personalized health advice.
+
+    nutrient_list = "\n".join([
+        f"- {n.get('nutrient', '?')}: {n.get('value', 0)} {n.get('unit', 'g')} (Status: {n.get('status', 'Unknown')})"
+        for n in nutrients
+    ])
+
+    expected_keys = [n.get('nutrient', '').lower().strip() for n in nutrients]
+    keys_str = str(expected_keys)
+
+    prompt = f"""You are an expert clinical nutritionist giving personalized, actionable dietary advice.
 
 USER PROFILE:
 - Age: {user_context['age']}
@@ -980,33 +1034,76 @@ USER PROFILE:
 - Medical Conditions: {user_context['medical_conditions']}
 - Allergies: {user_context['allergies']}
 
-NUTRIENT INFORMATION:
-- Nutrient: {nutrient_name}
-- Amount: {nutrient_value} {nutrient_unit}
-- Status: {nutrient_status}
+NUTRIENTS TO ANALYZE:
+{nutrient_list}
 
-Provide a brief, personalized 1-2 sentence analysis of how this nutrient level affects THIS SPECIFIC USER, considering their profile. Be direct and actionable.
+INSTRUCTIONS — follow these rules strictly for each nutrient:
 
-Format: Return ONLY the analysis text, no headers or extra formatting.
-"""
+1. HIGH status: Explain the specific health risk this elevated level poses FOR THIS USER given their profile (e.g. age, activity, conditions). Suggest one concrete dietary action to reduce it.
+
+2. LOW status: Explain what this deficiency means for THIS USER's body, energy, or health goals. Recommend one specific food or habit to address it.
+
+3. NORMAL status: Don't just say "it's fine". Explain WHY this level is beneficial for this specific person's age, gender, activity level, or conditions. Add one actionable tip to maintain it.
+
+4. UNKNOWN status: Do NOT say "unknown" or repeat the status. Instead, use the user's profile to estimate whether this level is likely adequate, borderline, or concerning FOR THEM, and explain your reasoning with a brief recommendation. Base this on typical daily requirements for their age, gender, weight and activity level.
+
+TONE RULES:
+- Be direct, specific, and actionable — never vague.
+- Never just restate the status word (High/Low/Normal/Unknown).
+- Never say "it is currently unknown" or "adequacy is unknown".
+- Always reference at least one detail from the user's profile in your answer.
+- Each answer must be 1-2 sentences max.
+
+Return ONLY valid JSON. No markdown, no explanation, no extra text:
+{{
+  "nutrient_name_lowercase": "personalized insight here",
+  ...
+}}
+
+CRITICAL KEY RULES:
+- Use EXACTLY these keys (lowercased, verbatim): {keys_str}
+- Do NOT rename keys. Every key must appear in the response."""
 
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a concise nutritionist providing personalized health insights in 1-2 sentences."},
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a clinical nutritionist. Return only valid JSON with exactly the keys provided. "
+                        "Never restate the status word. Always give specific, profile-aware, actionable insights. "
+                        "No markdown fences. No explanation outside the JSON."
+                    )
+                },
                 {"role": "user", "content": prompt}
             ],
             temperature=0.4,
-            max_tokens=150
+            max_tokens=1200
         )
-        
-        return response.choices[0].message.content.strip()
-        
-    except Exception as e:
-        print(f"❌ AI analysis failed for {nutrient_name}: {e}")
-        return "Unable to generate personalized analysis at this time."
 
+        raw = response.choices[0].message.content.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        return json.loads(raw)
+
+    except Exception as e:
+        print(f"❌ Batch AI analysis failed: {e}")
+        return {}
+
+
+def get_personalized_nutrient_analysis(nutrient_name, nutrient_value, nutrient_unit, nutrient_status, user_profile):
+    """Single-nutrient wrapper — used by barcode (index) route."""
+    if not client or not user_profile:
+        return "AI analysis unavailable."
+
+    result = get_personalized_nutrient_analysis_batch(
+        [{"nutrient": nutrient_name, "value": nutrient_value, "unit": nutrient_unit, "status": nutrient_status}],
+        user_profile
+    )
+    return match_ai_result(result, nutrient_name.lower()) or "Unable to generate analysis."
 def get_community_warnings(product_name):
     """
     Analyzes all user feedback for a specific product.
@@ -1201,6 +1298,44 @@ def get_community_warnings(product_name):
             "summary_message": "Error retrieving community warnings."
         }
 
+
+# ==================== PASSWORD POLICY ====================
+ 
+PASSWORD_POLICY = {
+    "min_length": 8,
+    "require_upper": True,
+    "require_lower": True,
+    "require_digit": True,
+    "require_special": True,
+}
+ 
+SPECIAL_CHARS = r"[!@#$%^&*()\-_=+\[\]{};':\"\\|,.<>/?`~]"
+ 
+def validate_password(password: str) -> tuple[bool, list[str]]:
+    """
+    Validates password against policy.
+    Returns (is_valid: bool, errors: list[str])
+    """
+    errors = []
+ 
+    if len(password) < PASSWORD_POLICY["min_length"]:
+        errors.append(f"Password must be at least {PASSWORD_POLICY['min_length']} characters long.")
+ 
+    if PASSWORD_POLICY["require_upper"] and not _re.search(r"[A-Z]", password):
+        errors.append("Password must contain at least one uppercase letter (A–Z).")
+ 
+    if PASSWORD_POLICY["require_lower"] and not _re.search(r"[a-z]", password):
+        errors.append("Password must contain at least one lowercase letter (a–z).")
+ 
+    if PASSWORD_POLICY["require_digit"] and not _re.search(r"[0-9]", password):
+        errors.append("Password must contain at least one number (0–9).")
+ 
+    if PASSWORD_POLICY["require_special"] and not _re.search(SPECIAL_CHARS, password):
+        errors.append("Password must contain at least one special character (!@#$%^&* etc.).")
+ 
+    return (len(errors) == 0, errors)
+ 
+ 
 # ==================== ROUTES ====================
 
 @app.route('/')
@@ -1362,22 +1497,46 @@ def login():
 
 @app.route('/signup', methods=['POST'])
 def signup():
-    username = request.form['username']
-    password = request.form['password']
-    
-    if credentials_storage.user_exists(username):
-        flash("Username already exists.", "error")
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '')
+    confirm  = request.form.get('confirm_password', '')
+ 
+    # --- Username validation ---
+    if len(username) < 3:
+        flash("Username must be at least 3 characters.", "error")
         return redirect(url_for('landing'))
-
+ 
+    if not _re.match(r'^[a-zA-Z0-9_.-]+$', username):
+        flash("Username may only contain letters, numbers, underscores, hyphens and dots.", "error")
+        return redirect(url_for('landing'))
+ 
+    # --- Password confirmation ---
+    if password != confirm:
+        flash("Passwords do not match. Please try again.", "error")
+        return redirect(url_for('landing'))
+ 
+    # --- Password policy ---
+    is_valid, errors = validate_password(password)
+    if not is_valid:
+        for err in errors:
+            flash(err, "error")
+        return redirect(url_for('landing'))
+ 
+    # --- Duplicate check ---
+    if credentials_storage.user_exists(username):
+        flash("Username already exists. Please choose a different one.", "error")
+        return redirect(url_for('landing'))
+ 
+    # --- Create account ---
     if add_user(username, password):
         session.permanent = False
         session['username'] = username
-        flash("Account created successfully!", "success")
+        session['auth_provider'] = 'regular'
+        flash("Account created successfully! Welcome to Cal-FIT.", "success")
         return redirect(url_for('profile_form'))
     else:
         flash("Failed to create account. Please try again.", "error")
         return redirect(url_for('landing'))
-
 @app.route('/dashboard')
 @login_required
 @prevent_cache
@@ -1437,8 +1596,7 @@ def scan_label():
             elif scan_type == "barcode":
                 processed_data = process_nutrition_label(filepath)
                 if not processed_data:
-                    flash("Product not found. The barcode was scanned but no data was retrieved. Please try a label scan instead.", "warning")
-                    return render_template('scan_label.html')
+                    return redirect(url_for('product_not_found'))
 
                 session['scan_type'] = "barcode"
                 session['barcode_processed'] = True
@@ -1453,58 +1611,74 @@ def scan_label():
 
     return render_template('scan_label.html')
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+@app.route('/product-not-found')
+def product_not_found():
+    return render_template('product_not_found.html')
+
 @app.route('/scan-result')
 @login_required
 @prevent_cache
 def scan_result():
     scan_type = session.get('scan_type')
-    
     if scan_type != "label":
         flash("No label scan data found.", "error")
         return redirect(url_for('scan_label'))
-    
+ 
     raw_text = session.get('scan_raw_text')
     structured_nutrients = session.get('scan_structured_nutrients')
     username = session.get('username')
-
+ 
     if not raw_text or not structured_nutrients:
         return redirect(url_for('scan_label'))
-
+ 
     user_profile = load_user_health_profile(username)
-    
+ 
+    # Step 1: evaluate statuses (fast, local DB)
     for nutrient in structured_nutrients:
         try:
-            value_str = str(nutrient['value'])
-            value = float(re.sub(r'[^\d.]', '', value_str))
+            value = float(re.sub(r'[^\d.]', '', str(nutrient['value'])))
         except (ValueError, TypeError):
             value = 0.0
-            print(f"⚠️ Could not parse value for {nutrient.get('nutrient', 'Unknown')}: {nutrient.get('value', 'None')}")
-
         nutrient_name = nutrient.get('nutrient', '').strip()
-        
         status_info = evaluate_nutrient_status_enhanced(nutrient_name, value)
-        
         nutrient['value'] = value
         nutrient['status'] = status_info['status']
         nutrient['message'] = status_info['message']
-        
+        nutrient['ai_analysis'] = "Generating..."  # placeholder
+ 
+    # Step 2: fire AI batch + community warnings CONCURRENTLY
+    def run_ai_batch():
         if user_profile:
-            ai_analysis = get_personalized_nutrient_analysis(
-                nutrient_name,
-                value,
-                nutrient.get('unit', 'g'),
-                status_info['status'],
-                user_profile
-            )
-            nutrient['ai_analysis'] = ai_analysis
+            return get_personalized_nutrient_analysis_batch(structured_nutrients, user_profile)
+        return {}
+ 
+    def run_community():
+        return get_community_warnings_cached("Scanned from Label (OCR)")
+ 
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        ai_future = executor.submit(run_ai_batch)
+        community_future = executor.submit(run_community)
+        ai_results = ai_future.result()
+        community_data = community_future.result()
+ 
+    # Step 3: apply AI results with fuzzy key matching
+    no_profile_msg = "Complete your profile to get personalized insights."
+    fallback_msg = "No specific insight available."
+ 
+    for nutrient in structured_nutrients:
+        key = nutrient.get('nutrient', '').strip().lower()
+        matched = match_ai_result(ai_results, key)
+        if matched:
+            nutrient['ai_analysis'] = matched
+        elif not user_profile:
+            nutrient['ai_analysis'] = no_profile_msg
         else:
-            nutrient['ai_analysis'] = "Complete your profile to get personalized insights."
-        
-        print(f"🔍 Nutrient: {nutrient_name}, Value: {value}, Status: {status_info['status']}")
-
+            nutrient['ai_analysis'] = fallback_msg
+ 
+    # Step 4: save to DB
     try:
         image_filename = session.get('scan_image_filename')
-        
         scan_id = scan_storage.save_scan_data(
             username=username,
             raw_text=raw_text,
@@ -1514,19 +1688,16 @@ def scan_result():
             product_name="Scanned from Label (OCR)",
             product_image_url=None
         )
-        
         if scan_id:
             session['last_scan_id'] = scan_id
-            flash("Scan results saved successfully!", "success")
-        else:
-            flash("Could not save scan results to database.", "warning")
-            
     except Exception as e:
-        print(f"❌ Error saving scan to MongoDB: {e}")
-        flash("Error saving scan results.", "warning")
-
-    return render_template('scan_result.html', raw_text=raw_text, structured_nutrients=structured_nutrients)
-
+        print(f"❌ Error saving scan: {e}")
+ 
+    return render_template('scan_result.html',
+                           raw_text=raw_text,
+                           structured_nutrients=structured_nutrients,
+                           community_warnings=community_data)
+ 
 @app.route('/index')
 @login_required
 @prevent_cache
@@ -1534,31 +1705,41 @@ def index():
     barcode_processed = session.get('barcode_processed', False)
     scan_data = session.get('scan_data', {})
     username = session.get('username')
-    
-    # Initialize community_warnings
+ 
     community_warnings = {"total_reports": 0, "top_reports": [], "product_name": None}
-    
+ 
     if barcode_processed and scan_data and scan_data.get('structured_nutrients') and username:
         user_profile = load_user_health_profile(username)
-        
-        # Get community warnings for the product
         product_name = scan_data.get('product_name')
-        if product_name:
-            community_warnings = get_community_warnings(product_name)
-            print(f"🔍 Community warnings for {product_name}: {community_warnings}")
-        
-        if user_profile:
-            for nutrient in scan_data['structured_nutrients']:
-                if 'ai_analysis' not in nutrient:
-                    ai_analysis = get_personalized_nutrient_analysis(
-                        nutrient.get('nutrient', ''),
-                        nutrient.get('value', 0),
-                        nutrient.get('unit', 'g'),
-                        nutrient.get('status', 'Unknown'),
-                        user_profile
-                    )
-                    nutrient['ai_analysis'] = ai_analysis
-
+ 
+        nutrients_needing_analysis = [
+            n for n in scan_data['structured_nutrients']
+            if 'ai_analysis' not in n
+        ]
+ 
+        def run_ai_batch():
+            if user_profile and nutrients_needing_analysis:
+                return get_personalized_nutrient_analysis_batch(nutrients_needing_analysis, user_profile)
+            return {}
+ 
+        def run_community():
+            if product_name:
+                return get_community_warnings_cached(product_name)
+            return {"total_reports": 0, "top_reports": [], "product_name": None}
+ 
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            ai_future = executor.submit(run_ai_batch)
+            community_future = executor.submit(run_community)
+            ai_results = ai_future.result()
+            community_warnings = community_future.result()
+ 
+        # Apply with fuzzy matching
+        for nutrient in scan_data['structured_nutrients']:
+            if 'ai_analysis' not in nutrient:
+                key = nutrient.get('nutrient', '').strip().lower()
+                matched = match_ai_result(ai_results, key)
+                nutrient['ai_analysis'] = matched if matched else "No specific insight available."
+ 
     return render_template(
         'index.html',
         barcode_processed=barcode_processed,
@@ -2189,6 +2370,12 @@ def api_submit_report(scan_id):
         print(f"❌ Error submitting report for scan {scan_id}: {e}")
         import traceback; traceback.print_exc()
         return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
+def _warm_up_nlp():
+    print("🔥 Warming up HF NLP model in background...")
+    from nlp_analyzer import analyze_report_text
+    analyze_report_text("warmup")
+    print("✅ NLP model warm and ready.")
 
+threading.Thread(target=_warm_up_nlp, daemon=True).start()
 if __name__ == "__main__":
-    app.run(host="0.0.0.0docker build -t nutritionapp .", port=5000, debug=True, use_reloader = False)
+    app.run(host="localhost" ,debug=True, use_reloader = False)
