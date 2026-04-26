@@ -27,3 +27,4 @@ static/images/
 Thumbs.db
 .env.local
 .flask_session/
+frontend/
